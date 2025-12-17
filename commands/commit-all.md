@@ -2,162 +2,86 @@
 description: Commit all uncommitted changes, grouped intelligently into multiple commits
 ---
 
-Find ALL uncommitted changes and commit them properly, grouping related changes into separate commits.
+Find ALL uncommitted changes and commit them properly. Groups related changes into separate commits. Executes without asking for confirmation.
 
 ## 1. Discover All Changes
 
 ```bash
 git status --porcelain
 git diff --stat
-git diff --cached --stat
 ```
 
 If no changes found, inform user and STOP.
 
-## 2. Categorize All Changes
+## 2. Analyze and Group Changes
 
-List every changed file and categorize:
-
-```
-UNCOMMITTED CHANGES FOUND
-=========================
-
-Staged:
-  M  src/components/Button.tsx
-  A  src/components/Modal.tsx
-
-Unstaged:
-  M  src/utils/auth.ts
-  M  src/utils/api.ts
-  D  src/old-file.ts
-
-Untracked:
-  ?  src/components/NewFeature.tsx
-  ?  .env.example
-```
-
-## 3. Analyze and Group Changes
-
-Analyze the changes and group them by logical relationship:
+List all changed files and group by logical relationship:
 
 **Grouping criteria:**
-- Same feature/component (files in same directory or with related names)
-- Same type of change (all deletions, all config changes, all test files)
+- Same feature/component (files in same directory or related names)
+- Same type of change (all deletions, all config changes, renames)
 - Same scope (auth-related, UI-related, etc.)
-- Dependencies (if file A imports file B and both changed, group them)
+- Directory renames (deleted dir + new dir with same files = 1 commit)
 
-**Read changed files if needed** to understand what changed and group properly.
+## 3. Safety Check (Silent)
 
-## 4. Propose Commit Plan
-
-Show the user a commit plan:
-
-```
-PROPOSED COMMIT PLAN
-====================
-
-Commit 1: feat(ui): add Modal component
-  • src/components/Modal.tsx (new)
-  • src/components/Button.tsx (updated - uses Modal)
-
-Commit 2: refactor(auth): update authentication utilities
-  • src/utils/auth.ts
-  • src/utils/api.ts
-
-Commit 3: chore: remove deprecated files
-  • src/old-file.ts (deleted)
-
-Commit 4: chore: add environment example
-  • .env.example (new)
-
-──────────────────────
-Total: 4 commits for 6 files
-
-Proceed with this plan? (y/n/edit)
-```
-
-**If user says "edit":** Ask which grouping to change and adjust.
-
-## 5. Safety Checks
-
-Before committing, verify:
-
-**Do NOT commit these files (warn user):**
-- `.env` (secrets)
-- `*.pem`, `*.key` (private keys)
-- `credentials.json`, `secrets.*`
+Skip these files automatically (don't commit, don't ask):
+- `.env`, `*.pem`, `*.key` (secrets)
 - `node_modules/`, `.next/`, `dist/` (should be gitignored)
 
-If found, warn:
-```
-⚠️  WARNING: Found potentially sensitive files:
-  • .env (contains secrets)
+If sensitive files found, mention in summary at the end.
 
-These will be SKIPPED. Add to .gitignore if not already.
-```
+## 4. Execute Commits
 
-## 6. Execute Commits
-
-For each group in the plan:
+For each logical group, immediately:
 
 ```bash
-# Stage files for this commit
-git add <file1> <file2> ...
-
-# Commit with quality message
+git add <files-in-group>
 git commit -m "type(scope): description"
 ```
 
 **Commit message rules:**
 - Conventional format: `type(scope): description`
 - Types: feat, fix, refactor, style, docs, test, chore
-- Under 72 characters
-- Imperative mood
-- NO "Co-authored-by" or AI mentions
+- Under 72 characters, imperative mood
+- NO "Co-authored-by", NO AI mentions
 
-## 7. Handle Conflicts/Issues
+**For directory renames:**
+```bash
+git add -A docs/
+git commit -m "refactor(docs): rename claude-agent-sdk to sdk-claude-agent-python"
+```
 
-**If a file has merge conflicts:**
-- Skip it
-- Report: "Skipped file.ts - has merge conflicts. Resolve manually."
+## 5. Handle Issues (Don't Stop)
 
-**If staging fails:**
-- Report the error
-- Continue with other commits
+- Merge conflicts → skip file, note in summary
+- Staging fails → skip file, continue with others
 
-## 8. Summary
+## 6. Summary
 
 ```
-COMMIT COMPLETE
-===============
-
-Created 4 commits:
-  ✓ abc1234 feat(ui): add Modal component (2 files)
-  ✓ def5678 refactor(auth): update authentication utilities (2 files)
-  ✓ 789abcd chore: remove deprecated files (1 file)
-  ✓ cde0123 chore: add environment example (1 file)
+COMMITTED
+=========
+✓ abc1234 refactor(docs): rename sdk directory (62 files)
+✓ def5678 fix(auth): update token validation (2 files)
 
 Skipped:
-  • .env (sensitive file)
+  • .env (sensitive)
+  • src/broken.ts (merge conflict)
 
-Still uncommitted:
-  (none)
-
-Use /push when ready to push.
+Use /push when ready.
 ```
 
-## 9. Edge Cases
+## What We Do vs Don't Do
 
-**If everything is one logical change:**
-- Create just one commit
-- Don't force multiple commits unnecessarily
+**DO:**
+- Analyze and group intelligently
+- Execute commits immediately
+- Report what was done
 
-**If changes are too intermingled to separate:**
-- Ask user: "These changes are interrelated. Commit as single commit or try to separate?"
-
-**If there are 20+ unrelated files:**
-- Group by directory first
-- Then refine by relationship
-- Ask user to confirm before proceeding
+**DON'T:**
+- Ask "Proceed? y/n"
+- Ask "Is this grouping correct?"
+- Wait for confirmation
 
 $ARGUMENTS
