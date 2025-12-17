@@ -6,22 +6,14 @@ List the custom commands available.
 
 ## How to Find Commands
 
-Use bash to list commands from both locations:
+Run these commands (single line each):
 
 ```bash
-# User-level commands (expand ~ properly)
-ls ~/.claude/commands/*.md 2>/dev/null | while read f; do
-  name=$(basename "$f" .md)
-  desc=$(grep -m1 "^description:" "$f" | sed 's/description: *//')
-  echo "/$name - $desc"
-done
+for f in ~/.claude/commands/*.md; do [ -f "$f" ] && echo "$(basename "$f" .md): $(grep -m1 '^description:' "$f" | cut -d: -f2-)"; done
+```
 
-# Project-level commands
-ls .claude/commands/*.md 2>/dev/null | while read f; do
-  name=$(basename "$f" .md)
-  desc=$(grep -m1 "^description:" "$f" | sed 's/description: *//')
-  echo "/$name - $desc"
-done
+```bash
+for f in .claude/commands/*.md; do [ -f "$f" ] && echo "$(basename "$f" .md): $(grep -m1 '^description:' "$f" | cut -d: -f2-)"; done
 ```
 
 ## Output Format
