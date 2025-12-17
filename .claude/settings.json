@@ -1,0 +1,14 @@
+{
+  "hooks": {
+    "SessionStart": [
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "cat .claude/state.json 2>/dev/null || echo '{\"note\": \"No state.json found. Run /migrate to set up tracking.\"}'"
+          }
+        ]
+      }
+    ]
+  }
+}
