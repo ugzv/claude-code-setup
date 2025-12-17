@@ -4,20 +4,36 @@ description: List project commands
 
 List the custom commands available.
 
-Check both locations for commands:
-1. **User-level**: `~/.claude/commands/` (shared across all projects)
-2. **Project-level**: `.claude/commands/` (project-specific)
+## How to Find Commands
 
-For each `.md` file found, extract the `description:` from frontmatter.
+Use bash to list commands from both locations:
+
+```bash
+# User-level commands (expand ~ properly)
+ls ~/.claude/commands/*.md 2>/dev/null | while read f; do
+  name=$(basename "$f" .md)
+  desc=$(grep -m1 "^description:" "$f" | sed 's/description: *//')
+  echo "/$name - $desc"
+done
+
+# Project-level commands
+ls .claude/commands/*.md 2>/dev/null | while read f; do
+  name=$(basename "$f" .md)
+  desc=$(grep -m1 "^description:" "$f" | sed 's/description: *//')
+  echo "/$name - $desc"
+done
+```
+
+## Output Format
 
 Present as two sections if both exist:
 ```
-USER COMMANDS (~/.claude/commands/)
+USER COMMANDS
   /backlog     - Review and manage backlog items
   /commit      - Clean commits
   ...
 
-PROJECT COMMANDS (.claude/commands/)
+PROJECT COMMANDS
   /deploy      - Deploy to staging
   ...
 ```
