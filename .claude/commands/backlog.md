@@ -28,11 +28,39 @@ End with a simple prompt—the user should know they can pick a number or ask fo
 
 This is the critical moment. Don't start implementing the backlog description. Start by validating it.
 
+### 1. Check for Conflicts
+
+Before starting, identify what files this work will likely touch. Then check `currentFocus` array for overlaps:
+
+- If another focus item lists files that overlap with this work, **warn the user**:
+  ```
+  ⚠️ Potential conflict: "[other focus description]" is working on:
+    - src/auth.ts
+    - src/middleware/auth.ts
+
+  This task may also touch those files. Continue anyway?
+  ```
+
+- If no overlap or user confirms, proceed.
+
+### 2. Validate the Item
+
 Read the relevant code. Does the problem still exist? Is it the same shape as described? Sometimes you'll find it's already fixed. Sometimes it's worse than described. Sometimes the whole context has changed.
 
 If stale: update or resolve the item, tell the user what you found.
 
-If valid: understand current state, then begin work.
+### 3. Register Your Focus
+
+If valid, add to `currentFocus` array before starting work:
+```json
+{
+  "description": "short description of work",
+  "files": ["files", "you'll", "touch"],
+  "started": "YYYY-MM-DD"
+}
+```
+
+Then begin work.
 
 ## Managing the Backlog
 

@@ -10,7 +10,7 @@
    ```
 
 2. **Understand Context**:
-   - `currentFocus` → What we're working on (set by user)
+   - `currentFocus` → Array of active work (multiple sessions supported)
    - `lastSession` → What happened last time
    - `backlog` → Open items to potentially work on
    - `shipped` → Recent completions

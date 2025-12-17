@@ -25,7 +25,8 @@ CLAUDE.md:
   - [EXISTS/MISSING]
   - Has Session Protocol? [YES=skip / NO=prepend at TOP]
 
-.claude/state.json:    [EXISTS=skip / MISSING=create]
+.claude/state.json:    [EXISTS=check format / MISSING=create]
+  - currentFocus format: [array=ok / null/string=upgrade to array]
 .claude/settings.json: [EXISTS=merge hooks / MISSING=create with hooks]
 
 Hooks to configure:
@@ -73,7 +74,7 @@ mkdir -p .claude
    ```
 
 2. **Understand Context**:
-   - `currentFocus` → What we're working on (set by user)
+   - `currentFocus` → Array of active work (multiple sessions supported)
    - `lastSession` → What happened last time
    - `backlog` → Open items to potentially work on
    - `shipped` → Recent completions
@@ -105,14 +106,14 @@ mkdir -p .claude
 **If CLAUDE.md doesn't exist:**
 - Create with just the protocol section above (without the placeholder line)
 
-## 6. Create State File (.claude/state.json)
+## 6. Create/Update State File (.claude/state.json)
 
-ONLY if it doesn't exist:
+**If it doesn't exist**, create it:
 
 ```json
 {
   "project": "[detect from package.json name, git remote, or folder name]",
-  "currentFocus": null,
+  "currentFocus": [],
   "lastSession": {
     "date": "[today]",
     "summary": "Initialized Claude tracking system",
@@ -122,6 +123,19 @@ ONLY if it doesn't exist:
   "shipped": []
 }
 ```
+
+Note: `currentFocus` is an array to support multiple parallel Claude sessions. Each focus item looks like:
+```json
+{
+  "description": "what you're working on",
+  "files": ["src/auth.ts", "src/api/login.ts"],
+  "started": "YYYY-MM-DD"
+}
+```
+
+**If it exists**, check for format upgrades:
+- If `currentFocus` is `null` or a string → convert to `[]`
+- If `currentFocus` is already an array → leave it alone
 
 ## 7. Configure Hooks (.claude/settings.json)
 
