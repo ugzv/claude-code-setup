@@ -22,7 +22,9 @@ When you find code that resists change, you've found code that's actively slowin
 
 ## Before You Start
 
-Read `.claude/state.json` backlog. Skip issues already being tracked—no point reporting what's already known.
+Read `.claude/state.json`:
+- Check `backlog` - skip issues already being tracked
+- Check `currentFocus` - if another session is working on files you might refactor, warn about potential conflicts before proceeding
 
 ## How to Investigate
 
@@ -66,6 +68,15 @@ The best refactoring targets are high-pain, high-leverage, bounded-effort. Find 
 Don't just report and stop. The user came to you because they want the code to be better, not because they wanted a list of problems.
 
 For the highest-leverage opportunity you found, offer to do it. If it's a bounded refactor—extracting a function, splitting a file, untangling two concerns—offer to execute it now and show what changes.
+
+Before starting any refactor work, register in `currentFocus`:
+```json
+{
+  "description": "refactor: [what you're doing]",
+  "files": ["files", "being", "refactored"],
+  "started": "YYYY-MM-DD"
+}
+```
 
 For larger refactors that need more consideration, explain what's involved and offer to start. "This is a half-day effort. Want me to begin with the first piece?"
 

@@ -47,7 +47,7 @@ Create with session protocol at TOP:
    ```
 
 2. **Understand Context**:
-   - `currentFocus` → What we're working on (set by user)
+   - `currentFocus` → Array of active work (multiple sessions supported)
    - `lastSession` → What happened last time
    - `backlog` → Open items to potentially work on
    - `shipped` → Recent completions
@@ -69,6 +69,7 @@ Create with session protocol at TOP:
 - Only USER sets `currentFocus` - never assume or change it
 - Add discoveries to backlog during `/push`, not randomly
 - Keep backlog clean - resolve items when addressed
+- **Never commit on your own** - wait for user to run `/commit`. Exception: post-commit fixes (e.g., hook failures)
 
 ---
 
@@ -79,12 +80,10 @@ Create with session protocol at TOP:
 
 ## 5. Create State File (.claude/state.json)
 
-Ask: "What's the current focus for this project? (or leave empty)"
-
 ```json
 {
   "project": "[project name]",
-  "currentFocus": "[user input or null]",
+  "currentFocus": [],
   "lastSession": {
     "date": "[today]",
     "summary": "Project initialized with Claude tracking system",
@@ -92,6 +91,15 @@ Ask: "What's the current focus for this project? (or leave empty)"
   },
   "backlog": [],
   "shipped": []
+}
+```
+
+Note: `currentFocus` is an array to support multiple parallel Claude sessions. Each focus item looks like:
+```json
+{
+  "description": "what you're working on",
+  "files": ["src/auth.ts", "src/api/login.ts"],
+  "started": "YYYY-MM-DD"
 }
 ```
 

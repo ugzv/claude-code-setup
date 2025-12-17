@@ -23,7 +23,7 @@ If missing, create automatically:
 ```json
 {
   "project": "[folder name]",
-  "currentFocus": null,
+  "currentFocus": [],
   "lastSession": null,
   "backlog": [],
   "shipped": []
@@ -42,6 +42,8 @@ If missing, create automatically:
 ```
 
 **shipped** - add items that represent meaningful progress. Ask: "Would someone care that this happened?" Features, fixes, and refactors that change behavior count. Routine maintenance (`chore: bump deps`) usually doesn't—but use judgment. A chore that sets up CI/CD is meaningful. A docs change adding a tutorial is meaningful.
+
+**currentFocus** - remove this session's focus item from the array (match by description of what you were working on). Other sessions' focus items stay.
 
 **backlog**:
 - Auto-resolve items that match pushed commits (mark as `"status": "resolved"`)
