@@ -2,34 +2,24 @@
 description: Push changes and update project state
 ---
 
-Ship your work: push to remote and update `.claude/state.json`.
+Push to remote and update `.claude/state.json`. Execute without unnecessary confirmations.
 
-## 1. Detect Branch and Remote
+## 1. Check What's Being Pushed
 
 ```bash
 git branch --show-current
-git rev-parse --abbrev-ref @{upstream} 2>/dev/null || echo "NO_UPSTREAM"
-```
-
-## 2. Review What's Being Pushed
-
-```bash
-git log @{upstream}..HEAD --oneline 2>/dev/null || git log origin/$(git symbolic-ref refs/remotes/origin/HEAD 2>/dev/null | sed 's@^refs/remotes/origin/@@')..HEAD --oneline
+git log @{upstream}..HEAD --oneline 2>/dev/null || git log origin/main..HEAD --oneline
 ```
 
 If nothing to push, inform user and STOP.
 
-Show the commits that will be pushed.
-
-## 3. Check State File Exists
+## 2. Check State File
 
 ```bash
 test -f .claude/state.json && echo "EXISTS" || echo "MISSING"
 ```
 
-If missing, ask: "State file not found. Run `/migrate` first, or create now?"
-
-If create now, initialize with:
+If missing, create it:
 ```json
 {
   "project": "[folder name]",
@@ -40,135 +30,68 @@ If create now, initialize with:
 }
 ```
 
-## 4. Read Current State
+## 3. Backlog Auto-Check
 
-Read `.claude/state.json` to understand:
-- Current backlog items
-- What currentFocus was
+Scan commits being pushed against open backlog items:
+- If a commit clearly resolves a backlog item → mark as resolved automatically
+- If unclear → leave as open (don't ask)
 
-## 5. Backlog Auto-Resolve Check
+## 4. Update State File
 
-Review the commits being pushed. For EACH open backlog item, assess:
-- Does this push address/resolve this item?
-
-Show the user:
-```
-BACKLOG CHECK
-=============
-Analyzing commits against open backlog items...
-
-✓ LIKELY RESOLVED:
-  #2 [bug] Mobile menu doesn't close - your commit "fix(ui): mobile menu navigation" addresses this
-
-? POSSIBLY RELATED:
-  #1 [tech-debt] Refactor status constants - commit touches related files, unclear if resolved
-
-• UNAFFECTED:
-  #3 [idea] Add keyboard shortcuts
-  #4 [improvement] Add dark mode
-
-Mark #2 as resolved? (y/n)
-Is #1 resolved? (y/n)
-```
-
-Wait for user confirmation before marking anything resolved.
-
-## 6. Update State File
-
-Update `.claude/state.json`:
-
-**lastSession:**
+**lastSession** - always update:
 ```json
 "lastSession": {
   "date": "[today]",
-  "summary": "[describe what was accomplished based on commits]",
-  "commits": ["abc1234", "def5678"]
+  "summary": "[what was accomplished]",
+  "commits": ["abc1234"]
 }
 ```
 
-**shipped** (prepend, keep last 10):
+**shipped** - only if feat/fix/refactor (skip chore/style/docs):
+- Determine change type from commit messages
+- If `feat`, `fix`, or `refactor` → add to shipped
+- If `chore`, `style`, `docs` → skip shipped, just update lastSession
 
-**Log changes that affect behavior:**
-- ✓ `feat` - new features (always log)
-- ✓ `fix` - bug fixes (always log)
-- ✓ `refactor` - code restructuring (log - could break things, useful for debugging)
-
-**Skip changes with no behavior impact:**
-- ✗ `style` - formatting, whitespace
-- ✗ `chore` - delete unused files, update gitignore, cleanup
-- ✗ `docs` - comments, README updates
-
-Ask user: "What type of change? (feat/fix/refactor = log, chore/style = skip)"
-
-If feat/fix/refactor:
 ```json
 "shipped": [
   {
     "date": "[today]",
     "type": "feat|fix|refactor",
-    "summary": "[one-line summary - what changed and why it matters]",
+    "summary": "[one-line summary]",
     "commits": ["abc1234"]
   }
 ]
 ```
 
-If chore/style/docs, skip adding to shipped (still gets committed, just not logged).
+**backlog** - auto-resolve what was addressed, keep the rest.
 
-**backlog:**
-- Mark confirmed items as resolved with today's date
-- Keep wont-do and resolved items (cleanup via `/backlog clean`)
-
-## 7. Prompt for New Backlog Items
-
-Ask: "Did you notice anything during this work to add to the backlog? (tech debt, bugs, ideas)"
-
-If yes:
-- Ask for task description
-- Ask for type (tech-debt / bug / idea / improvement)
-- Ask for priority (high / medium / low)
-- Add to backlog with status "open"
-
-If no, skip.
-
-## 8. Current Focus Check
-
-Ask: "Current focus is: `[currentFocus]`. Is this still accurate?"
-
-Options:
-- Keep as is
-- Update to: [new focus]
-- Clear (no specific focus)
-
-Update state.json accordingly.
-
-## 9. Commit State Changes
+## 5. Commit State + Push
 
 ```bash
 git add .claude/state.json
 git diff --cached --quiet || git commit -m "chore: update project state"
-```
-
-## 10. Push
-
-```bash
 git push
 ```
 
-If push fails:
-- Report error
-- Tell user: "State was committed locally. Fix push issue and run `git push` manually."
-
-## 11. Summary
+## 6. Quick Summary
 
 ```
-PUSH COMPLETE
-=============
-Commits pushed: 3
-Shipped: fix(ui): mobile menu navigation
-Backlog: 1 resolved, 3 open, 1 added
-Current focus: "Implementing dark mode"
-
-State file updated ✓
+Pushed: 3 commits
+Shipped: feat(ui): add modal component
+Backlog: 1 resolved, 2 open
 ```
+
+Done.
+
+## 7. Only Ask If Needed
+
+**DO NOT ask for confirmation on:**
+- Whether to push
+- Whether to update state
+- Backlog resolution (auto-detect)
+
+**ONLY ask if:**
+- Push fails (report error)
+- Ambiguous change type and can't determine from commits
 
 $ARGUMENTS
