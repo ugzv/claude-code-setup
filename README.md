@@ -125,6 +125,19 @@ Push and update tracking:
 - Prompts for new backlog items
 - Confirms `currentFocus` is still accurate
 
+### Batch Commit Everything
+
+```
+/commit-all
+```
+
+When you have multiple uncommitted changes (forgot to commit, multiple sessions, manual cleanup):
+- Finds ALL uncommitted changes
+- Groups related files together
+- Creates separate commits for unrelated changes
+- Shows plan and asks for confirmation
+- Warns about sensitive files (.env, keys)
+
 ### Managing Backlog
 
 ```
@@ -139,6 +152,7 @@ Push and update tracking:
 | `/init-project` | Initialize new project with tracking |
 | `/migrate` | Add tracking to existing project |
 | `/commit` | Clean commit (no AI mentions) |
+| `/commit-all` | Commit ALL uncommitted changes, grouped intelligently |
 | `/push` | Push + update state + backlog check |
 | `/backlog` | Review and manage backlog |
 
