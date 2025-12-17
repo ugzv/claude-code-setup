@@ -59,6 +59,14 @@ The best refactoring targets are high-pain, high-leverage, bounded-effort. Find 
 
 ## After Analysis
 
-Offer to add the highest-leverage opportunities to `.claude/state.json` backlog. But be selective—three important refactors that will actually get done beat twenty "nice to haves" that will be ignored.
+Don't just report and stop. The user came to you because they want the code to be better, not because they wanted a list of problems.
+
+For the highest-leverage opportunity you found, offer to do it. If it's a bounded refactor—extracting a function, splitting a file, untangling two concerns—offer to execute it now and show what changes.
+
+For larger refactors that need more consideration, explain what's involved and offer to start. "This is a half-day effort. Want me to begin with the first piece?"
+
+For things that should wait, add them to `.claude/state.json` backlog with enough context that future-you or future-someone can pick them up without re-investigating.
+
+The goal is code that resists change less than it did before you ran this command.
 
 $ARGUMENTS

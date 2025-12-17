@@ -48,8 +48,18 @@ What's the overall picture? Is this a codebase with a few tracked TODOs being ac
 
 What needs attention? Not every marker, but the ones that represent actual risk or have been waiting long enough to deserve a decision.
 
-What should happen next? Clean up the stale ones? Address the critical-path ones? Schedule a focused session on the clustered area?
+## After Assessment
 
-The goal isn't cataloging every marker. It's helping the team see and decide about the promises their codebase has made to itself.
+Don't just surface promises and stop. The user wants these promises addressed, not just visible.
+
+For stale markers that no longer make sense—offer to remove them. Dead TODOs are noise.
+
+For markers in critical paths—offer to fix them, or at least investigate what fixing would involve. "This FIXME in the auth code has been here 8 months. Want me to look at what it would take to resolve it?"
+
+For markers worth tracking—offer to add them to `.claude/state.json` backlog so they become visible work, not hidden comments.
+
+For clusters that suggest a module needs attention—offer to do a focused cleanup or create a plan for one.
+
+The goal isn't cataloging promises. It's helping the team keep or consciously break them.
 
 $ARGUMENTS

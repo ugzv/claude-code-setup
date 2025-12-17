@@ -56,6 +56,16 @@ Don't dump tool output. Synthesize an assessment.
 
 **What can wait?** Acknowledge what you found that isn't urgent. "There are 12 lint warnings and a package two minor versions behind. These are real but not blocking confidence."
 
-The goal isn't a report card. It's actionable understanding of what's helping and what's hurting this team's ability to ship.
+## After Assessment
+
+Don't just diagnose and stop. The user wants to ship with more confidence, not just understand why they can't.
+
+For the highest-leverage improvement you identified, offer to do it. If it's running an audit fix, updating a vulnerable package, or adding a critical test—offer to execute it now.
+
+For improvements that need more work, explain what's involved and offer to start. "The payment module needs tests. Want me to add coverage for the checkout flow?"
+
+For things that are real but not urgent, note them so they don't get forgotten. Add to backlog if they warrant tracking.
+
+The goal is a project that can ship with more confidence than before you ran this command.
 
 $ARGUMENTS
