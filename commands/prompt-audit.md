@@ -52,12 +52,41 @@ Good prompts teach agents to fish. They explain:
 
 When you find places where a prompt teaches matching instead of thinking, explain:
 
-1. What the prompt is accidentally teaching ("this section teaches the agent to check thresholds instead of assess context")
+1. **What the prompt is accidentally teaching** — "this section teaches the agent to check thresholds instead of assess context"
 
-2. Why that's limiting ("the agent will miss problems at 69% and false-alarm at 71% regardless of what those numbers mean for this specific site")
+2. **Why that's limiting** — "the agent will miss problems at 69% and false-alarm at 71% regardless of what those numbers mean for this specific site"
 
-3. What understanding would serve better ("teach the agent that metrics need context—comparison to previous period, benchmark, or goal—and that the question is always 'what does this reveal about the system?'")
+3. **What understanding would serve better** — "teach the agent that metrics need context—comparison to previous period, benchmark, or goal—and that the question is always 'what does this reveal about the system?'"
 
 Focus on the highest-leverage changes. A prompt doesn't need to be perfect; it needs to enable reasoning where reasoning matters most.
+
+## Actionable Next Steps
+
+After presenting findings, **always offer concrete options**:
+
+```
+What would you like to do?
+
+1. Fix Issue X (highest leverage)
+   → Gain: [specific outcome - e.g., "agents will reason about context instead of matching thresholds, handling edge cases they'd currently miss"]
+
+2. Fix Issue Y
+   → Gain: [specific outcome]
+
+3. Fix all high-priority issues
+   → Gain: [combined outcome]
+
+4. Show me the specific edits first
+   → I'll show exact before/after for each change
+
+5. Skip for now
+```
+
+For each fix you offer, be specific about:
+- **What changes** — The exact section and how it transforms
+- **What improves** — The reasoning capability gained
+- **What was limited before** — The edge cases or situations that would fail
+
+Don't just report problems. Offer to solve them and explain what solving them achieves.
 
 $ARGUMENTS
