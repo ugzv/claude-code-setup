@@ -14,15 +14,15 @@ The symptom is an agent that handles your examples perfectly but fails on anythi
 
 When you read a prompt, you're looking for places where the prompt author accidentally said "don't think, just match."
 
-**Examples that teach format instead of reasoning.** When an agent sees five examples of "user asks X → respond with Y," it learns the mapping, not the thinking. It can't handle X-prime because it never learned why Y was the right answer for X. The question to ask: if someone showed me these examples, would I understand WHY these are good responses, or just WHAT the responses look like?
+**Examples that teach format instead of reasoning.** When an agent sees multiple examples of "user asks X → respond with Y," it learns the mapping, not the thinking. It can't handle variations because it never learned why the response was right. The question to ask: would someone reading these examples understand WHY these are good responses, or just WHAT they look like?
 
-**Thresholds that replace judgment.** "If bounce rate > 70%, flag as problem" teaches the agent to check a number against a threshold. It doesn't teach the agent that bounce rate is contextual—70% might be fine for a blog, catastrophic for a checkout page. The agent stops asking "is this a problem?" and starts asking "is this above 70%?"
+**Thresholds that replace judgment.** Hard numbers create bright lines that ignore context. The agent stops asking "is this a problem in this situation?" and starts asking "does this cross the threshold?" But metrics need context—the same number might be fine in one situation and catastrophic in another.
 
-**Procedures that bypass situation assessment.** Step-by-step scripts turn agents into executors. "1. Do X, 2. Do Y, 3. Do Z" gets followed regardless of whether this situation actually needs X, Y, and Z. The agent stops asking "what does this situation need?" and starts asking "what's step 1?"
+**Procedures that bypass situation assessment.** Step-by-step scripts turn agents into executors. The procedure gets followed regardless of whether this particular situation needs it. The agent stops asking "what does this situation need?" and starts asking "what's the next step?"
 
-**Lookup tables that map inputs to outputs.** Any structure that says "when you see A, do B" is teaching pattern-matching. The agent learns the table, not the reasoning that would let it handle situations that aren't in the table.
+**Lookup tables that map inputs to outputs.** Any structure that says "when you see A, do B" teaches pattern-matching. The agent learns the table, not the reasoning that would let it handle situations outside the table.
 
-**Rules without reasons.** Instructions like "never use markdown in headers" get followed precisely, but the agent can't adapt when the rule doesn't quite fit because it doesn't know WHY the rule exists. Give the agent the principle, and it can figure out the rules.
+**Rules without reasons.** Instructions without motivation get followed precisely, but the agent can't adapt when the rule doesn't quite fit because it doesn't know WHY the rule exists. The principle enables flexibility. The rule without principle creates brittleness.
 
 ## How to Read a Prompt Critically
 
@@ -44,49 +44,18 @@ Good prompts teach agents to fish. They explain:
 
 **The reasoning patterns.** Not "when X, do Y" but "here's how to think about situations like X." Frameworks for decision-making transfer to novel situations. Lookup tables don't.
 
-**The why behind preferences.** Not "format responses like this" but "users need to scan quickly and take action, so lead with insights and end with next steps." The agent can adapt the format when the situation calls for it.
+**The why behind preferences.** Not "format responses like this" but why that format serves the user. The agent can adapt when the situation calls for something different.
 
-**The values and beliefs.** Role prompting through philosophy—"you believe that revenue is the only metric that can't be gamed"—shapes how the agent approaches everything, not just the situations you anticipated.
+**The values and beliefs.** Role prompting through philosophy shapes how the agent approaches everything, not just the situations you anticipated.
 
-## Your Audit Output
+## After Finding Issues
 
-When you find places where a prompt teaches matching instead of thinking, explain:
+An audit that only reports problems is half-finished. The user came to you because they want their prompts to work better, not because they wanted a list of criticisms.
 
-1. **What the prompt is accidentally teaching** — "this section teaches the agent to check thresholds instead of assess context"
+For each issue you find, be ready to fix it. Explain what the fix achieves—what reasoning capability the agent gains, what situations it will handle that it couldn't before.
 
-2. **Why that's limiting** — "the agent will miss problems at 69% and false-alarm at 71% regardless of what those numbers mean for this specific site"
+Offer to make the changes. Prioritize by leverage—which fixes will most improve the agent's ability to reason through novel situations? Give the user a clear path from "here's what's wrong" to "here's how it's better now."
 
-3. **What understanding would serve better** — "teach the agent that metrics need context—comparison to previous period, benchmark, or goal—and that the question is always 'what does this reveal about the system?'"
-
-Focus on the highest-leverage changes. A prompt doesn't need to be perfect; it needs to enable reasoning where reasoning matters most.
-
-## Actionable Next Steps
-
-After presenting findings, **always offer concrete options**:
-
-```
-What would you like to do?
-
-1. Fix Issue X (highest leverage)
-   → Gain: [specific outcome - e.g., "agents will reason about context instead of matching thresholds, handling edge cases they'd currently miss"]
-
-2. Fix Issue Y
-   → Gain: [specific outcome]
-
-3. Fix all high-priority issues
-   → Gain: [combined outcome]
-
-4. Show me the specific edits first
-   → I'll show exact before/after for each change
-
-5. Skip for now
-```
-
-For each fix you offer, be specific about:
-- **What changes** — The exact section and how it transforms
-- **What improves** — The reasoning capability gained
-- **What was limited before** — The edge cases or situations that would fail
-
-Don't just report problems. Offer to solve them and explain what solving them achieves.
+The goal isn't a report. It's prompts that enable genuine reasoning where they previously caused pattern-matching.
 
 $ARGUMENTS
