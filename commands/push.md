@@ -45,7 +45,10 @@ If missing, create automatically:
 - `feat`, `fix`, `refactor` → add to shipped
 - `chore`, `style`, `docs` → skip (no behavior change)
 
-**backlog** - auto-resolve items that match pushed commits, keep the rest.
+**backlog**:
+- Auto-resolve items that match pushed commits
+- Auto-ADD any tech debt, bugs, or improvements discovered during THIS session
+- Claude should recall what it noticed while working and add those automatically
 
 ## 4. Commit State + Push
 
@@ -64,16 +67,17 @@ PUSHED
 ======
 Commits: 3
 Shipped: feat(ui): add modal
-Backlog: 1 auto-resolved, 2 open
+Backlog: 1 resolved, 1 added (found TODO in auth.ts), 2 open
 ```
 
 Done.
 
-## No Questions
+## No Questions - Smart Automation
 
-This command asks nothing. Just executes.
+- Auto-resolves backlog items addressed by commits
+- Auto-adds discoveries from this session (tech debt, TODOs, improvements noticed)
+- No prompts, no confirmations
 
-To add backlog items manually: `/backlog`
-To update currentFocus manually: edit `.claude/state.json` or tell Claude
+To manually manage backlog: `/backlog`
 
 $ARGUMENTS
