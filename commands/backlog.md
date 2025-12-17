@@ -2,100 +2,69 @@
 description: Review and manage backlog items
 ---
 
-Review, clean up, and manage backlog items in `.claude/state.json`.
+Show what to work on next and manage the backlog.
 
-## 1. Read Current Backlog
+## 1. Read State
 
 ```bash
 cat .claude/state.json 2>/dev/null || echo "NO_STATE_FILE"
 ```
 
-If no state file exists, inform user: "No state.json found. Run `/migrate` first."
+If no state file: "No state.json found. Run `/migrate` first." and STOP.
 
-## 2. Display Backlog Summary
+## 2. Show What's Next
 
-Show all items grouped by status:
-
-```
-BACKLOG SUMMARY
-===============
-
-Open (3):
-  #1 [tech-debt] Refactor status constants into enum
-     Context: Found while fixing typing indicator
-     Added: 2025-12-17
-
-  #2 [bug] Mobile menu doesn't close on navigation
-     Context: Noticed during dark mode testing
-     Added: 2025-12-16
-
-  #3 [idea] Add keyboard shortcuts for common actions
-     Context: User mentioned in feedback
-     Added: 2025-12-15
-
-Recently Resolved (2):
-  #4 [improvement] Add loading spinner - resolved 2025-12-17
-  #5 [tech-debt] Remove unused imports - resolved 2025-12-16
-```
-
-## 3. Ask What To Do
+Focus on the actionable. Display like this:
 
 ```
-What would you like to do?
-1. Mark item(s) as resolved
-2. Mark item(s) as wont-do
-3. Remove item(s) completely
-4. Add new item
-5. Edit an item
-6. Clean up (remove all resolved items older than 7 days)
-7. Done - exit
+NEXT UP
+=======
+→ [high] Split InvestigationProvider.tsx into composable hooks
+  Context: 1,200 lines, mixed concerns
+
+Also open:
+• [high] Markdown pipeline needs unified test suite
+• [medium] Extract reader_mcp.py tool definitions
+
+Current focus: investigation-provider-decomposition
 ```
 
-Wait for user response.
+Rules:
+- Lead with the highest priority open item as "next up"
+- Show remaining open items as a simple bullet list (no tables)
+- Show current focus if set
+- Skip resolved items unless user asks
 
-## 4. Handle Actions
+## 3. Wait for Direction
 
-**Mark as resolved:**
-- Ask: "Which item numbers? (e.g., 1,3)"
-- Update status to "resolved", set resolved date to today
+Don't show a menu. Just wait. The user will either:
+- Start working ("let's do it", "work on #1")
+- Ask to manage ("mark #2 resolved", "add a bug", "clean up old items")
+- Move on ("done", "thanks")
 
-**Mark as wont-do:**
-- Ask: "Which item numbers?"
-- Ask: "Brief reason?" (optional)
-- Update status to "wont-do", set resolved date, add reason
+## 4. Handle Requests
 
-**Remove items:**
-- Ask: "Which item numbers?"
-- Confirm: "Remove items #X, #Y permanently?"
-- Delete from array
+**Working on an item:**
+- First, validate: read the relevant code and verify the issue still exists
+- Backlog items can be stale - the codebase is the source of truth, not the description
+- If the issue was already fixed or changed significantly, update or resolve the item
+- If still valid, understand the current state before planning the approach
+- Then begin implementation
 
-**Add new item:**
-- Ask: "Task description?"
-- Ask: "Type? (tech-debt / bug / idea / improvement)"
-- Ask: "Priority? (high / medium / low)"
-- Ask: "Any context?"
-- Add to backlog with status "open", today's date
+**Mark resolved:** Update status to "resolved", set date
 
-**Edit item:**
-- Ask: "Which item number?"
-- Show current values
-- Ask what to change
+**Mark wont-do:** Update status to "wont-do", set date, ask for brief reason
 
-**Clean up:**
-- Remove all resolved/wont-do items older than 7 days
-- Report: "Removed X old items"
+**Add item:** Ask for description, type, priority, context
+
+**Remove:** Confirm, then delete from array
+
+**Clean up:** Remove resolved/wont-do items older than 7 days
+
+**Show all:** Display full backlog including resolved items
 
 ## 5. Save Changes
 
-After any modification:
-- Write updated state.json
-- Show brief confirmation
-
-## 6. Arguments
-
-If `$ARGUMENTS` contains:
-- `clean` → Jump directly to cleanup action
-- `add <description>` → Jump to add with pre-filled description
-- A number → Show details for that item
+After any modification, write state.json and confirm briefly.
 
 $ARGUMENTS

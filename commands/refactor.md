@@ -20,6 +20,10 @@ The causes are usually structural: responsibilities that should be separate are 
 
 When you find code that resists change, you've found code that's actively slowing down the team.
 
+## Before You Start
+
+Read `.claude/state.json` backlog. Skip issues already being tracked—no point reporting what's already known.
+
 ## How to Investigate
 
 Use whatever analysis tools exist in this project—linters, type checkers, complexity analyzers. But treat their output as evidence, not verdicts.
