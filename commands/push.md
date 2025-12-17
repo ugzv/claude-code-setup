@@ -41,9 +41,7 @@ If missing, create automatically:
 }
 ```
 
-**shipped** - auto-determine from commit messages:
-- `feat`, `fix`, `refactor` → add to shipped
-- `chore`, `style`, `docs` → skip (no behavior change)
+**shipped** - add items that represent meaningful progress. Ask: "Would someone care that this happened?" Features, fixes, and refactors that change behavior count. Routine maintenance (`chore: bump deps`) usually doesn't—but use judgment. A chore that sets up CI/CD is meaningful. A docs change adding a tutorial is meaningful.
 
 **backlog**:
 - Auto-resolve items that match pushed commits (mark as `"status": "resolved"`)

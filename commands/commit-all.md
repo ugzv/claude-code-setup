@@ -17,13 +17,9 @@ If no changes found, inform user and STOP.
 
 Use the exact file paths from the git output above. Do not type paths from memory.
 
-Group files by logical relationship:
+Group files by logical relationship. Each commit should tell one story—someone reading git log should understand what happened, and someone reverting should only undo related changes.
 
-**Grouping criteria:**
-- Same feature/component (files in same directory or related names)
-- Same type of change (all deletions, all config changes, renames)
-- Same scope (auth-related, UI-related, etc.)
-- Directory renames (deleted dir + new dir with same files = 1 commit)
+Group files that serve the same purpose ("these implement feature X", "these fix bug Y"). Split files that serve different purposes, even if nearby in the directory tree. A config change and a bugfix that happened in the same session are two commits, not one.
 
 ## 3. Safety Check (Silent)
 
