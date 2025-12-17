@@ -32,5 +32,6 @@
 - Only USER sets `currentFocus` - never assume or change it
 - Add discoveries to backlog during `/push`, not randomly
 - Keep backlog clean - resolve items when addressed
+- **Never commit on your own** - wait for user to run `/commit`. Exception: post-commit fixes (e.g., hook failures)
 
 ---
