@@ -3,8 +3,8 @@
   "currentFocus": null,
   "lastSession": {
     "date": "2025-12-17",
-    "summary": "Improved command reliability: fixed path hallucination in commit commands, separated concerns between /commit and /push for backlog management, improved /backlog UX with action-focused display, added validation for stale backlog items, added backlog check to /refactor",
-    "commits": ["43ca2d0", "11c0fad"]
+    "summary": "Rewrote /backlog command with philosophy-driven approach: removed hardcoded examples, added problem framing, principles over rules",
+    "commits": ["44678ed"]
   },
   "backlog": [],
   "shipped": [
@@ -17,6 +17,11 @@
       "date": "2025-12-17",
       "type": "fix",
       "summary": "Improve backlog UX and validate stale items before working"
+    },
+    {
+      "date": "2025-12-17",
+      "type": "refactor",
+      "summary": "Philosophy-driven /backlog prompt, remove hardcoded examples"
     }
   ]
 }
