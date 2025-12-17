@@ -2,69 +2,42 @@
 description: Review and manage backlog items
 ---
 
-Show what to work on next and manage the backlog.
+## The Problem You're Solving
 
-## 1. Read State
+Work gets lost between sessions. Ideas noticed while debugging, tech debt spotted while adding features, bugs found while testing—these insights evaporate when the conversation ends.
 
-```bash
-cat .claude/state.json 2>/dev/null || echo "NO_STATE_FILE"
-```
+The backlog is persistent memory. Your job is to surface what's actionable and help the user pick something to work on.
 
-If no state file: "No state.json found. Run `/migrate` first." and STOP.
+## What Matters
 
-## 2. Show What's Next
+**Actionability over completeness.** The user came here to start working, not to review a database. Lead with what they can do right now. High priority items first. Clear enough to act on.
 
-Focus on the actionable. Display like this:
+**Code truth over backlog truth.** Backlog items are hypotheses written in the past. The codebase is reality now. Before working on any item, verify it still applies. Files get refactored, problems get solved incidentally, scope changes. An item that says "split this 1,200 line file" might describe a file that's already been split.
 
-```
-NEXT UP
-=======
-→ [high] Split InvestigationProvider.tsx into composable hooks
-  Context: 1,200 lines, mixed concerns
+**Friction kills momentum.** The path from "show me the backlog" to "I'm working on something" should be one decision. Number the items. User says "2" and you're off. No menus, no confirmations, no "are you sure."
 
-Also open:
-• [high] Markdown pipeline needs unified test suite
-• [medium] Extract reader_mcp.py tool definitions
+## Reading the Backlog
 
-Current focus: investigation-provider-decomposition
-```
+Read `.claude/state.json`. If missing, tell the user to run `/migrate` first.
 
-Rules:
-- Lead with the highest priority open item as "next up"
-- Show remaining open items as a simple bullet list (no tables)
-- Show current focus if set
-- Skip resolved items unless user asks
+Show open items numbered by priority (high → medium → low). Include enough context that the user can pick without asking follow-up questions. Show current focus if set.
 
-## 3. Wait for Direction
+End with a simple prompt—the user should know they can pick a number or ask for something else (add, resolve, clean).
 
-Don't show a menu. Just wait. The user will either:
-- Start working ("let's do it", "work on #1")
-- Ask to manage ("mark #2 resolved", "add a bug", "clean up old items")
-- Move on ("done", "thanks")
+## When the User Picks an Item
 
-## 4. Handle Requests
+This is the critical moment. Don't start implementing the backlog description. Start by validating it.
 
-**Working on an item:**
-- First, validate: read the relevant code and verify the issue still exists
-- Backlog items can be stale - the codebase is the source of truth, not the description
-- If the issue was already fixed or changed significantly, update or resolve the item
-- If still valid, understand the current state before planning the approach
-- Then begin implementation
+Read the relevant code. Does the problem still exist? Is it the same shape as described? Sometimes you'll find it's already fixed. Sometimes it's worse than described. Sometimes the whole context has changed.
 
-**Mark resolved:** Update status to "resolved", set date
+If stale: update or resolve the item, tell the user what you found.
 
-**Mark wont-do:** Update status to "wont-do", set date, ask for brief reason
+If valid: understand current state, then begin work.
 
-**Add item:** Ask for description, type, priority, context
+## Managing the Backlog
 
-**Remove:** Confirm, then delete from array
+Users may want to add items, mark things resolved, or clean up old entries. Handle these naturally—no rigid command syntax required. "mark 2 done", "add a bug about the login timeout", "clean up old stuff" should all work.
 
-**Clean up:** Remove resolved/wont-do items older than 7 days
-
-**Show all:** Display full backlog including resolved items
-
-## 5. Save Changes
-
-After any modification, write state.json and confirm briefly.
+After any change, save state.json and confirm briefly.
 
 $ARGUMENTS
