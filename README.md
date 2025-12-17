@@ -145,15 +145,85 @@ When you have multiple uncommitted changes (forgot to commit, multiple sessions,
 /backlog clean   # Remove old resolved items
 ```
 
+### Code Analysis
+
+```
+/health      # Full project health check
+/refactor    # Find refactoring opportunities
+/unused      # Find dead code and unused deps
+/todo-scan   # Find all TODO/FIXME markers
+```
+
+### Dependency Management
+
+```
+/deps        # Check outdated & vulnerable packages, update to latest
+```
+
+Uses security tools:
+- **npm**: `npm audit`, `npm outdated`
+- **Python**: `pip-audit`, `safety`, `deptry`
+- **Rust**: `cargo audit`, `cargo outdated`
+
+### Quick Context
+
+```
+/context     # Fast project orientation
+```
+
+Loads project state, structure, and recent activity in one command.
+
+### Prompt Engineering
+
+```
+/prompt-audit   # Audit existing prompts for anti-patterns
+/prompt-create  # Guide for writing new agent prompts
+```
+
+For building agentic applications. Based on philosophy-driven prompting principles:
+- **Philosophy over rules** — Teach agents WHY, not just WHAT
+- **Frameworks over examples** — Decision patterns, not lookup tables
+- **Identity through beliefs** — Role prompting through values, not titles
+
 ## Commands Reference
+
+### Setup Commands
 
 | Command | Purpose |
 |---------|---------|
 | `/init-project` | Initialize new project with tracking |
 | `/migrate` | Add tracking to existing project |
+
+### Development Commands
+
+| Command | Purpose |
+|---------|---------|
 | `/commit` | Clean commit (no AI mentions) |
 | `/commit-all` | Commit ALL uncommitted changes, grouped intelligently |
 | `/push` | Push + update state + backlog check |
+
+### Analysis Commands
+
+| Command | Purpose | Tools Used |
+|---------|---------|------------|
+| `/health` | Full project health check | tsc, eslint, pytest, cargo check |
+| `/refactor` | Find code that needs refactoring | eslint, ruff, knip, clippy |
+| `/unused` | Find unused code & dependencies | knip, vulture, depcheck, deptry |
+| `/deps` | Update dependencies safely | npm audit, pip-audit, cargo audit |
+| `/todo-scan` | Find TODO/FIXME/HACK markers | grep + git blame |
+
+### Prompting Commands
+
+| Command | Purpose |
+|---------|---------|
+| `/prompt-audit` | Audit prompts for anti-patterns (examples, lookup tables, procedures) |
+| `/prompt-create` | Guide for writing new agent prompts with philosophy-driven approach |
+
+### Context Commands
+
+| Command | Purpose |
+|---------|---------|
+| `/context` | Quick project orientation |
 | `/backlog` | Review and manage backlog |
 
 ## File Structure
@@ -173,10 +243,19 @@ Global commands (in your home directory):
 ```
 ~/.claude/
 ├── commands/
-│   ├── init-project.md
+│   ├── init-project.md    # Setup
 │   ├── migrate.md
-│   ├── commit.md
+│   ├── commit.md          # Development
+│   ├── commit-all.md
 │   ├── push.md
+│   ├── health.md          # Analysis
+│   ├── refactor.md
+│   ├── unused.md
+│   ├── deps.md
+│   ├── todo-scan.md
+│   ├── prompt-audit.md    # Prompting
+│   ├── prompt-create.md
+│   ├── context.md         # Context
 │   └── backlog.md
 └── templates/
     └── CLAUDE.md
