@@ -2,82 +2,34 @@
 description: Push changes and update project state
 ---
 
-Push to remote and update `.claude/state.json`. Fully automatic - no questions.
+Push to remote and update `.claude/state.json`. Fully automatic—no confirmations needed.
 
-## 1. Check What's Being Pushed
+## Why State Tracking Matters
 
-```bash
-git branch --show-current
-git log @{upstream}..HEAD --oneline 2>/dev/null || git log origin/main..HEAD --oneline
-```
+Claude sessions are ephemeral. When this conversation ends, everything you learned about the project—what you were working on, what you discovered, what you shipped—evaporates. The next session starts from zero.
 
-If nothing to push, inform user and STOP.
+State tracking creates continuity. The next Claude (maybe you after context refresh, maybe a different session) can pick up where work left off instead of asking "what should we do?" when the answer is sitting in half-finished work.
 
-## 2. Read/Create State File
+## What State Captures
 
-```bash
-test -f .claude/state.json && cat .claude/state.json
-```
+**lastSession:** What just happened. The next session's first question is "what did we do last time?"—this answers it. Include the date, a summary of what was accomplished, and which commits were pushed.
 
-If missing, create automatically:
-```json
-{
-  "project": "[folder name]",
-  "currentFocus": [],
-  "lastSession": null,
-  "backlog": [],
-  "shipped": []
-}
-```
+**shipped:** Meaningful completions. Not every commit matters at this level—routine chores don't need celebration. But features, fixes, refactors that change behavior? Those are worth recording. The question is: "Would someone reviewing the project's progress care that this happened?"
 
-## 3. Auto-Update State
+**currentFocus:** What's actively being worked on. This session's focus item should be removed when pushing (the work is done). Other sessions' focus items stay—they're still in progress elsewhere.
 
-**lastSession** - always update:
-```json
-"lastSession": {
-  "date": "[today]",
-  "summary": "[what was accomplished based on commits]",
-  "commits": ["abc1234"]
-}
-```
+**backlog:** Auto-resolve items that match what was just pushed. If a commit clearly addresses a backlog item, mark it resolved. Discoveries were captured during `/commit`, not here.
 
-**shipped** - add items that represent meaningful progress. Ask: "Would someone care that this happened?" Features, fixes, and refactors that change behavior count. Routine maintenance (`chore: bump deps`) usually doesn't—but use judgment. A chore that sets up CI/CD is meaningful. A docs change adding a tutorial is meaningful.
+## The Push Itself
 
-**currentFocus** - remove this session's focus item from the array (match by description of what you were working on). Other sessions' focus items stay.
+Check what's being pushed first. If there's nothing to push, say so and stop.
 
-**backlog**:
-- Auto-resolve items that match pushed commits (mark as `"status": "resolved"`)
-- Discoveries are captured during `/commit`, not here
+If state.json changed, commit that separately before pushing—the state update shouldn't be tangled with feature work.
 
-## 4. Commit State + Push
+Push to remote. If it fails, report the error clearly.
 
-```bash
-git add .claude/state.json
-git diff --cached --quiet || git commit -m "chore: update project state"
-git push
-```
+## After Pushing
 
-If push fails, report error and stop.
-
-## 5. Summary
-
-```
-PUSHED
-======
-Commits: 3
-Shipped: feat(ui): add modal
-Backlog: 1 resolved, 2 open
-```
-
-Done.
-
-## No Questions - Smart Automation
-
-- Auto-resolves backlog items addressed by commits
-- No prompts, no confirmations
-
-Discoveries are captured during `/commit` while context is fresh.
-
-To manually manage backlog: `/backlog`
+Summarize: how many commits, what shipped, backlog status. The user should know what just went out and what the project state looks like now.
 
 $ARGUMENTS

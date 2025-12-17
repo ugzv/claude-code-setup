@@ -2,84 +2,42 @@
 description: Commit all uncommitted changes, grouped intelligently into multiple commits
 ---
 
-Find ALL uncommitted changes and commit them properly. Groups related changes into separate commits. Executes without asking for confirmation.
+Find ALL uncommitted changes and commit them properly, grouping related changes into separate commits. Execute without asking for confirmation.
 
-## 1. Discover All Changes
+## Why Grouping Matters
 
-```bash
-git status --porcelain
-git diff --stat
-```
+A commit should tell one story. Someone reading the history should understand what happened. Someone reverting should only undo related changes—not unravel three unrelated fixes tangled together.
 
-If no changes found, inform user and STOP.
+When multiple changes exist, the question isn't "how do I commit everything" but "what are the logical units here?" A config change and a bugfix that happened in the same session are two stories, not one.
 
-## 2. Analyze and Group Changes
+## What Makes Changes Related
 
-Use the exact file paths from the git output above. Do not type paths from memory.
+Changes belong together when they serve the same purpose. Ask: "If I had to revert this, what would make sense to undo as a unit?"
 
-Group files by logical relationship. Each commit should tell one story—someone reading git log should understand what happened, and someone reverting should only undo related changes.
+Files implementing the same feature belong together. Files fixing the same bug belong together. A refactor that touches many files but serves one goal is one commit.
 
-Group files that serve the same purpose ("these implement feature X", "these fix bug Y"). Split files that serve different purposes, even if nearby in the directory tree. A config change and a bugfix that happened in the same session are two commits, not one.
+Files that happen to be nearby in the directory tree but serve different purposes are separate commits. Proximity isn't relationship.
 
-## 3. Safety Check (Silent)
+## Safety Awareness
 
-Skip these files automatically (don't commit, don't ask):
-- `.env`, `*.pem`, `*.key` (secrets)
-- `node_modules/`, `.next/`, `dist/` (should be gitignored)
+Some files should never be committed regardless of context: secrets (`.env`, `*.pem`, `*.key`), build artifacts that should be gitignored (`node_modules/`, `dist/`, `.next/`).
 
-If sensitive files found, mention in summary at the end.
+If you encounter these, skip them silently and mention in the summary. Don't ask, don't commit, don't stop—just note what was skipped and why.
 
-## 4. Execute Commits
+## Commit Quality
 
-For each logical group, immediately:
+Each commit follows the same standards as `/commit`: conventional format, imperative mood, under 72 characters, no AI fingerprints.
 
-```bash
-git add <files-in-group>
-git commit -m "type(scope): description"
-```
+The goal is a git history that looks like a thoughtful developer made deliberate, atomic commits—because that's what's happening, even if the developer is assisted.
 
-**Commit message rules:**
-- Conventional format: `type(scope): description`
-- Types: feat, fix, refactor, style, docs, test, chore
-- Under 72 characters, imperative mood
-- NO "Co-authored-by", NO AI mentions
+## Handling Problems
 
-**For directory renames:**
-```bash
-git add -A docs/
-git commit -m "refactor(docs): rename claude-agent-sdk to sdk-claude-agent-python"
-```
+If something fails (merge conflict, staging error), skip that file and continue with others. Report what couldn't be committed and why, but don't let one problem stop the whole operation.
 
-## 5. Handle Issues (Don't Stop)
+## After Committing
 
-- Merge conflicts → skip file, note in summary
-- Staging fails → skip file, continue with others
+Report what was committed, how it was grouped, and what was skipped. The user should understand the shape of what just happened to their history.
 
-## 6. Summary
-
-```
-COMMITTED
-=========
-✓ abc1234 refactor(docs): rename sdk directory (62 files)
-✓ def5678 fix(auth): update token validation (2 files)
-
-Skipped:
-  • .env (sensitive)
-  • src/broken.ts (merge conflict)
-
-Use /push when ready.
-```
-
-## What We Do vs Don't Do
-
-**DO:**
-- Analyze and group intelligently
-- Execute commits immediately
-- Report what was done
-
-**DON'T:**
-- Ask "Proceed? y/n"
-- Ask "Is this grouping correct?"
-- Wait for confirmation
+Don't push—that's `/push` when ready.
 
 $ARGUMENTS

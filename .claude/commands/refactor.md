@@ -4,84 +4,78 @@ description: Analyze codebase for refactoring opportunities
 
 You are investigating where this codebase resists change.
 
-## The Problem You're Solving
+## Why Verification Is Everything
 
-Refactoring isn't about cleanliness. It's about the gap between how fast this team *could* ship and how fast they *actually* ship. Every hour spent deciphering confusing code, every bug that hides in complexity, every new developer who takes weeks instead of days to contribute—that's the cost of code that resists change.
+Anyone can look at code and say "this seems complex" or "this probably causes problems." That's worthless. The user doesn't need intuition—they have their own.
 
-Your job is to find where that resistance lives and quantify what it's costing.
+What makes your analysis valuable is **evidence that can't be argued with**. When you say "this file has been modified 47 times in 6 months with 8 bug-fix commits," that's a fact. When you say "this seems to change a lot," that's an opinion dressed as insight.
 
-## What Resistance Looks Like
+The difference between useful analysis and noise is whether your claims are backed by data you actually gathered, or assumptions that felt reasonable.
 
-You're not looking for code that violates style guides. You're looking for code that fights back when someone tries to change it.
+**If you haven't verified something, you don't know it.** And if you don't know it, don't say it.
 
-The symptoms show up in the team's experience: files everyone dreads touching, functions that break in unexpected ways when modified, areas where only one person knows what's happening, modules where simple features take disproportionately long to add.
+## What You're Looking For
 
-The causes are usually structural: responsibilities that should be separate are tangled together, assumptions that should be explicit are buried in logic, complexity that should be isolated has leaked everywhere.
+Code that resists change has a cost: the gap between how fast this team *could* ship and how fast they *actually* ship. Your job is finding where that resistance lives and proving what it's costing.
 
-When you find code that resists change, you've found code that's actively slowing down the team.
+The symptoms are structural: responsibilities tangled together, assumptions buried in logic, complexity that leaked everywhere. But symptoms aren't proof—you need to connect what you see in the code to what's happening in the project's history.
 
-## Before You Start
+High complexity alone means nothing. High complexity in a file that changes constantly and correlates with bugs? That's a problem worth solving.
+
+## Before You Analyze
 
 Read `.claude/state.json`:
-- Check `backlog` - skip issues already being tracked
-- Check `currentFocus` - if another session is working on files you might refactor, warn about potential conflicts before proceeding
+- Skip issues already in `backlog`
+- Warn about conflicts with `currentFocus`
 
-## How to Investigate
+Understand what verification tools exist in this project. Different codebases have different tooling—linters, type checkers, complexity analyzers, dependency graphers. Know what you can measure before you start measuring.
 
-Use whatever analysis tools exist in this project—linters, type checkers, complexity analyzers. But treat their output as evidence, not verdicts.
+If critical tools are missing, that's worth noting. "I can't verify complexity scores because no analyzer is configured" is honest and useful. Guessing is neither.
 
-A linter warning about function length is data. The question is: what does this length *mean*? Is this a god function doing five jobs? A well-organized sequence that happens to be long? A function that grew organically and nobody noticed?
+## The Standard for Claims
 
-The tools tell you *where* to look. Your job is understanding *why* it matters.
+Every factual claim needs evidence from this session:
 
-When you find concerning code, trace its impact:
-- How often does this file change? (High churn + high complexity = pain)
-- What depends on this? (Wide coupling + confusion = cascading bugs)
-- Who understands this? (Sole ownership + complexity = risk)
+- Claims about change frequency → verify against actual commit history
+- Claims about complexity → verify against actual analysis output
+- Claims about coupling → verify against actual import/dependency tracing
+- Claims about bugs → verify against actual commit messages or issue references
 
-## What to Report
+This isn't about following a checklist. It's about understanding that unverified claims actively harm the user by sending them chasing problems that might not exist.
 
-For each opportunity you identify, connect it to outcomes:
+## What Makes a Finding Valuable
 
-**What's the resistance?** Not "this function is 200 lines" but "this function handles authentication, logging, rate limiting, and the actual business logic—you can't change any one of these without understanding all of them."
+**Evidence of resistance:** Not "this looks complex" but what specifically makes it resist change, backed by measurements you took.
 
-**What's it costing?** Be specific. "This file has been modified 47 times in the last 6 months with 12 bugs introduced. Each bug took average 4 hours to diagnose because the logic is interleaved." Or "New developers have reported this module as the hardest to understand. Two attempted fixes were reverted."
+**Evidence of cost:** Not "this causes problems" but how you know it causes problems—commit patterns, bug correlations, things you can point to.
 
-**What would change look like?** Not "refactor this" but "extract rate limiting into middleware, move auth to a decorator, keep this function focused on the business logic. Result: each concern testable in isolation, future changes scoped to one place."
+**A path forward:** Not "refactor this" but what specifically would change, which concerns would separate, what the result would look like.
 
-**What's the investment?** Roughly how much effort to fix, and what does the team get back? "Half-day refactor that would eliminate the recurring auth bugs and cut onboarding time for this module."
+**Honest scope:** How much code is involved, what would need to change, what the user is signing up for.
 
-## Prioritization
+## What to Leave Out
 
-Not everything that could be cleaner should be refactored. Focus on leverage:
+- Ugly but stable code that nobody touches (no cost = no priority)
+- Style preferences without evidence of impact
+- Patterns that "could be better" but aren't causing measurable problems
+- Anything you couldn't verify
 
-Where is the team actually feeling pain? Code that's ugly but stable and rarely touched isn't costing anything. Code that's moderately messy but changes every sprint is costing constantly.
+The goal isn't a comprehensive list of everything imperfect. It's finding the high-leverage changes that would make this codebase resist change less.
 
-What would unblock future work? Sometimes one refactor enables many features. Sometimes a refactor just makes code prettier without enabling anything.
+## When You Can't Verify
 
-What's the blast radius of not acting? Some complexity just accumulates developer annoyance. Some complexity is a bug waiting to happen in production.
+Say so. "I suspect this module has issues based on its size, but I couldn't run complexity analysis. To investigate properly, we'd need [specific tooling]."
 
-The best refactoring targets are high-pain, high-leverage, bounded-effort. Find those.
+This is more valuable than a false claim. It tells the user exactly what's missing and lets them decide whether to address the tooling gap.
 
 ## After Analysis
 
-Don't just report and stop. The user came to you because they want the code to be better, not because they wanted a list of problems.
+Don't just report. The user wants the code to be better.
 
-For the highest-leverage opportunity you found, offer to do it. If it's a bounded refactor—extracting a function, splitting a file, untangling two concerns—offer to execute it now and show what changes.
+For the highest-leverage verified finding, offer to execute it. Register in `currentFocus` before starting work on files.
 
-Before starting any refactor work, register in `currentFocus`:
-```json
-{
-  "description": "refactor: [what you're doing]",
-  "files": ["files", "being", "refactored"],
-  "started": "YYYY-MM-DD"
-}
-```
+For findings that need more investigation, add to backlog with the evidence you gathered—so future sessions don't need to re-verify.
 
-For larger refactors that need more consideration, explain what's involved and offer to start. "This is a half-day effort. Want me to begin with the first piece?"
-
-For things that should wait, add them to `.claude/state.json` backlog with enough context that future-you or future-someone can pick them up without re-investigating.
-
-The goal is code that resists change less than it did before you ran this command.
+The measure of success: code that resists change less, proven by the same evidence you used to find the problems.
 
 $ARGUMENTS

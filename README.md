@@ -1,32 +1,31 @@
 # Claude Code Setup
 
-A tracking system for Claude Code that maintains context across sessions. Based on [Anthropic's best practices for long-running agents](https://www.anthropic.com/engineering/effective-harnesses-for-long-running-agents).
+A tracking system for Claude Code that maintains context across sessions.
 
-## What This Solves
+## The Problem
 
-- **Lost context** - Claude forgets what you were working on between sessions
-- **No history** - No record of what was shipped or discovered
-- **Stale backlogs** - Ideas and tech debt get lost or forgotten
-- **Inconsistent commits** - Commit messages vary in quality
+Claude sessions are ephemeral. When a conversation ends, everything learned about the project—what you were working on, what you discovered, what you shipped—evaporates. The next session starts from zero.
 
-## How It Works
+This creates real costs:
+- Re-explaining context every session
+- Lost discoveries and insights
+- No continuity on multi-session work
+- Inconsistent commit quality
 
-```
-Session start (hook) → state.json loaded → Claude knows context
-        ↓
-      Work
-        ↓
-    /commit          → Clean commits during work
-        ↓
-     /push           → Push + update state + backlog check
-```
+## The Solution
 
-**Single source of truth:** `.claude/state.json`
+State tracking creates continuity. A simple JSON file persists what matters:
 
 ```json
 {
   "project": "my-app",
-  "currentFocus": "Implementing dark mode",
+  "currentFocus": [
+    {
+      "description": "Implementing dark mode",
+      "files": ["src/theme.ts", "src/components/Toggle.tsx"],
+      "started": "2025-12-17"
+    }
+  ],
   "lastSession": {
     "date": "2025-12-17",
     "summary": "Fixed typing indicator bug",
@@ -34,8 +33,7 @@ Session start (hook) → state.json loaded → Claude knows context
   },
   "backlog": [
     {
-      "id": 1,
-      "task": "Refactor status constants",
+      "description": "Refactor status constants",
       "type": "tech-debt",
       "status": "open",
       "context": "Found while fixing indicator",
@@ -48,227 +46,101 @@ Session start (hook) → state.json loaded → Claude knows context
 }
 ```
 
+A SessionStart hook loads this automatically. The next Claude picks up where work left off.
+
+## Philosophy-Driven Commands
+
+These commands follow a core principle: **explain WHY, not just WHAT**.
+
+Claude 4 follows instructions precisely. Show it examples, it matches them. Give it rules, it follows them mechanically. But explain the reasoning behind what you want, and it generalizes intelligently to novel situations.
+
+Every command in this system teaches understanding rather than procedures. The result: commands that handle unexpected situations because they know the goal, not just the steps.
+
 ## Installation
 
-### Quick Install
-
 ```bash
-# Clone this repo
 git clone https://github.com/ugzv/claude-code-setup.git
-
-# Run install script
 cd claude-code-setup
 ./install.sh
 ```
 
-### Manual Install
+Restart Claude Code to pick up the new commands.
 
-```bash
-# Create directories
-mkdir -p ~/.claude/commands ~/.claude/templates
+## Quick Start
 
-# Copy commands
-cp commands/*.md ~/.claude/commands/
-
-# Copy templates
-cp templates/*.md ~/.claude/templates/
-```
-
-### Restart Claude Code
-
-After installing, restart Claude Code to pick up the new commands.
-
-## Usage
-
-### For New Projects
-
+**New project:**
 ```
 /init-project
 ```
 
-Creates:
-- `CLAUDE.md` with session protocol at TOP
-- `.claude/state.json`
-- `.claude/settings.json` with SessionStart hook
-
-### For Existing Projects
-
+**Existing project:**
 ```
 /migrate
 ```
 
-Safely adds tracking to existing projects:
-- Prepends session protocol to existing `CLAUDE.md`
-- Creates backup before modifying
-- Idempotent (safe to run multiple times)
+Both create the tracking system: `CLAUDE.md` with session protocol, `.claude/state.json`, and the SessionStart hook.
 
-### During Work
+## Commands
 
-```
-/commit
-```
+### Development
 
-Clean commits with conventional format:
-- No AI mentions or co-author tags
-- Quality commit messages
-- Only stages files you specify
+| Command | What It Does |
+|---------|--------------|
+| `/commit` | Commit YOUR changes from this session. Clean messages, no AI fingerprints. |
+| `/commit-all` | Commit ALL uncommitted changes, grouped by logical relationship. |
+| `/push` | Push to remote, update state tracking. |
 
-### When Shipping
+### Analysis
 
-```
-/push
-```
+| Command | What It Does |
+|---------|--------------|
+| `/health` | Assess whether the team can ship with confidence. |
+| `/refactor` | Find code that resists change—backed by verified evidence. |
+| `/unused` | Find dead code and unused dependencies. |
+| `/deps` | Check security vulnerabilities and outdated packages. |
+| `/todo-scan` | Surface TODO/FIXME markers and assess which ones matter. |
 
-Push and update tracking:
-- Auto-detects resolved backlog items
-- Updates `lastSession` and `shipped`
-- Prompts for new backlog items
-- Confirms `currentFocus` is still accurate
+### Context
 
-### Batch Commit Everything
+| Command | What It Does |
+|---------|--------------|
+| `/context` | Quick project orientation—what is this, where are we, what's next. |
+| `/backlog` | Review and manage backlog items. |
+| `/commands` | List available project commands. |
 
-```
-/commit-all
-```
+### Prompting
 
-When you have multiple uncommitted changes (forgot to commit, multiple sessions, manual cleanup):
-- Finds ALL uncommitted changes
-- Groups related files together
-- Creates separate commits for unrelated changes
-- Shows plan and asks for confirmation
-- Warns about sensitive files (.env, keys)
+| Command | What It Does |
+|---------|--------------|
+| `/prompt-audit` | Find where prompts accidentally teach pattern-matching instead of reasoning. |
+| `/prompt-create` | Guide for writing prompts that enable genuine reasoning. |
 
-### Managing Backlog
+### Setup
 
-```
-/backlog         # Review all items
-/backlog clean   # Remove old resolved items
-```
+| Command | What It Does |
+|---------|--------------|
+| `/init-project` | Initialize new project with tracking. |
+| `/migrate` | Add tracking to existing project (non-destructive). |
 
-### Code Analysis
+## How It Works
 
 ```
-/health      # Full project health check
-/refactor    # Find refactoring opportunities
-/unused      # Find dead code and unused deps
-/todo-scan   # Find all TODO/FIXME markers
+Session start → Hook loads state.json → Claude has context
+                        ↓
+                      Work
+                        ↓
+                    /commit → Clean commits, capture discoveries
+                        ↓
+                     /push → Push + update state + resolve backlog items
 ```
 
-### Dependency Management
+### The Hook
 
-```
-/deps        # Check outdated & vulnerable packages, update to latest
-```
-
-Uses security tools:
-- **npm**: `npm audit`, `npm outdated`
-- **Python**: `pip-audit`, `safety`, `deptry`
-- **Rust**: `cargo audit`, `cargo outdated`
-
-### Quick Context
-
-```
-/context     # Fast project orientation
-```
-
-Loads project state, structure, and recent activity in one command.
-
-### Prompt Engineering
-
-```
-/prompt-audit   # Audit existing prompts for anti-patterns
-/prompt-create  # Guide for writing new agent prompts
-```
-
-For building agentic applications. Based on philosophy-driven prompting principles:
-- **Philosophy over rules** — Teach agents WHY, not just WHAT
-- **Frameworks over examples** — Decision patterns, not lookup tables
-- **Identity through beliefs** — Role prompting through values, not titles
-
-## Commands Reference
-
-### Setup Commands
-
-| Command | Purpose |
-|---------|---------|
-| `/init-project` | Initialize new project with tracking |
-| `/migrate` | Add tracking to existing project |
-
-### Development Commands
-
-| Command | Purpose |
-|---------|---------|
-| `/commit` | Clean commit (no AI mentions) |
-| `/commit-all` | Commit ALL uncommitted changes, grouped intelligently |
-| `/push` | Push + update state + backlog check |
-
-### Analysis Commands
-
-| Command | Purpose | Tools Used |
-|---------|---------|------------|
-| `/health` | Full project health check | tsc, eslint, pytest, cargo check |
-| `/refactor` | Find code that needs refactoring | eslint, ruff, knip, clippy |
-| `/unused` | Find unused code & dependencies | knip, vulture, depcheck, deptry |
-| `/deps` | Update dependencies safely | npm audit, pip-audit, cargo audit |
-| `/todo-scan` | Find TODO/FIXME/HACK markers | grep + git blame |
-
-### Prompting Commands
-
-| Command | Purpose |
-|---------|---------|
-| `/prompt-audit` | Audit prompts for anti-patterns (examples, lookup tables, procedures) |
-| `/prompt-create` | Guide for writing new agent prompts with philosophy-driven approach |
-
-### Context Commands
-
-| Command | Purpose |
-|---------|---------|
-| `/context` | Quick project orientation |
-| `/backlog` | Review and manage backlog |
-
-## File Structure
-
-After setup, your project will have:
-
-```
-your-project/
-├── CLAUDE.md                 # Session protocol at TOP
-└── .claude/
-    ├── state.json            # Single source of truth
-    └── settings.json         # SessionStart hook
-```
-
-Global commands (in your home directory):
-
-```
-~/.claude/
-├── commands/
-│   ├── init-project.md    # Setup
-│   ├── migrate.md
-│   ├── commit.md          # Development
-│   ├── commit-all.md
-│   ├── push.md
-│   ├── health.md          # Analysis
-│   ├── refactor.md
-│   ├── unused.md
-│   ├── deps.md
-│   ├── todo-scan.md
-│   ├── prompt-audit.md    # Prompting
-│   ├── prompt-create.md
-│   ├── context.md         # Context
-│   └── backlog.md
-└── templates/
-    └── CLAUDE.md
-```
-
-## How the Hook Works
-
-The `SessionStart` hook in `.claude/settings.json` automatically reads `state.json` when:
-
-- Claude Code starts
-- You use `/resume`
-- You use `/clear`
-- Context compaction runs
+`.claude/settings.json` contains a SessionStart hook that fires on:
+- Claude Code startup
+- `/resume`
+- `/clear`
+- Context compaction
 
 ```json
 {
@@ -287,44 +159,58 @@ The `SessionStart` hook in `.claude/settings.json` automatically reads `state.js
 }
 ```
 
-## Ownership Rules
+### Parallel Sessions
 
-| Field | Who Sets It | When |
-|-------|-------------|------|
-| `currentFocus` | User only | User says "let's work on X" |
-| `lastSession` | Claude | On `/push` |
-| `backlog` | Claude adds, User removes | On `/push` |
-| `shipped` | Claude | On `/push` |
+`currentFocus` is an array, supporting multiple Claude sessions working on different parts of the same project. Each session registers what files it's touching, enabling conflict detection.
 
-## What Gets Logged to Shipped
+## File Structure
 
-Only changes that affect behavior get logged:
-
-| Type | Logged? | Reason |
-|------|---------|--------|
-| `feat` | Yes | New functionality |
-| `fix` | Yes | Bug fix |
-| `refactor` | Yes | Could break things, useful for debugging |
-| `style` | No | Just formatting, no behavior change |
-| `chore` | No | Cleanup, delete unused files |
-| `docs` | No | Comments, README updates |
-
-**Rule of thumb:** Does this change affect how the code behaves? If yes → log it. If no → skip.
-
-## Backlog Lifecycle
+After setup:
 
 ```
-Discovered during work
-        ↓
-      open
-        ↓
-   ┌────┴────┐
-   ↓         ↓
-resolved   wont-do
-(auto on    (manual via
- /push)     /backlog)
+your-project/
+├── CLAUDE.md              # Session protocol at top
+└── .claude/
+    ├── state.json         # Tracking data
+    └── settings.json      # SessionStart hook
 ```
+
+Global commands:
+
+```
+~/.claude/
+└── commands/
+    ├── commit.md
+    ├── commit-all.md
+    ├── push.md
+    ├── health.md
+    ├── refactor.md
+    ├── unused.md
+    ├── deps.md
+    ├── todo-scan.md
+    ├── context.md
+    ├── backlog.md
+    ├── commands.md
+    ├── prompt-audit.md
+    ├── prompt-create.md
+    ├── init-project.md
+    └── migrate.md
+```
+
+## Design Principles
+
+**State as continuity.** Sessions end, but work continues. The state file bridges the gap.
+
+**Verification over speculation.** Analysis commands like `/refactor` require evidence. "This file changes frequently" needs git history to back it up. Claims without data are worthless.
+
+**Philosophy over procedures.** Commands explain WHY something matters, not step-by-step HOW. Claude reasons about the goal and figures out the approach for each situation.
+
+**Clean commits as communication.** Commits are for humans reading history months later. Atomic changes, clear messages, no AI fingerprints.
+
+**Backlog as persistent memory.** Discoveries made while working get captured before context evaporates. Future sessions can act on them.
 
 ## Credits
 
 Inspired by [Effective harnesses for long-running agents](https://www.anthropic.com/engineering/effective-harnesses-for-long-running-agents) from Anthropic Engineering.
+
+Prompt philosophy based on [Claude 4 best practices](https://docs.anthropic.com/en/docs/build-with-claude/prompt-engineering/claude-4-best-practices).
