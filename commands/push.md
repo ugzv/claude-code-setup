@@ -46,9 +46,8 @@ If missing, create automatically:
 - `chore`, `style`, `docs` → skip (no behavior change)
 
 **backlog**:
-- Auto-resolve items that match pushed commits
-- Auto-ADD any tech debt, bugs, or improvements discovered during THIS session
-- Claude should recall what it noticed while working and add those automatically
+- Auto-resolve items that match pushed commits (mark as `"status": "resolved"`)
+- Discoveries are captured during `/commit`, not here
 
 ## 4. Commit State + Push
 
@@ -67,7 +66,7 @@ PUSHED
 ======
 Commits: 3
 Shipped: feat(ui): add modal
-Backlog: 1 resolved, 1 added (found TODO in auth.ts), 2 open
+Backlog: 1 resolved, 2 open
 ```
 
 Done.
@@ -75,8 +74,9 @@ Done.
 ## No Questions - Smart Automation
 
 - Auto-resolves backlog items addressed by commits
-- Auto-adds discoveries from this session (tech debt, TODOs, improvements noticed)
 - No prompts, no confirmations
+
+Discoveries are captured during `/commit` while context is fresh.
 
 To manually manage backlog: `/backlog`
 

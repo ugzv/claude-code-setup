@@ -6,7 +6,7 @@ Commit the code changes that YOU (this Claude Code session) made, and capture an
 
 ## 1. Identify Your Changes
 
-Recall which files YOU modified during this conversation. Run `git status` and `git diff` to see changes.
+Run `git status` and `git diff --name-only` to get the exact file paths. Use these paths directly when staging—do not type paths from memory.
 
 ## 2. Stage and Commit
 

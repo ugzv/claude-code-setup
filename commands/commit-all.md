@@ -15,7 +15,9 @@ If no changes found, inform user and STOP.
 
 ## 2. Analyze and Group Changes
 
-List all changed files and group by logical relationship:
+Use the exact file paths from the git output above. Do not type paths from memory.
+
+Group files by logical relationship:
 
 **Grouping criteria:**
 - Same feature/component (files in same directory or related names)
