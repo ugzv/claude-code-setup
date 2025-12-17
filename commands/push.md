@@ -88,29 +88,31 @@ Update `.claude/state.json`:
 
 **shipped** (prepend, keep last 10):
 
-**ONLY add to shipped if it's a meaningful change:**
-- ✓ `feat` - new features (always add)
-- ✓ `fix` - bug fixes (always add)
-- ✓ `refactor` - only if significant/breaking
-- ✗ `chore` - skip (cleanup, delete unused files)
-- ✗ `style` - skip (formatting)
-- ✗ `docs` - skip unless significant
+**Log changes that affect behavior:**
+- ✓ `feat` - new features (always log)
+- ✓ `fix` - bug fixes (always log)
+- ✓ `refactor` - code restructuring (log - could break things, useful for debugging)
 
-Ask user: "Is this a meaningful change to log? (feat/fix = yes, chore/cleanup = no)"
+**Skip changes with no behavior impact:**
+- ✗ `style` - formatting, whitespace
+- ✗ `chore` - delete unused files, update gitignore, cleanup
+- ✗ `docs` - comments, README updates
 
-If yes:
+Ask user: "What type of change? (feat/fix/refactor = log, chore/style = skip)"
+
+If feat/fix/refactor:
 ```json
 "shipped": [
   {
     "date": "[today]",
-    "type": "feat|fix",
-    "summary": "[one-line user-facing summary]",
+    "type": "feat|fix|refactor",
+    "summary": "[one-line summary - what changed and why it matters]",
     "commits": ["abc1234"]
   }
 ]
 ```
 
-If no (chore/cleanup), skip adding to shipped.
+If chore/style/docs, skip adding to shipped (still gets committed, just not logged).
 
 **backlog:**
 - Mark confirmed items as resolved with today's date
