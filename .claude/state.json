@@ -3,8 +3,8 @@
   "currentFocus": [],
   "lastSession": {
     "date": "2025-12-17",
-    "summary": "Added /commands to list project commands",
-    "commits": ["9907b48"]
+    "summary": "Refactored /refactor, /commit, /commit-all, /push to philosophy-driven prompts; updated README",
+    "commits": ["2cac0ed"]
   },
   "backlog": [],
   "shipped": [
@@ -32,6 +32,11 @@
       "date": "2025-12-17",
       "type": "feat",
       "summary": "Add /commands to list project commands"
+    },
+    {
+      "date": "2025-12-17",
+      "type": "refactor",
+      "summary": "Philosophy-driven prompts for /refactor, /commit, /commit-all, /push"
     }
   ]
 }
