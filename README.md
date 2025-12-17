@@ -217,6 +217,21 @@ The `SessionStart` hook in `.claude/settings.json` automatically reads `state.js
 | `backlog` | Claude adds, User removes | On `/push` |
 | `shipped` | Claude | On `/push` |
 
+## What Gets Logged to Shipped
+
+Only changes that affect behavior get logged:
+
+| Type | Logged? | Reason |
+|------|---------|--------|
+| `feat` | Yes | New functionality |
+| `fix` | Yes | Bug fix |
+| `refactor` | Yes | Could break things, useful for debugging |
+| `style` | No | Just formatting, no behavior change |
+| `chore` | No | Cleanup, delete unused files |
+| `docs` | No | Comments, README updates |
+
+**Rule of thumb:** Does this change affect how the code behaves? If yes → log it. If no → skip.
+
 ## Backlog Lifecycle
 
 ```
