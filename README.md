@@ -82,6 +82,8 @@ Creates the tracking system: `CLAUDE.md` with session protocol, `.claude/state.j
 
 | Command | What It Does |
 |---------|--------------|
+| `/fix` | Auto-fix all linting, formatting, unused imports. |
+| `/test` | Run tests intelligently based on what's available. |
 | `/commit` | Commit YOUR changes from this session. Clean messages, no AI fingerprints. |
 | `/commit-all` | Commit ALL uncommitted changes, grouped by logical relationship. |
 | `/push` | Push to remote, update state tracking. |
@@ -106,8 +108,7 @@ Creates the tracking system: `CLAUDE.md` with session protocol, `.claude/state.j
 
 | Command | What It Does |
 |---------|--------------|
-| `/prompt-audit` | Find where prompts accidentally teach pattern-matching instead of reasoning. |
-| `/prompt-create` | Guide for writing prompts that enable genuine reasoning. |
+| `/prompt` | Load prompting philosophy, apply to any prompt work (create, audit, improve). |
 
 ### Setup
 
@@ -173,6 +174,8 @@ Global commands:
 ```
 ~/.claude/
 └── commands/
+    ├── fix.md
+    ├── test.md
     ├── commit.md
     ├── commit-all.md
     ├── push.md
@@ -182,8 +185,7 @@ Global commands:
     ├── context.md
     ├── backlog.md
     ├── commands.md
-    ├── prompt-audit.md
-    ├── prompt-create.md
+    ├── prompt.md
     └── migrate.md
 ```
 
