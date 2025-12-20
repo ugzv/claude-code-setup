@@ -53,6 +53,23 @@ This isn't about following a checklist. It's about understanding that unverified
 
 **Honest scope:** How much code is involved, what would need to change, what the user is signing up for.
 
+## Dead Code and Unused Dependencies
+
+Every line of code that exists but doesn't run has hidden costs: developers read it trying to understand the system, it gets updated during refactors, it ships as bundle weight, it sits in dependencies with potential vulnerabilities.
+
+**Use the right tools.** Check what's installed, and offer to add what's missing:
+- **JS/TS:** `npx knip` (best all-in-one), or `depcheck`, `ts-prune`
+- **Python:** `vulture`, `ruff check --select F401,F841` (unused imports/vars)
+
+If the user declines installation, fall back to manual methods: grep for exports then grep for their imports, check package.json deps against actual imports, look for files with no inbound imports.
+
+**Before recommending removal, verify:**
+- Dynamic imports make static analysis blind—check for `import()` with variables
+- Public APIs expose code for external consumers that nothing internal imports
+- Test utilities only run in test environments
+
+For high-confidence removals, offer to execute. For uncertain cases, recommend investigation first.
+
 ## What to Leave Out
 
 - Ugly but stable code that nobody touches (no cost = no priority)

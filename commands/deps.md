@@ -18,7 +18,12 @@ A known vulnerability in a dependency is an open door. It doesn't matter if the 
 
 Check for vulnerabilities first. If you find HIGH or CRITICAL severity issues, those get fixed before anything else gets discussed. Not flagged for later—fixed now, or a very good reason documented for why not.
 
-This isn't about best practices. It's about not leaving doors open.
+**Use the right tools:**
+- **JS/TS:** `npm audit` (built-in), `pnpm audit`, or `yarn audit`
+- **Python:** `pip-audit` (install with `pip install pip-audit`), or `safety check`
+- **Go:** `govulncheck` (install with `go install golang.org/x/vuln/cmd/govulncheck@latest`)
+
+If security tooling isn't installed, offer to add it. This isn't optional—every project should have a way to check for known vulnerabilities.
 
 ## Staleness Is Contextual
 
@@ -35,6 +40,10 @@ A package being outdated isn't automatically a problem. The question is: what's 
 But also: a stable, working package with no security issues that you're two minor versions behind on? That might be fine. The cost of upgrading is real too.
 
 Assess what waiting is actually costing, not just that a newer version exists.
+
+**Check for outdated packages:**
+- **JS/TS:** `npm outdated`, `pnpm outdated`, or `yarn outdated`
+- **Python:** `pip list --outdated`, or `uv pip list --outdated`
 
 ## Unused Dependencies Are Pure Risk
 
