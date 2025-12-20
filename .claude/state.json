@@ -2,41 +2,36 @@
   "project": "claude-code-setup",
   "currentFocus": [],
   "lastSession": {
-    "date": "2025-12-17",
-    "summary": "Refactored /refactor, /commit, /commit-all, /push to philosophy-driven prompts; updated README",
-    "commits": ["2cac0ed"]
+    "date": "2025-12-20",
+    "summary": "Consolidated commands (15→13), added /fix and /test, rewrote /prompt with internal philosophy guide",
+    "commits": ["e0a8016", "368cf09", "7ef84c0", "bfe8273", "7fa2091"]
   },
   "backlog": [],
   "shipped": [
     {
-      "date": "2025-12-17",
-      "type": "fix",
-      "summary": "Use git output paths instead of memory in commit commands"
-    },
-    {
-      "date": "2025-12-17",
-      "type": "fix",
-      "summary": "Improve backlog UX and validate stale items before working"
-    },
-    {
-      "date": "2025-12-17",
-      "type": "refactor",
-      "summary": "Philosophy-driven /backlog prompt, remove hardcoded examples"
-    },
-    {
-      "date": "2025-12-17",
-      "type": "refactor",
-      "summary": "Replace lookup tables with principle-based guidance in /push and /commit-all"
-    },
-    {
-      "date": "2025-12-17",
+      "date": "2025-12-20",
       "type": "feat",
-      "summary": "Add /commands to list project commands"
+      "summary": "Add /fix (auto-fix linting, formatting, unused imports) and /test (run tests intelligently)"
+    },
+    {
+      "date": "2025-12-20",
+      "type": "refactor",
+      "summary": "Consolidate commands: /init-project→/migrate, /todo-scan→/health, /unused→/refactor, /prompt-audit+/prompt-create→/prompt"
+    },
+    {
+      "date": "2025-12-20",
+      "type": "refactor",
+      "summary": "Rewrite /prompt with internal prompting philosophy (principles over rules, example trap, quick reference checklists)"
     },
     {
       "date": "2025-12-17",
       "type": "refactor",
       "summary": "Philosophy-driven prompts for /refactor, /commit, /commit-all, /push"
+    },
+    {
+      "date": "2025-12-17",
+      "type": "feat",
+      "summary": "Add /commands to list project commands"
     }
   ]
 }
