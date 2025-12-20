@@ -1,3 +1,24 @@
+# ABOUT THIS PROJECT
+
+This is a **meta-project**: we're building a Claude Code command and tracking system here that gets installed and used in OTHER projects.
+
+**When working here, you are:**
+- Building/improving commands that other Claude sessions will use
+- Testing and refining the tracking system itself
+- NOT a user of the system—you're the developer of it
+
+**The commands in `.claude/commands/` are:**
+- The SOURCE files that get copied to `~/.claude/commands/` via `install.sh`
+- Meant to help developers in their actual coding projects
+- Designed with philosophy-driven prompts (explain WHY, not just WHAT)
+
+**When evaluating commands, ask:**
+- "Would this help a developer during a real coding session?"
+- "Is this command used frequently enough to justify existing?"
+- "Could this be consolidated with another command?"
+
+---
+
 # SESSION PROTOCOL
 
 > **IMPORTANT: Follow this protocol at the start of EVERY conversation and after /clear**

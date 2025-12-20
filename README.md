@@ -1,6 +1,8 @@
 # Claude Code Setup
 
-A tracking system for Claude Code that maintains context across sessions.
+A tracking system and command library for Claude Code that maintains context across sessions.
+
+> **Note:** This is the **source repository** where the system is developed. After installation, these commands become available in all your projects to make Claude coding sessions more productive.
 
 ## The Problem
 
@@ -208,6 +210,28 @@ Global commands:
 **Clean commits as communication.** Commits are for humans reading history months later. Atomic changes, clear messages, no AI fingerprints.
 
 **Backlog as persistent memory.** Discoveries made while working get captured before context evaporates. Future sessions can act on them.
+
+## Development
+
+This repo is the source for the command system. To work on it:
+
+```bash
+cd claude-code-setup
+```
+
+**Key files:**
+- `.claude/commands/*.md` - Command source files (copied to `~/.claude/commands/` on install)
+- `install.sh` - Installation script
+- `CLAUDE.md` - Instructions for Claude when working on THIS project
+
+**When adding/modifying commands, consider:**
+- Would this help during actual coding sessions?
+- Is it used frequently enough to justify existing?
+- Could it be consolidated with another command?
+- Does it explain WHY (philosophy) not just WHAT (procedures)?
+
+**Testing changes:**
+Run `./install.sh` to copy updated commands to `~/.claude/commands/`, then test in another project.
 
 ## Credits
 
