@@ -1,8 +1,8 @@
 ---
-description: Add Claude tracking system to existing project
+description: Set up Claude tracking system (new or existing projects)
 ---
 
-Migrate an existing project to the Claude tracking system. NON-DESTRUCTIVE and IDEMPOTENT.
+Set up the Claude tracking system. Works for both new and existing projects. NON-DESTRUCTIVE and IDEMPOTENT—safe to run multiple times.
 
 ## 1. Audit Existing Setup
 
@@ -14,13 +14,13 @@ test -f .claude/state.json && echo "STATE_EXISTS" || echo "NO_STATE"
 
 Report findings to user.
 
-## 2. Show Migration Plan
+## 2. Show Setup Plan
 
 BEFORE making changes, show:
 
 ```
-MIGRATION PLAN
-==============
+SETUP PLAN
+==========
 CLAUDE.md:
   - [EXISTS/MISSING]
   - Has Session Protocol? [YES=skip / NO=prepend at TOP]
@@ -192,8 +192,8 @@ echo ".claude/*.backup" >> .gitignore
 ## 10. Summary
 
 ```
-MIGRATION COMPLETE
-==================
+SETUP COMPLETE
+==============
 Created:
   ✓ .claude/state.json
   ✓ .claude/settings.json (with hooks)
@@ -222,7 +222,7 @@ Ask: "Commit tracking files now?"
 If yes:
 ```bash
 git add CLAUDE.md .claude/state.json .claude/settings.json
-git commit -m "chore: add Claude tracking system"
+git commit -m "chore: set up Claude tracking system"
 ```
 
 Do NOT add .backup files.

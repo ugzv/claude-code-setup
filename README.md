@@ -70,17 +70,11 @@ Restart Claude Code to pick up the new commands.
 
 ## Quick Start
 
-**New project:**
-```
-/init-project
-```
-
-**Existing project:**
 ```
 /migrate
 ```
 
-Both create the tracking system: `CLAUDE.md` with session protocol, `.claude/state.json`, and the SessionStart hook.
+Creates the tracking system: `CLAUDE.md` with session protocol, `.claude/state.json`, and the SessionStart hook. Safe to run on new or existing projects.
 
 ## Commands
 
@@ -96,11 +90,9 @@ Both create the tracking system: `CLAUDE.md` with session protocol, `.claude/sta
 
 | Command | What It Does |
 |---------|--------------|
-| `/health` | Assess whether the team can ship with confidence. |
-| `/refactor` | Find code that resists change—backed by verified evidence. |
-| `/unused` | Find dead code and unused dependencies. |
+| `/health` | Assess whether the team can ship with confidence. Includes TODO/FIXME scanning. |
+| `/refactor` | Find code that resists change. Includes dead code and unused dependency detection. |
 | `/deps` | Check security vulnerabilities and outdated packages. |
-| `/todo-scan` | Surface TODO/FIXME markers and assess which ones matter. |
 
 ### Context
 
@@ -121,8 +113,7 @@ Both create the tracking system: `CLAUDE.md` with session protocol, `.claude/sta
 
 | Command | What It Does |
 |---------|--------------|
-| `/init-project` | Initialize new project with tracking. |
-| `/migrate` | Add tracking to existing project (non-destructive). |
+| `/migrate` | Set up tracking system (works for new or existing projects). |
 
 ## How It Works
 
@@ -187,15 +178,12 @@ Global commands:
     ├── push.md
     ├── health.md
     ├── refactor.md
-    ├── unused.md
     ├── deps.md
-    ├── todo-scan.md
     ├── context.md
     ├── backlog.md
     ├── commands.md
     ├── prompt-audit.md
     ├── prompt-create.md
-    ├── init-project.md
     └── migrate.md
 ```
 

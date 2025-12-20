@@ -42,9 +42,15 @@ Check what's vulnerable. Check what's outdated. But interpret what you find.
 
 TODOs, FIXMEs, HACKs—these are the team's notes to their future selves. They represent known gaps between "what we shipped" and "what we wanted."
 
-A codebase with many markers isn't necessarily unhealthy. It might mean the team is disciplined about acknowledging debt. A codebase with zero markers in 50,000 lines is suspicious—either the team is superhuman or they're not noticing problems.
+Search for TODO, FIXME, HACK, XXX, BUG markers. Use git blame to date them—a two-week-old TODO might be active work, a two-year-old FIXME is a broken promise.
 
-Look at the markers that exist. Are they fresh or ancient? Are they in critical paths or edge cases? Does anyone seem to be addressing them or are they just accumulating?
+**What matters:**
+- **Markers in critical paths** (auth, payments, data integrity) represent real risk
+- **Ancient markers** (6+ months) need conscious decisions: fix, document why blocked, or remove
+- **Clusters** in one area suggest that module was rushed or needs focused cleanup
+- **Context decay**—cryptic markers like "TODO: fix the thing" that nobody understands anymore
+
+A codebase with zero markers in 50,000 lines is suspicious—either superhuman or not noticing problems. Many markers might mean the team acknowledges debt. The question is: are they being addressed or just accumulating?
 
 ## What to Report
 
@@ -63,6 +69,8 @@ Don't just diagnose and stop. The user wants to ship with more confidence, not j
 For the highest-leverage improvement you identified, offer to do it. If it's running an audit fix, updating a vulnerable package, or adding a critical test—offer to execute it now.
 
 For improvements that need more work, explain what's involved and offer to start. "The payment module needs tests. Want me to add coverage for the checkout flow?"
+
+For stale TODO markers that no longer make sense—offer to remove them. For markers in critical paths—offer to investigate what fixing would involve. For markers worth tracking—offer to add to backlog.
 
 For things that are real but not urgent, note them so they don't get forgotten. Add to backlog if they warrant tracking.
 
