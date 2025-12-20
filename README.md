@@ -100,7 +100,7 @@ Creates the tracking system: `CLAUDE.md` with session protocol, `.claude/state.j
 
 | Command | What It Does |
 |---------|--------------|
-| `/context` | Quick project orientation—what is this, where are we, what's next. |
+| `/orient` | Quick project orientation—what is this, where are we, what's next. |
 | `/backlog` | Review and manage backlog items. |
 | `/commands` | List available project commands. |
 
@@ -182,7 +182,7 @@ Global commands:
     ├── health.md
     ├── refactor.md
     ├── deps.md
-    ├── context.md
+    ├── orient.md
     ├── backlog.md
     ├── commands.md
     ├── prompt.md

@@ -1,5 +1,5 @@
 ---
-description: Load project context quickly
+description: Get oriented in the project quickly
 ---
 
 You are getting oriented so you can contribute immediately.
