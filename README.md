@@ -78,6 +78,12 @@ Creates the tracking system: `CLAUDE.md` with session protocol, `.claude/state.j
 
 ## Commands
 
+### Planning
+
+| Command | What It Does |
+|---------|--------------|
+| `/plan` | Spec-driven planning before complex tasks. Explores codebase, asks batched questions with options, proposes approach for approval. |
+
 ### Development
 
 | Command | What It Does |
@@ -100,7 +106,6 @@ Creates the tracking system: `CLAUDE.md` with session protocol, `.claude/state.j
 
 | Command | What It Does |
 |---------|--------------|
-| `/orient` | Quick project orientation—what is this, where are we, what's next. |
 | `/backlog` | Review and manage backlog items. |
 | `/commands` | List available project commands. |
 
@@ -120,6 +125,8 @@ Creates the tracking system: `CLAUDE.md` with session protocol, `.claude/state.j
 
 ```
 Session start → Hook loads state.json → Claude has context
+                        ↓
+              /plan (if complex task)
                         ↓
                       Work
                         ↓
@@ -174,6 +181,7 @@ Global commands:
 ```
 ~/.claude/
 └── commands/
+    ├── plan.md
     ├── fix.md
     ├── test.md
     ├── commit.md
@@ -182,7 +190,6 @@ Global commands:
     ├── refactor.md
     ├── agent.md
     ├── mcp.md
-    ├── orient.md
     ├── backlog.md
     ├── commands.md
     ├── prompt.md
