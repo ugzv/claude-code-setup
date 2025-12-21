@@ -3,11 +3,21 @@
   "currentFocus": [],
   "lastSession": {
     "date": "2025-12-21",
-    "summary": "Consolidated /commit-all→/commit --all and /deps→/health. Added /agent (Agent SDK audits) and /mcp (MCP server validation). 13 commands total.",
-    "commits": ["9ae85e3", "83644b1", "a56e08c"]
+    "summary": "Added /plan for spec-driven planning (inspired by claude-codepro). Removed /orient (redundant with session protocol). 13 commands.",
+    "commits": ["e837368", "6268037", "a5f7dc8"]
   },
   "backlog": [],
   "shipped": [
+    {
+      "date": "2025-12-21",
+      "type": "feat",
+      "summary": "Add /plan for spec-driven planning before complex tasks"
+    },
+    {
+      "date": "2025-12-21",
+      "type": "refactor",
+      "summary": "Remove /orient, redundant with session protocol"
+    },
     {
       "date": "2025-12-21",
       "type": "feat",
