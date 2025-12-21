@@ -63,6 +63,43 @@ Every line of code that exists but doesn't run has hidden costs: developers read
 
 If the user declines installation, fall back to manual methods: grep for exports then grep for their imports, check package.json deps against actual imports, look for files with no inbound imports.
 
+### Configure Tools Before Running
+
+An unconfigured analysis tool will flood you with false positives. **Knip** on an MCP server flags every tool handler as "unused" because it can't see the MCP runtime. That's noise, not signal.
+
+**Before running knip**, check if `knip.json` exists. If not, create one tuned for the project:
+
+For **MCP servers** (TypeScript):
+```json
+{
+  "$schema": "https://unpkg.com/knip@latest/schema.json",
+  "entry": ["src/index.ts"],
+  "project": ["src/**/*.ts"],
+  "ignore": ["dist/**", "build/**"],
+  "ignoreDependencies": ["@modelcontextprotocol/sdk"]
+}
+```
+
+For **standard TypeScript projects**:
+```json
+{
+  "$schema": "https://unpkg.com/knip@latest/schema.json",
+  "entry": ["src/index.ts", "src/main.ts"],
+  "project": ["src/**/*.ts"],
+  "ignore": ["**/*.test.ts", "**/*.spec.ts", "dist/**"]
+}
+```
+
+For **Python with vulture**, create `.vulture_whitelist.py` for false positives:
+```python
+# Vulture whitelist - intentionally unused code
+_.on_startup  # FastAPI/FastMCP lifecycle hooks
+_.on_shutdown
+_.tool  # MCP tool decorators register handlers dynamically
+```
+
+**The principle:** A well-configured analysis that finds 3 real issues beats an unconfigured analysis that finds 50 false positives. Configure first, then run.
+
 **Before recommending removal, verify:**
 - Dynamic imports make static analysis blind—check for `import()` with variables
 - Public APIs expose code for external consumers that nothing internal imports
