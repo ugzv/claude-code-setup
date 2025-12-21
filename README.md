@@ -84,17 +84,17 @@ Creates the tracking system: `CLAUDE.md` with session protocol, `.claude/state.j
 |---------|--------------|
 | `/fix` | Auto-fix all linting, formatting, unused imports. |
 | `/test` | Run tests intelligently based on what's available. |
-| `/commit` | Commit YOUR changes from this session. Clean messages, no AI fingerprints. |
-| `/commit-all` | Commit ALL uncommitted changes, grouped by logical relationship. |
+| `/commit` | Commit YOUR changes (or use `--all` to batch commit everything). Clean messages, no AI fingerprints. |
 | `/push` | Push to remote, update state tracking. |
 
 ### Analysis
 
 | Command | What It Does |
 |---------|--------------|
-| `/health` | Assess whether the team can ship with confidence. Includes TODO/FIXME scanning. |
+| `/health` | Assess whether the team can ship with confidence. Includes TODO scanning, dependency security, and staleness checks. |
 | `/refactor` | Find code that resists change. Includes dead code and unused dependency detection. |
-| `/deps` | Check security vulnerabilities and outdated packages. |
+| `/agent` | Audit Claude Agent SDK projects for architecture issues (agent loop, tool definitions, subagents). |
+| `/mcp` | Test and validate MCP server projects (SDK versions, tool definitions, transport issues). |
 
 ### Context
 
@@ -177,11 +177,11 @@ Global commands:
     ├── fix.md
     ├── test.md
     ├── commit.md
-    ├── commit-all.md
     ├── push.md
     ├── health.md
     ├── refactor.md
-    ├── deps.md
+    ├── agent.md
+    ├── mcp.md
     ├── orient.md
     ├── backlog.md
     ├── commands.md
