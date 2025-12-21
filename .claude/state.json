@@ -3,11 +3,16 @@
   "currentFocus": [],
   "lastSession": {
     "date": "2025-12-21",
-    "summary": "Added /plan for spec-driven planning (inspired by claude-codepro). Removed /orient (redundant with session protocol). 13 commands.",
-    "commits": ["e837368", "6268037", "a5f7dc8"]
+    "summary": "Enhanced /push with CI status check and pre-push lint detection (Python/JS). Only runs checks if tools are configured.",
+    "commits": ["15933a8", "99ff49f"]
   },
   "backlog": [],
   "shipped": [
+    {
+      "date": "2025-12-21",
+      "type": "feat",
+      "summary": "Enhance /push: CI status check + pre-push lint detection"
+    },
     {
       "date": "2025-12-21",
       "type": "feat",
