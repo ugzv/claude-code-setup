@@ -22,39 +22,56 @@ When you find a tool installed but unconfigured:
 
 A well-configured linter that catches real issues is infinitely more valuable than an unconfigured one that spews noise or misses everything.
 
-## Detect and Run Everything
+## CI Config is the Source of Truth
 
-First, figure out what this project uses. Check config files:
-- `pyproject.toml`, `setup.py`, `requirements.txt` → Python
-- `package.json` → JS/TS
-- `go.mod` → Go
-- `Cargo.toml` → Rust
+**Check CI first.** If `.github/workflows/*.yml` exists, parse it to see what tools the CI actually runs. Your goal is to ensure CI passes, not just "code looks formatted."
 
-Then run ALL available fixers. Don't just format - fix everything that's auto-fixable.
+```bash
+# Look for these patterns in CI files:
+grep -r "black --check\|black .\|ruff check\|ruff format\|eslint\|prettier" .github/workflows/
+```
+
+**Run what CI runs.** If CI uses `black --check`, run `black .` locally. If CI uses `ruff`, run `ruff`. Don't assume one replaces the other—they have subtle differences that cause CI failures.
+
+### Detection Priority
+
+1. **CI config** (`.github/workflows/*.yml`) - highest priority, this is what actually runs
+2. **pyproject.toml / package.json** - fallback if no CI config
+3. **Installed tools** - last resort, detect what's available
 
 ### Python
 
-**Ruff is the modern standard** - it replaces black, isort, flake8, and more in one fast tool.
+**First, check what CI uses:**
+```bash
+# Parse CI config for Python tools
+grep -E "black|ruff|flake8|isort|mypy" .github/workflows/*.yml
+```
+
+**Then run the matching tools:**
 
 ```bash
-# If ruff is available (check pyproject.toml or try running it)
-ruff check --fix .                    # Fix lint issues (unused imports, variables, etc.)
-ruff format .                         # Format code
-
-# If only black/isort available
+# If CI uses black (even if ruff is also installed)
 black .
-isort .
+isort .  # if used
 
-# If flake8 with autoflake
-autoflake --in-place --remove-all-unused-imports --recursive .
+# If CI uses ruff
+ruff check --fix .
+ruff format .
+
+# If CI uses both (some projects do)
+ruff check --fix .
+black .  # run black AFTER ruff to ensure black's formatting wins
 ```
+
+**If no CI config**, fall back to pyproject.toml detection:
+- `[tool.ruff]` → run ruff
+- `[tool.black]` → run black
+- Neither → check what's installed
 
 **If no tools installed**, offer to add ruff:
 ```bash
 uv add --dev ruff   # or: pip install ruff
 ```
-
-Ruff fixes: unused imports (F401), unused variables (F841), import sorting, formatting, and 700+ other rules.
 
 **If ruff is installed but no config exists** (`[tool.ruff]` missing from pyproject.toml), create one tuned for the project:
 
@@ -94,16 +111,24 @@ extend-ignore = ["PLR0913"]  # Allow many args in agent configs
 
 ### JavaScript/TypeScript
 
+**First, check what CI uses:**
 ```bash
-# ESLint for lint fixes (unused vars, imports, etc.)
+grep -E "eslint|prettier|biome" .github/workflows/*.yml
+```
+
+**Then run the matching tools:**
+```bash
+# If CI uses eslint
 npx eslint --fix .
 
-# Prettier for formatting
+# If CI uses prettier
 npx prettier --write .
 
-# If using Biome (newer, faster)
+# If CI uses biome
 npx biome check --apply .
 ```
+
+**If no CI config**, fall back to package.json devDependencies detection.
 
 **If no tools installed**, offer to add eslint + prettier:
 ```bash

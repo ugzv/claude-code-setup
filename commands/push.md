@@ -20,32 +20,54 @@ State tracking creates continuity. The next Claude (maybe you after context refr
 
 **backlog:** Auto-resolve items that match what was just pushed. If a commit clearly addresses a backlog item, mark it resolved. Discoveries were captured during `/commit`, not here.
 
-## Pre-Push Lint Check
+## Pre-Push CI Check
 
-Before pushing, check for lint/format issues—but only if the project has tools configured. Don't enforce anything that doesn't exist.
+Before pushing, run the **exact same checks that CI will run**. This prevents the "push → CI fails → fix → push again" cycle.
 
-### Detection
+### Detection Priority
+
+1. **CI config is the source of truth.** Check `.github/workflows/*.yml` to see what commands CI actually runs.
+2. **Fallback to pyproject.toml / package.json** if no CI config exists.
+
+### Parse CI Config
+
+```bash
+# Look for lint/format commands in CI
+grep -E "black|ruff|eslint|prettier|flake8|mypy|pytest" .github/workflows/*.yml
+```
+
+Common patterns to detect:
+- `black --check` → run `black --check .`
+- `ruff check` → run `ruff check .`
+- `eslint` → run `npx eslint .`
+- `prettier --check` → run `npx prettier --check .`
+- `pytest` → consider running tests too
+
+### Fallback Detection
+
+If no CI config exists:
 
 **Python:** Check `pyproject.toml` for:
-- `ruff` → run `ruff check .`
-- `black` → run `black --check .`
-- `flake8` → run `flake8 .`
+- `[tool.ruff]` → run `ruff check .`
+- `[tool.black]` → run `black --check .`
 
-**JS/TS:** Check `package.json` for:
-- `eslint` in devDependencies → run `npx eslint .`
-- `prettier` in devDependencies → run `npx prettier --check .`
-- `biome` in devDependencies → run `npx biome check .`
+**JS/TS:** Check `package.json` devDependencies for:
+- `eslint` → run `npx eslint .`
+- `prettier` → run `npx prettier --check .`
 
 ### Behavior
 
-- **No tools found:** Skip silently, proceed to push
-- **Tools found, no issues:** Proceed to push
-- **Tools found, issues detected:** Stop and warn:
+- **No CI config or tools found:** Skip silently, proceed to push
+- **Checks pass:** Proceed to push
+- **Checks fail:** Stop and warn:
   ```
-  Lint issues found. Run /fix to auto-fix, or push anyway with /push --force
+  CI checks would fail:
+  - black --check: 3 files need formatting
+
+  Run /fix to auto-fix, or /push --force to push anyway.
   ```
 
-The `--force` flag skips lint checks for cases where you know CI will handle it or issues are intentional.
+The `--force` flag skips checks for cases where you intentionally want CI to run first.
 
 ## The Push Itself
 
