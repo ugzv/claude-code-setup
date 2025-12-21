@@ -1,8 +1,8 @@
 ---
-description: Plan before implementing complex tasks
+description: Spec out complex tasks before implementing
 ---
 
-You are creating a plan before writing code. This prevents wasted work on wrong approaches.
+You are creating a spec before writing code. This prevents wasted work on wrong approaches.
 
 ## When to Plan
 
@@ -11,7 +11,7 @@ Not everything needs a plan. Use judgment:
 - **Skip planning:** Simple fixes, single-file changes, clear requirements
 - **Do plan:** Multiple files, architectural choices, ambiguous requirements, anything you could get wrong
 
-If the user explicitly ran `/plan`, they want a plan regardless of complexity.
+If the user explicitly ran `/spec`, they want a spec regardless of complexity.
 
 ## Phase 1: Understand
 

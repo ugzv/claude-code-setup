@@ -82,7 +82,7 @@ Creates the tracking system: `CLAUDE.md` with session protocol, `.claude/state.j
 
 | Command | What It Does |
 |---------|--------------|
-| `/plan` | Spec-driven planning before complex tasks. Explores codebase, asks batched questions with options, proposes approach for approval. |
+| `/spec` | Spec-driven planning before complex tasks. Explores codebase, asks batched questions with options, proposes approach for approval. |
 
 ### Development
 
@@ -126,7 +126,7 @@ Creates the tracking system: `CLAUDE.md` with session protocol, `.claude/state.j
 ```
 Session start → Hook loads state.json → Claude has context
                         ↓
-              /plan (if complex task)
+              /spec (if complex task)
                         ↓
                       Work
                         ↓
@@ -181,7 +181,7 @@ Global commands:
 ```
 ~/.claude/
 └── commands/
-    ├── plan.md
+    ├── spec.md
     ├── fix.md
     ├── test.md
     ├── commit.md
