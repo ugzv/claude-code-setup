@@ -3,11 +3,21 @@
   "currentFocus": [],
   "lastSession": {
     "date": "2025-12-21",
-    "summary": "Consolidated commands (15→13), added /fix and /test, rewrote /prompt with internal philosophy guide, renamed /context to /orient",
-    "commits": ["e0a8016", "368cf09", "7ef84c0", "bfe8273", "7fa2091", "28dfbc4", "4703faf"]
+    "summary": "Consolidated /commit-all→/commit --all and /deps→/health. Added /agent (Agent SDK audits) and /mcp (MCP server validation). 13 commands total.",
+    "commits": ["9ae85e3", "83644b1", "a56e08c"]
   },
   "backlog": [],
   "shipped": [
+    {
+      "date": "2025-12-21",
+      "type": "feat",
+      "summary": "Add /agent and /mcp commands for SDK project auditing"
+    },
+    {
+      "date": "2025-12-21",
+      "type": "refactor",
+      "summary": "Consolidate /commit-all into /commit --all, /deps into /health"
+    },
     {
       "date": "2025-12-20",
       "type": "feat",
