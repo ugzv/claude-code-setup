@@ -32,4 +32,37 @@ Push to remote. If it fails, report the error clearly.
 
 Summarize: how many commits, what shipped, backlog status. The user should know what just went out and what the project state looks like now.
 
+## CI Status Check
+
+After pushing, check if this repo has CI configured and report the status. Don't wait for completion—just report current state.
+
+```bash
+# Check latest workflow run for this branch
+gh run list --branch $(git branch --show-current) --limit 1
+```
+
+**Report based on status:**
+- **completed + success:** "CI passed ✓"
+- **in_progress / queued:** "CI running..." (no need to wait)
+- **completed + failure:** Investigate and report (see below)
+
+### When CI Fails
+
+Don't just report failure—dig in and help fix it.
+
+```bash
+# Get the failed run ID from gh run list, then:
+gh run view <run-id> --log-failed
+```
+
+This shows the actual error output. Common failures:
+- **Lint/format:** Run `/fix` locally, commit, push again
+- **Type errors:** Fix the types, commit, push
+- **Test failures:** Run `/test` locally to reproduce, fix, commit, push
+- **Dependency issues:** Check lockfile is committed, run install locally
+
+Report what failed and why. If it's fixable (lint, format, types), offer to fix it now. If it needs investigation, explain what you found in the logs.
+
+If `gh` isn't available or the repo has no CI, skip silently—not every project uses GitHub Actions.
+
 $ARGUMENTS
