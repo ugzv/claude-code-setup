@@ -20,6 +20,33 @@ State tracking creates continuity. The next Claude (maybe you after context refr
 
 **backlog:** Auto-resolve items that match what was just pushed. If a commit clearly addresses a backlog item, mark it resolved. Discoveries were captured during `/commit`, not here.
 
+## Pre-Push Lint Check
+
+Before pushing, check for lint/format issues—but only if the project has tools configured. Don't enforce anything that doesn't exist.
+
+### Detection
+
+**Python:** Check `pyproject.toml` for:
+- `ruff` → run `ruff check .`
+- `black` → run `black --check .`
+- `flake8` → run `flake8 .`
+
+**JS/TS:** Check `package.json` for:
+- `eslint` in devDependencies → run `npx eslint .`
+- `prettier` in devDependencies → run `npx prettier --check .`
+- `biome` in devDependencies → run `npx biome check .`
+
+### Behavior
+
+- **No tools found:** Skip silently, proceed to push
+- **Tools found, no issues:** Proceed to push
+- **Tools found, issues detected:** Stop and warn:
+  ```
+  Lint issues found. Run /fix to auto-fix, or push anyway with /push --force
+  ```
+
+The `--force` flag skips lint checks for cases where you know CI will handle it or issues are intentional.
+
 ## The Push Itself
 
 Check what's being pushed first. If there's nothing to push, say so and stop.
