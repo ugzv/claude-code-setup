@@ -30,13 +30,51 @@ The tools generate data. Your job is interpretation.
 
 ## Dependencies Are Attack Surface
 
-Every dependency is code you don't control. That's fine—leverage is valuable—but it's also risk.
+Every dependency is code you don't control. That's fine—leverage is valuable—but it's also risk. Your job is to find where the risk has grown without the team noticing.
 
-Security vulnerabilities in dependencies are non-negotiable. If there's a known CVE in a package this project uses, that's not a "concern"—that's an open door.
+### Security Is Non-Negotiable
 
-Staleness is different. A package two years behind latest might be fine if it's stable and working. Or it might be accumulating debt that makes the eventual upgrade painful. The question is: what's the cost of staying where we are versus the cost of upgrading?
+A known vulnerability in a dependency is an open door. It doesn't matter if the package is working fine, if the team is busy, if the upgrade looks annoying. An attacker doesn't care about your roadmap.
 
-Check what's vulnerable. Check what's outdated. But interpret what you find.
+Check for vulnerabilities first. If you find HIGH or CRITICAL severity issues, those get fixed before anything else gets discussed. Not flagged for later—fixed now, or a very good reason documented for why not.
+
+**Use the right tools:**
+- **JS/TS:** `npm audit`, `pnpm audit`, or `yarn audit`
+- **Python:** `pip-audit` (install with `pip install pip-audit`), or `safety check`
+- **Go:** `govulncheck` (install with `go install golang.org/x/vuln/cmd/govulncheck@latest`)
+
+If security tooling isn't installed, offer to add it.
+
+### Staleness Is Contextual
+
+A package being outdated isn't automatically a problem. The question is: what's accumulating while you wait?
+
+- **Security patches you're missing:** Even non-critical vulnerabilities accumulate
+- **Bug fixes you'd benefit from:** Workarounds for bugs fixed upstream are chosen pain
+- **Migration distance:** v1 to v2 is documented. v1 to v5 means four migration guides
+- **Ecosystem compatibility:** Fall too far behind and other packages stop supporting you
+
+But also: a stable package with no security issues that's two minor versions behind? That might be fine.
+
+**Check for outdated packages:**
+- **JS/TS:** `npm outdated`, `pnpm outdated`, or `yarn outdated`
+- **Python:** `pip list --outdated`, or `uv pip list --outdated`
+
+### Unused Dependencies Are Pure Risk
+
+A package in your dependency list that nothing imports is the worst trade: zero leverage, full risk. Find these and remove them.
+
+### Taking Action on Dependencies
+
+Don't just report—execute improvements:
+
+- **Security vulnerabilities:** Fix them now. Run audit fix, or manually upgrade
+- **Patch updates:** Almost always safe. Batch update them
+- **Minor updates:** Usually safe. Update and verify tests pass
+- **Major updates:** Do one at a time, check release notes, verify thoroughly
+- **Unused packages:** Remove them
+
+After changes, run the test suite and build to verify nothing broke.
 
 ## Technical Debt Markers
 
