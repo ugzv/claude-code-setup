@@ -3,11 +3,21 @@
   "currentFocus": [],
   "lastSession": {
     "date": "2025-12-21",
-    "summary": "Enhanced /push with CI status check and pre-push lint detection (Python/JS). Only runs checks if tools are configured.",
-    "commits": ["15933a8", "99ff49f"]
+    "summary": "Enhanced /fix and /refactor to create proper tool configs (ruff, eslint, knip) before running. Renamed /plan to /spec to avoid built-in conflict.",
+    "commits": ["9a50551", "f38d95c"]
   },
   "backlog": [],
   "shipped": [
+    {
+      "date": "2025-12-21",
+      "type": "feat",
+      "summary": "Add config creation for linting/analysis tools in /fix and /refactor"
+    },
+    {
+      "date": "2025-12-21",
+      "type": "refactor",
+      "summary": "Rename /plan to /spec to avoid built-in command conflict"
+    },
     {
       "date": "2025-12-21",
       "type": "feat",
@@ -16,7 +26,7 @@
     {
       "date": "2025-12-21",
       "type": "feat",
-      "summary": "Add /plan for spec-driven planning before complex tasks"
+      "summary": "Add /spec for spec-driven planning before complex tasks"
     },
     {
       "date": "2025-12-21",
