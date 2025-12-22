@@ -2,12 +2,27 @@
   "project": "claude-code-setup",
   "currentFocus": [],
   "lastSession": {
-    "date": "2025-12-21",
-    "summary": "Fixed /fix and /push to prioritize CI config over tool detection, preventing deployment failures when CI uses different tools than what's installed locally.",
-    "commits": ["6e3c04d"]
+    "date": "2025-12-22",
+    "summary": "Added parallel subagent patterns to commands (health, refactor, mcp, agent, fix, push, test, spec). Renamed commands for clarity: /refactor→/analyze, /prompt→/prompt-guide, /spec→/think. Added Windows installer.",
+    "commits": ["b88654b", "281433a", "5bea56d", "9492168", "3dc300a"]
   },
   "backlog": [],
   "shipped": [
+    {
+      "date": "2025-12-22",
+      "type": "feat",
+      "summary": "Add parallel subagent patterns for faster command execution"
+    },
+    {
+      "date": "2025-12-22",
+      "type": "refactor",
+      "summary": "Rename commands: /spec→/think, /refactor→/analyze, /prompt→/prompt-guide"
+    },
+    {
+      "date": "2025-12-22",
+      "type": "feat",
+      "summary": "Add Windows installer (install.bat)"
+    },
     {
       "date": "2025-12-21",
       "type": "fix",
@@ -57,21 +72,6 @@
       "date": "2025-12-20",
       "type": "refactor",
       "summary": "Consolidate commands: /init-project→/migrate, /todo-scan→/health, /unused→/refactor, /prompt-audit+/prompt-create→/prompt"
-    },
-    {
-      "date": "2025-12-20",
-      "type": "refactor",
-      "summary": "Rewrite /prompt with internal prompting philosophy (principles over rules, example trap, quick reference checklists)"
-    },
-    {
-      "date": "2025-12-17",
-      "type": "refactor",
-      "summary": "Philosophy-driven prompts for /refactor, /commit, /commit-all, /push"
-    },
-    {
-      "date": "2025-12-17",
-      "type": "feat",
-      "summary": "Add /commands to list project commands"
     }
   ]
 }
