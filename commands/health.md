@@ -14,9 +14,59 @@ An unhealthy project has hope instead of feedback. "I think this works." "It wor
 
 Your job is to assess how much this team is gambling versus knowing.
 
-## The Investigation
+## Run Checks in Parallel
 
-Run whatever checks this project has: type checker, test suite, linter, build. But you're not collecting numbers to report. You're understanding what the numbers reveal about the team's ability to ship confidently.
+**IMPORTANT: Use subagents to run all checks simultaneously.** These checks are independent—there's no reason to wait for security audit to finish before starting type checking.
+
+### Detection Phase (Quick)
+
+First, quickly detect what tools are available:
+
+```bash
+# Detect project type and available tools
+ls package.json pyproject.toml go.mod Cargo.toml 2>/dev/null
+```
+
+### Parallel Execution Phase
+
+**Spawn subagents for each category simultaneously.** Use the Task tool with multiple parallel invocations:
+
+```
+┌─────────────────────────────────────────────────────────┐
+│  SPAWN ALL AT ONCE (single message, multiple Task calls)│
+├─────────────────────────────────────────────────────────┤
+│  1. security-check    → npm audit / pip-audit / govuln  │
+│  2. type-check        → tsc / mypy / pyright            │
+│  3. test-runner       → pytest / npm test / go test     │
+│  4. lint-check        → eslint / ruff / golangci-lint   │
+│  5. outdated-check    → npm outdated / pip list         │
+│  6. debt-scan         → grep TODO/FIXME + git blame     │
+└─────────────────────────────────────────────────────────┘
+```
+
+Each subagent should:
+- Run the appropriate tool for the detected project type
+- Capture output and exit code
+- Return a structured summary: status (pass/warn/fail), count of issues, key findings
+
+**Example prompt for a subagent:**
+```
+You are a security scanner. Run the appropriate security audit for this project:
+- JS/TS: npm audit (or pnpm/yarn audit)
+- Python: pip-audit or safety check
+- Go: govulncheck
+
+Return: {"status": "pass|warn|fail", "critical": N, "high": N, "details": "..."}
+```
+
+### Wait and Synthesize
+
+After spawning all subagents, wait for results and synthesize:
+- Collect all subagent outputs
+- Prioritize findings (security > failing tests > type errors > lint)
+- Create unified health report
+
+## Interpreting Results
 
 **If tests pass**, that's a floor, not a ceiling. Do the tests cover the code that matters? Are they testing behavior or implementation? Would they catch the kinds of bugs that actually happen here?
 

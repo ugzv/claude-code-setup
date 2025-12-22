@@ -12,6 +12,68 @@ This is not about prompt writing style (that's `/prompt`). This is about agent *
 - Will subagents behave predictably?
 - Are there safety gaps?
 
+## Run Audits in Parallel
+
+**IMPORTANT: Use subagents to audit different aspects simultaneously.** These checks are independent.
+
+```
+┌─────────────────────────────────────────────────────────┐
+│  SPAWN ALL AT ONCE (single message, multiple Task calls)│
+├─────────────────────────────────────────────────────────┤
+│  1. loop-auditor                                        │
+│     → Check: gather → act → verify phases present?      │
+│     → Find: context tools, action tools, validation     │
+│     → Flag: missing phases, broken feedback loops       │
+│                                                         │
+│  2. tool-auditor                                        │
+│     → Check: naming, descriptions, parameter types      │
+│     → Flag: vague names, missing "when to use"          │
+│     → Return: tool quality scores                       │
+│                                                         │
+│  3. prompt-auditor                                      │
+│     → Check: identity, principles vs rules, conflicts   │
+│     → Flag: if-then rules, contradictions               │
+│     → Return: prompt structure assessment               │
+│                                                         │
+│  4. safety-auditor                                      │
+│     → Check: destructive action confirmations           │
+│     → Check: input validation, rate limits, secrets     │
+│     → Flag: missing safeguards                          │
+└─────────────────────────────────────────────────────────┘
+```
+
+**Example subagent prompts:**
+
+```
+# Tool auditor
+Find all tool definitions in this project. For each tool, assess:
+1. Name: Is it action-oriented and specific? (not "do_thing", "helper")
+2. Description: Does it explain WHEN to use, not just WHAT?
+3. Parameters: Are they typed with descriptions?
+4. Error handling: Does it return structured errors?
+
+Return a quality score (1-5) for each tool with specific issues.
+```
+
+```
+# Safety auditor
+Check this agent project for safety gaps:
+1. Do destructive actions (delete, modify, send) require confirmation?
+2. Are there input validation schemas?
+3. Could the agent leak secrets in responses?
+4. Is there a maxTurns or similar loop limit?
+
+Return: list of safety gaps with severity (critical/high/medium).
+```
+
+### Wait and Synthesize
+
+After all auditors return, create a unified report:
+- Architecture grade (does it implement gather → act → verify?)
+- Critical issues (must fix before production)
+- Improvements (would make agent more reliable)
+- Missing pieces (tools or capabilities needed)
+
 ## The Agent Loop
 
 Every effective agent follows: **gather context → take action → verify work → repeat.**

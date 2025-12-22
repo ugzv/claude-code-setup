@@ -26,18 +26,49 @@ A well-configured linter that catches real issues is infinitely more valuable th
 
 **Check CI first.** If `.github/workflows/*.yml` exists, parse it to see what tools the CI actually runs. Your goal is to ensure CI passes, not just "code looks formatted."
 
-```bash
-# Look for these patterns in CI files:
-grep -r "black --check\|black .\|ruff check\|ruff format\|eslint\|prettier" .github/workflows/
-```
-
 **Run what CI runs.** If CI uses `black --check`, run `black .` locally. If CI uses `ruff`, run `ruff`. Don't assume one replaces the other—they have subtle differences that cause CI failures.
 
-### Detection Priority
+## Parallel Detection Phase
 
-1. **CI config** (`.github/workflows/*.yml`) - highest priority, this is what actually runs
+**IMPORTANT: Use subagents to detect available tools simultaneously.** Don't wait for CI parsing to finish before checking pyproject.toml.
+
+```
+┌─────────────────────────────────────────────────────────┐
+│  SPAWN ALL AT ONCE (single message, multiple Task calls)│
+├─────────────────────────────────────────────────────────┤
+│  1. ci-parser                                           │
+│     → Parse .github/workflows/*.yml                     │
+│     → Extract: which linters, formatters CI runs        │
+│     → Return: {"tools": [...], "commands": [...]}       │
+│                                                         │
+│  2. python-detector                                     │
+│     → Check pyproject.toml for [tool.ruff], [tool.black]│
+│     → Check if ruff/black/isort installed               │
+│     → Return: {"available": [...], "configured": [...]} │
+│                                                         │
+│  3. js-detector                                         │
+│     → Check package.json devDependencies                │
+│     → Look for eslint, prettier, biome configs          │
+│     → Return: {"available": [...], "configured": [...]} │
+│                                                         │
+│  4. config-validator                                    │
+│     → Check if detected tools have config files         │
+│     → Flag tools without configs (will need setup)      │
+│     → Return: {"configured": [...], "missing": [...]}   │
+└─────────────────────────────────────────────────────────┘
+```
+
+### Detection Priority (After Parallel Results)
+
+1. **CI config** - highest priority, this is what actually runs
 2. **pyproject.toml / package.json** - fallback if no CI config
 3. **Installed tools** - last resort, detect what's available
+
+### Apply Fixes (Sequential)
+
+After detection, run fixes in the correct order:
+- **Lint first** (finds issues), then **format** (may change what lint found)
+- For Python with both ruff and black: `ruff check --fix .` then `black .`
 
 ### Python
 

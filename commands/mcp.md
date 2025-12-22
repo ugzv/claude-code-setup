@@ -51,20 +51,79 @@ pip index versions mcp 2>/dev/null | head -1 || curl -s https://pypi.org/pypi/mc
 
 Compare against what the project uses in `package.json` or `pyproject.toml`. If significantly behind (especially major versions), recommend updating.
 
-## What to Validate
+## Run Validation in Parallel
 
-### 1. SDK Version
+**IMPORTANT: Use subagents to validate different aspects simultaneously.** These checks are independent.
 
-Check `package.json` or `pyproject.toml` for MCP SDK version. Compare against latest (use commands above).
+```
+┌─────────────────────────────────────────────────────────┐
+│  SPAWN ALL AT ONCE (single message, multiple Task calls)│
+├─────────────────────────────────────────────────────────┤
+│  1. version-checker                                     │
+│     → Check SDK version vs latest (npm/PyPI)            │
+│     → Flag: major versions behind, missing patches      │
+│     → Return: current, latest, upgrade urgency          │
+│                                                         │
+│  2. tool-validator                                      │
+│     → Find all tool registrations                       │
+│     → Check: names, descriptions, parameter types       │
+│     → Return: tool quality scores, specific issues      │
+│                                                         │
+│  3. transport-checker                                   │
+│     → Detect transport type (STDIO vs HTTP)             │
+│     → STDIO: grep for console.log, print() (bad!)       │
+│     → HTTP: check auth setup                            │
+│     → Return: transport issues found                    │
+│                                                         │
+│  4. error-handler-checker                               │
+│     → Find API calls and external fetches               │
+│     → Check: try/catch, structured error returns        │
+│     → Flag: unhandled throws, missing error responses   │
+└─────────────────────────────────────────────────────────┘
+```
+
+**Example subagent prompts:**
+
+```
+# Version checker
+Check the MCP SDK version in this project:
+1. Find version in package.json or pyproject.toml
+2. Check latest version: npm view @modelcontextprotocol/sdk version
+3. Compare and assess upgrade urgency
+
+Return: {"current": "X.Y.Z", "latest": "A.B.C", "urgency": "high/medium/low"}
+```
+
+```
+# Transport checker
+Detect transport mode and find issues:
+1. Check if STDIO or HTTP transport
+2. If STDIO, search for stdout pollution:
+   - grep for console.log, print(), println!
+   - These corrupt JSON-RPC messages!
+3. If HTTP, check authentication setup
+
+Return: list of transport issues with file:line references.
+```
+
+### Wait and Synthesize
+
+After all validators return, create unified report:
+- SDK status (upgrade recommended?)
+- Tool quality (clear enough for Claude to use correctly?)
+- Safety issues (stdout leaks, missing error handling)
+- Missing pieces (what would make server more useful?)
+
+## Validation Details
+
+### SDK Version
 
 Look for:
 - **Major version behind**: Likely missing important features, breaking changes
 - **Many minor versions behind**: May have bug fixes worth getting
 - **Pinned to exact version** (`1.8.0` vs `^1.8.0`): Might be intentional, ask why
 
-### 2. Tool Definitions
-
-Find all tool registrations. Check each for:
+### Tool Definitions
 
 **Name:** Descriptive and action-oriented?
 - Good: `get_user_events`, `create_dashboard`
@@ -96,7 +155,7 @@ async def get_events(user_id: str, limit: int = 100) -> str:
     """
 ```
 
-### 3. Transport Configuration
+### Transport Configuration
 
 **STDIO (local servers):**
 - NEVER write to stdout - it corrupts JSON-RPC messages
@@ -107,7 +166,7 @@ async def get_events(user_id: str, limit: int = 100) -> str:
 - Standard logging is fine
 - Check authentication setup (OAuth, API keys)
 
-### 4. Error Handling
+### Error Handling
 
 Does the server handle errors gracefully?
 - API failures should return structured error messages
@@ -131,7 +190,7 @@ try {
 }
 ```
 
-### 5. Configuration
+### Configuration
 
 Check for:
 - `.env.example` with all required variables documented

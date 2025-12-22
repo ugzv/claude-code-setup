@@ -4,13 +4,41 @@ description: Run tests intelligently based on what's available
 
 You are verifying the code works.
 
-## Detect Test Framework
+## Detect Test Frameworks
 
 Check what this project uses:
 - `pyproject.toml` or `pytest.ini` or `tests/` → pytest (Python)
 - `package.json` scripts → jest, vitest, mocha (JS/TS)
 - `go.mod` with `_test.go` files → go test (Go)
 - `Cargo.toml` → cargo test (Rust)
+
+## Parallel Test Execution (Polyglot/Monorepo Projects)
+
+**If multiple test frameworks are detected**, run them in parallel using subagents:
+
+```
+┌─────────────────────────────────────────────────────────┐
+│  SPAWN IF MULTIPLE FRAMEWORKS DETECTED                  │
+├─────────────────────────────────────────────────────────┤
+│  1. python-tests (if pytest/pyproject.toml found)       │
+│     → pytest tests/ -v                                  │
+│     → Return: pass/fail count, failure details          │
+│                                                         │
+│  2. js-tests (if package.json with test script)         │
+│     → npm test / vitest run / jest                      │
+│     → Return: pass/fail count, failure details          │
+│                                                         │
+│  3. go-tests (if go.mod + *_test.go files)              │
+│     → go test ./...                                     │
+│     → Return: pass/fail count, failure details          │
+│                                                         │
+│  4. rust-tests (if Cargo.toml)                          │
+│     → cargo test                                        │
+│     → Return: pass/fail count, failure details          │
+└─────────────────────────────────────────────────────────┘
+```
+
+**For single-language projects**, just run tests directly (no subagent overhead needed).
 
 ## Run Tests
 

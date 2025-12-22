@@ -20,51 +20,71 @@ State tracking creates continuity. The next Claude (maybe you after context refr
 
 **backlog:** Auto-resolve items that match what was just pushed. If a commit clearly addresses a backlog item, mark it resolved. Discoveries were captured during `/commit`, not here.
 
-## Pre-Push CI Check
+## Pre-Push CI Checks (Parallel)
 
 Before pushing, run the **exact same checks that CI will run**. This prevents the "push → CI fails → fix → push again" cycle.
 
-### Detection Priority
+**IMPORTANT: Run all pre-push checks in parallel using subagents.** Don't wait for linting to finish before starting type checking.
 
-1. **CI config is the source of truth.** Check `.github/workflows/*.yml` to see what commands CI actually runs.
-2. **Fallback to pyproject.toml / package.json** if no CI config exists.
+### Detection Phase (Quick)
 
-### Parse CI Config
+First, detect what CI runs:
 
 ```bash
-# Look for lint/format commands in CI
-grep -E "black|ruff|eslint|prettier|flake8|mypy|pytest" .github/workflows/*.yml
+# Parse CI config for tools
+grep -E "black|ruff|eslint|prettier|flake8|mypy|pytest|tsc" .github/workflows/*.yml 2>/dev/null
 ```
 
-Common patterns to detect:
-- `black --check` → run `black --check .`
-- `ruff check` → run `ruff check .`
-- `eslint` → run `npx eslint .`
-- `prettier --check` → run `npx prettier --check .`
-- `pytest` → consider running tests too
+Fallback to `pyproject.toml` / `package.json` if no CI config.
 
-### Fallback Detection
+### Parallel Check Phase
 
-If no CI config exists:
+**Spawn subagents for each detected check simultaneously:**
 
-**Python:** Check `pyproject.toml` for:
-- `[tool.ruff]` → run `ruff check .`
-- `[tool.black]` → run `black --check .`
+```
+┌─────────────────────────────────────────────────────────┐
+│  SPAWN ALL AT ONCE (single message, multiple Task calls)│
+├─────────────────────────────────────────────────────────┤
+│  1. format-checker                                      │
+│     → black --check / prettier --check                  │
+│     → Return: pass/fail + files needing format          │
+│                                                         │
+│  2. lint-checker                                        │
+│     → ruff check / eslint                               │
+│     → Return: pass/fail + error count                   │
+│                                                         │
+│  3. type-checker (if CI uses it)                        │
+│     → mypy / tsc --noEmit                               │
+│     → Return: pass/fail + error count                   │
+│                                                         │
+│  4. test-runner (if CI runs tests)                      │
+│     → pytest / npm test                                 │
+│     → Return: pass/fail + failure summary               │
+└─────────────────────────────────────────────────────────┘
+```
 
-**JS/TS:** Check `package.json` devDependencies for:
-- `eslint` → run `npx eslint .`
-- `prettier` → run `npx prettier --check .`
+**Example subagent prompt:**
+```
+Run format check for this project. Use the tool that CI uses:
+- If black in CI: black --check .
+- If prettier in CI: npx prettier --check .
+- If ruff format in CI: ruff format --check .
 
-### Behavior
+Return: {"pass": true/false, "files_to_fix": [...]}
+```
 
-- **No CI config or tools found:** Skip silently, proceed to push
-- **Checks pass:** Proceed to push
-- **Checks fail:** Stop and warn:
+### Gate Decision
+
+After all checks complete:
+- **All pass:** Proceed to push
+- **Any fail:** Stop and report which checks failed:
   ```
-  CI checks would fail:
-  - black --check: 3 files need formatting
+  Pre-push checks failed:
+  ✗ format: 3 files need formatting
+  ✗ lint: 12 errors
+  ✓ types: passed
 
-  Run /fix to auto-fix, or /push --force to push anyway.
+  Run /fix to auto-fix, or /push --force to skip checks.
   ```
 
 The `--force` flag skips checks for cases where you intentionally want CI to run first.
