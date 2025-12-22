@@ -14,6 +14,65 @@ The difference between useful analysis and noise is whether your claims are back
 
 **If you haven't verified something, you don't know it.** And if you don't know it, don't say it.
 
+## Run Analysis in Parallel
+
+**IMPORTANT: Use subagents to gather evidence simultaneously.** These analyses are independent—run them all at once.
+
+```
+┌─────────────────────────────────────────────────────────┐
+│  SPAWN ALL AT ONCE (single message, multiple Task calls)│
+├─────────────────────────────────────────────────────────┤
+│  1. complexity-analyzer                                 │
+│     → Find files with high cyclomatic complexity        │
+│     → Tools: radon (Python), eslint-complexity (JS)     │
+│     → Fallback: count lines, nesting depth, branches    │
+│                                                         │
+│  2. churn-analyzer                                      │
+│     → git log --numstat analysis                        │
+│     → Find: most-modified files, bug-fix correlations   │
+│     → Output: file, change_count, bug_fix_count         │
+│                                                         │
+│  3. dead-code-finder                                    │
+│     → knip (JS/TS), vulture (Python)                    │
+│     → Find: unused exports, unreferenced files          │
+│     → Verify: check for dynamic imports before flagging │
+│                                                         │
+│  4. coupling-analyzer                                   │
+│     → Trace import graphs                               │
+│     → Find: files imported by many, circular deps       │
+│     → Output: coupling score, dependency list           │
+└─────────────────────────────────────────────────────────┘
+```
+
+**Example subagent prompts:**
+
+```
+# Churn analyzer
+Analyze git history for this project. Find:
+1. Files modified most often (git log --numstat)
+2. Files with most bug-fix commits (grep for "fix" in commit messages)
+3. Correlation between change frequency and bug frequency
+
+Return top 10 files by churn with bug correlation data.
+```
+
+```
+# Coupling analyzer
+Analyze the import/dependency graph. Find:
+1. Files imported by 10+ other files (high fan-in)
+2. Files that import 10+ other files (high fan-out)
+3. Any circular dependencies
+
+Return coupling hotspots with specific file paths.
+```
+
+### Wait and Correlate
+
+After all subagents return, **correlate findings**:
+- High complexity + high churn = **priority refactor target**
+- High coupling + high churn = **architectural problem**
+- Dead code = **quick wins to remove**
+
 ## What You're Looking For
 
 Code that resists change has a cost: the gap between how fast this team *could* ship and how fast they *actually* ship. Your job is finding where that resistance lives and proving what it's costing.

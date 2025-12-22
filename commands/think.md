@@ -33,16 +33,69 @@ Before I explore the codebase, a few questions:
 
 Use the AskUserQuestion tool for this. Present concrete options with trade-offs, not open-ended questions.
 
-## Phase 2: Explore
+## Phase 2: Explore (Parallel)
 
-Before proposing an approach, understand what exists. Read the codebase:
+Before proposing an approach, understand what exists. **Use subagents to explore in parallel**—these searches are independent.
 
-- Find similar features (how did they solve this pattern before?)
-- Check the architecture (where does this type of code live?)
-- Look at dependencies (what's already available?)
-- Find related tests (what's the testing pattern?)
+```
+┌─────────────────────────────────────────────────────────┐
+│  SPAWN ALL AT ONCE (single message, multiple Task calls)│
+├─────────────────────────────────────────────────────────┤
+│  1. pattern-finder                                      │
+│     → Search for similar features in codebase           │
+│     → How was this pattern solved before?               │
+│     → Return: relevant file paths + brief summary       │
+│                                                         │
+│  2. arch-analyzer                                       │
+│     → Where does this type of code live?                │
+│     → Check directory structure, existing conventions   │
+│     → Return: recommended location + reasoning          │
+│                                                         │
+│  3. dep-checker                                         │
+│     → What libraries/utilities are already available?   │
+│     → Check package.json/pyproject.toml + src/utils     │
+│     → Return: relevant deps + existing helpers          │
+└─────────────────────────────────────────────────────────┘
+```
 
-Don't assume. Don't guess based on project name or README. Read actual files.
+**Example subagent prompts:**
+
+```
+# Pattern finder
+Search this codebase for similar features to: [user's request]
+Look for:
+1. Similar functionality already implemented
+2. Patterns used for comparable features
+3. Code that could be extended vs. written fresh
+
+Return: top 3 relevant files with 1-line summary each.
+```
+
+```
+# Architecture analyzer
+For implementing [user's request], determine:
+1. Which directory should this code live in?
+2. What's the naming convention for similar files?
+3. Are there existing patterns to follow?
+
+Return: recommended path + reasoning.
+```
+
+```
+# Dependency checker
+Check what's available for [user's request]:
+1. Relevant packages in package.json/pyproject.toml
+2. Existing utility functions in src/utils or lib/
+3. Helpers that could be reused
+
+Return: available tools + any gaps needing new deps.
+```
+
+### Wait and Synthesize
+
+After all subagents return, combine findings into your proposal. Don't dump raw results—synthesize what matters for the approach.
+
+Don't assume. Don't guess based on project name or README. The subagents read actual files.
 
 ## Phase 3: Propose
 
