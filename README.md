@@ -63,7 +63,12 @@ Every command in this system teaches understanding rather than procedures. The r
 ```bash
 git clone https://github.com/ugzv/claude-code-setup.git
 cd claude-code-setup
+
+# macOS/Linux
 ./install.sh
+
+# Windows
+install.bat
 ```
 
 Restart Claude Code to pick up the new commands.
@@ -82,25 +87,25 @@ Creates the tracking system: `CLAUDE.md` with session protocol, `.claude/state.j
 
 | Command | What It Does |
 |---------|--------------|
-| `/spec` | Spec-driven planning before complex tasks. Explores codebase, asks batched questions with options, proposes approach for approval. |
+| `/think` | Think through approach before complex tasks. Explores codebase in parallel, asks batched questions with options, proposes approach for approval. |
 
 ### Development
 
 | Command | What It Does |
 |---------|--------------|
-| `/fix` | Auto-fix all linting, formatting, unused imports. |
-| `/test` | Run tests intelligently based on what's available. |
+| `/fix` | Auto-fix linting and formatting. Parallel detection of CI config, Python tools, JS tools, and configs. |
+| `/test` | Run tests. Parallel execution for polyglot/monorepo projects. |
 | `/commit` | Commit YOUR changes (or use `--all` to batch commit everything). Clean messages, no AI fingerprints. |
-| `/push` | Push to remote, update state tracking. |
+| `/push` | Push to remote. Parallel pre-push CI checks, then update state tracking. |
 
 ### Analysis
 
 | Command | What It Does |
 |---------|--------------|
-| `/health` | Assess whether the team can ship with confidence. Includes TODO scanning, dependency security, and staleness checks. |
-| `/refactor` | Find code that resists change. Includes dead code and unused dependency detection. |
-| `/agent` | Audit Claude Agent SDK projects for architecture issues (agent loop, tool definitions, subagents). |
-| `/mcp` | Test and validate MCP server projects (SDK versions, tool definitions, transport issues). |
+| `/health` | Assess whether the team can ship with confidence. Runs security, types, tests, lint, outdated, and debt scans in parallel. |
+| `/analyze` | Find code that resists change. Uses parallel subagents for complexity, churn, dead code, and coupling analysis. |
+| `/agent` | Audit Agent SDK projects. Parallel checks for agent loop, tools, prompts, and safety. |
+| `/mcp` | Validate MCP servers. Parallel checks for SDK version, tools, transport, and error handling. |
 
 ### Context
 
@@ -113,7 +118,7 @@ Creates the tracking system: `CLAUDE.md` with session protocol, `.claude/state.j
 
 | Command | What It Does |
 |---------|--------------|
-| `/prompt` | Load prompting philosophy, apply to any prompt work (create, audit, improve). |
+| `/prompt-guide` | Load prompting philosophy, apply to any prompt work (create, audit, improve). |
 
 ### Setup
 
@@ -126,7 +131,7 @@ Creates the tracking system: `CLAUDE.md` with session protocol, `.claude/state.j
 ```
 Session start → Hook loads state.json → Claude has context
                         ↓
-              /spec (if complex task)
+              /think (if complex task)
                         ↓
                       Work
                         ↓
@@ -181,18 +186,18 @@ Global commands:
 ```
 ~/.claude/
 └── commands/
-    ├── spec.md
+    ├── think.md
     ├── fix.md
     ├── test.md
     ├── commit.md
     ├── push.md
     ├── health.md
-    ├── refactor.md
+    ├── analyze.md
     ├── agent.md
     ├── mcp.md
     ├── backlog.md
     ├── commands.md
-    ├── prompt.md
+    ├── prompt-guide.md
     └── migrate.md
 ```
 
@@ -217,8 +222,8 @@ cd claude-code-setup
 ```
 
 **Key files:**
-- `.claude/commands/*.md` - Command source files (copied to `~/.claude/commands/` on install)
-- `install.sh` - Installation script
+- `commands/*.md` - Command source files (copied to `~/.claude/commands/` on install)
+- `install.sh` / `install.bat` - Installation scripts
 - `CLAUDE.md` - Instructions for Claude when working on THIS project
 
 **When adding/modifying commands, consider:**
