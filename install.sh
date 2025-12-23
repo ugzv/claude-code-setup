@@ -24,6 +24,31 @@ cp "$SCRIPT_DIR/commands/"*.md ~/.claude/commands/
 echo "Installing templates..."
 cp "$SCRIPT_DIR/templates/"*.md ~/.claude/templates/
 
+# Configure settings (disable co-author in commits)
+echo "Configuring settings..."
+SETTINGS_FILE=~/.claude/settings.json
+
+if [ -f "$SETTINGS_FILE" ]; then
+  # Check if attribution already exists
+  if grep -q '"attribution"' "$SETTINGS_FILE"; then
+    echo "  Attribution already configured, skipping..."
+  else
+    # Add attribution to existing settings (after opening brace)
+    sed -i.bak 's/^{$/{\n  "attribution": {\n    "commit": ""\n  },/' "$SETTINGS_FILE" && rm -f "$SETTINGS_FILE.bak"
+    echo "  Added attribution settings"
+  fi
+else
+  # Create new settings file
+  cat > "$SETTINGS_FILE" << 'EOF'
+{
+  "attribution": {
+    "commit": ""
+  }
+}
+EOF
+  echo "  Created settings.json"
+fi
+
 echo ""
 echo "Installation complete!"
 echo ""

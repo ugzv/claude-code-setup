@@ -23,6 +23,28 @@ REM Copy templates
 echo Installing templates...
 copy /Y "%SCRIPT_DIR%templates\*.md" "%USERPROFILE%\.claude\templates\" >nul
 
+REM Configure settings (disable co-author in commits)
+echo Configuring settings...
+set "SETTINGS_FILE=%USERPROFILE%\.claude\settings.json"
+
+if exist "%SETTINGS_FILE%" (
+    findstr /C:"attribution" "%SETTINGS_FILE%" >nul
+    if errorlevel 1 (
+        echo   Note: Please manually add attribution settings to disable co-author
+        echo   Add this to %SETTINGS_FILE%:
+        echo   "attribution": { "commit": "" }
+    ) else (
+        echo   Attribution already configured, skipping...
+    )
+) else (
+    echo { > "%SETTINGS_FILE%"
+    echo   "attribution": { >> "%SETTINGS_FILE%"
+    echo     "commit": "" >> "%SETTINGS_FILE%"
+    echo   } >> "%SETTINGS_FILE%"
+    echo } >> "%SETTINGS_FILE%"
+    echo   Created settings.json
+)
+
 echo.
 echo Installation complete!
 echo.
