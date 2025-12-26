@@ -37,6 +37,18 @@ Use the AskUserQuestion tool for this. Present concrete options with trade-offs,
 
 Before proposing an approach, understand what exists. **Use subagents to explore in parallel**—these searches are independent.
 
+### LSP Enhancement (Optional)
+
+If LSP is available, use it for faster, more accurate exploration:
+
+| Task | Without LSP | With LSP |
+|------|-------------|----------|
+| Find similar code | grep + glob | `workspaceSymbol` (finds by name) |
+| Understand a file | Read entire file | `documentSymbol` (quick overview) |
+| Trace dependencies | Import parsing | `goToDefinition`, `findReferences` |
+
+**Check availability:** Try `documentSymbol` on a main file first. If it errors, fall back to grep/glob.
+
 ```
 ┌─────────────────────────────────────────────────────────┐
 │  SPAWN ALL AT ONCE (single message, multiple Task calls)│
@@ -44,11 +56,13 @@ Before proposing an approach, understand what exists. **Use subagents to explore
 │  1. pattern-finder                                      │
 │     → Search for similar features in codebase           │
 │     → How was this pattern solved before?               │
+│     → WITH LSP: workspaceSymbol to find by name         │
 │     → Return: relevant file paths + brief summary       │
 │                                                         │
 │  2. arch-analyzer                                       │
 │     → Where does this type of code live?                │
 │     → Check directory structure, existing conventions   │
+│     → WITH LSP: documentSymbol for quick file overview  │
 │     → Return: recommended location + reasoning          │
 │                                                         │
 │  3. dep-checker                                         │
@@ -67,6 +81,13 @@ Look for:
 1. Similar functionality already implemented
 2. Patterns used for comparable features
 3. Code that could be extended vs. written fresh
+
+If LSP is available (test with documentSymbol first):
+- Use workspaceSymbol to search for related function/class names
+- Use goToDefinition to trace imports and understand structure
+This is faster and more accurate than grep for symbol-based searches.
+
+If LSP unavailable, use grep/glob as fallback.
 
 Return: top 3 relevant files with 1-line summary each.
 ```

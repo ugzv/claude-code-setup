@@ -180,7 +180,50 @@ If yes:
 - Read backlog.json → merge into backlog
 - Remove old files after migration
 
-## 9. Update .gitignore (Optional)
+## 9. LSP Server Setup (Optional)
+
+LSP (Language Server Protocol) enables more accurate code analysis in `/analyze` and `/think` commands.
+
+**Detect project language:**
+```bash
+ls package.json pyproject.toml go.mod Cargo.toml 2>/dev/null
+```
+
+**Check if LSP is already working:**
+```
+Try: LSP documentSymbol on a main source file
+- If it works → LSP already configured, skip
+- If it errors → Offer to install
+```
+
+**If LSP not available, ask:**
+```
+LSP enables more accurate code analysis (find exact usages, call hierarchy).
+Install language server for this project?
+
+Detected: [TypeScript/Python/Go/Rust]
+Install command: [see below]
+
+(y/n)
+```
+
+**Installation commands by language:**
+
+| Language | Install Command | Notes |
+|----------|-----------------|-------|
+| TypeScript/JS | `npm install -g typescript-language-server typescript` | Requires Node.js |
+| Python | `pip install python-lsp-server` or `pip install pyright` | pylsp or pyright |
+| Go | `go install golang.org/x/tools/gopls@latest` | Requires Go |
+| Rust | `rustup component add rust-analyzer` | Via rustup |
+
+**After installation**, Claude Code should auto-detect the LSP. Test with:
+```
+LSP documentSymbol on src/index.ts (or main entry file)
+```
+
+If it still fails after installation, the user may need to configure their LSP settings in Claude Code.
+
+## 10. Update .gitignore (Optional)
 
 Ask: "Add `.claude/*.backup` to .gitignore? (recommended)"
 
@@ -189,7 +232,7 @@ If yes:
 echo ".claude/*.backup" >> .gitignore
 ```
 
-## 10. Summary
+## 11. Summary
 
 ```
 SETUP COMPLETE
@@ -213,9 +256,13 @@ Next steps:
   2. Update .claude/state.json with current project state
   3. Delete .backup files when satisfied
   4. Commit: git add CLAUDE.md .claude/ && git commit -m "chore: add Claude tracking"
+
+LSP Status:
+  • [Installed/Not installed] - [language server name]
+  • Run /analyze or /think to use enhanced code intelligence
 ```
 
-## 11. Commit (Optional)
+## 12. Commit (Optional)
 
 Ask: "Commit tracking files now?"
 

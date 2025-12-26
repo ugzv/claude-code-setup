@@ -14,6 +14,25 @@ The difference between useful analysis and noise is whether your claims are back
 
 **If you haven't verified something, you don't know it.** And if you don't know it, don't say it.
 
+## LSP Enhancement (Optional)
+
+If LSP is available, it provides **more accurate analysis** than grep/static analysis:
+
+| Analysis | Without LSP | With LSP |
+|----------|-------------|----------|
+| Find usages | grep (includes comments/strings) | `findReferences` (exact call sites) |
+| Call graph | Import parsing | `incomingCalls`/`outgoingCalls` |
+| Dead code | knip/vulture | `findReferences` returns 0 |
+
+**Check LSP availability first:**
+```
+Try: LSP documentSymbol on a main source file (src/index.ts, src/main.py, etc.)
+- If it works → Use LSP for coupling/dead-code analysis
+- If it errors → Fall back to grep/static analysis tools
+```
+
+**Don't block on LSP.** If unavailable, proceed with standard tools. LSP enhances accuracy but isn't required.
+
 ## Run Analysis in Parallel
 
 **IMPORTANT: Use subagents to gather evidence simultaneously.** These analyses are independent—run them all at once.
@@ -36,11 +55,15 @@ The difference between useful analysis and noise is whether your claims are back
 │     → knip (JS/TS), vulture (Python)                    │
 │     → Find: unused exports, unreferenced files          │
 │     → Verify: check for dynamic imports before flagging │
+│     → WITH LSP: Use findReferences to verify - 0 refs   │
+│       means truly unused (more accurate than static)    │
 │                                                         │
 │  4. coupling-analyzer                                   │
 │     → Trace import graphs                               │
 │     → Find: files imported by many, circular deps       │
 │     → Output: coupling score, dependency list           │
+│     → WITH LSP: Use incomingCalls on key functions      │
+│       for precise call hierarchy (no false positives)   │
 └─────────────────────────────────────────────────────────┘
 ```
 
@@ -62,6 +85,13 @@ Analyze the import/dependency graph. Find:
 1. Files imported by 10+ other files (high fan-in)
 2. Files that import 10+ other files (high fan-out)
 3. Any circular dependencies
+
+If LSP is available (test with documentSymbol first):
+- Use findReferences on key exports to count exact usages
+- Use incomingCalls to trace call hierarchy
+- This is more accurate than grep (ignores comments/strings)
+
+If LSP unavailable, fall back to import parsing and grep.
 
 Return coupling hotspots with specific file paths.
 ```
