@@ -1,242 +1,106 @@
 # Claude Code Setup
 
-A tracking system and command library for Claude Code that maintains context across sessions.
-
-> **Note:** This is the **source repository** where the system is developed. After installation, these commands become available in all your projects to make Claude coding sessions more productive.
+A tracking system and command library for [Claude Code][claude-code] that maintains context across sessions.
 
 ## The Problem
 
-Claude sessions are ephemeral. When a conversation ends, everything learned about the project—what you were working on, what you discovered, what you shipped—evaporates. The next session starts from zero.
-
-This creates real costs:
-- Re-explaining context every session
-- Lost discoveries and insights
-- No continuity on multi-session work
-- Inconsistent commit quality
+Claude sessions are ephemeral. When a conversation ends, context evaporates. The next session starts from zero.
 
 ## The Solution
 
-State tracking creates continuity. A simple JSON file persists what matters:
+A state file that persists across sessions:
 
 ```json
 {
   "project": "my-app",
-  "currentFocus": [
-    {
-      "description": "Implementing dark mode",
-      "files": ["src/theme.ts", "src/components/Toggle.tsx"],
-      "started": "2025-12-17"
-    }
-  ],
-  "lastSession": {
-    "date": "2025-12-17",
-    "summary": "Fixed typing indicator bug",
-    "commits": ["f3c149c"]
-  },
-  "backlog": [
-    {
-      "description": "Refactor status constants",
-      "type": "tech-debt",
-      "status": "open",
-      "context": "Found while fixing indicator",
-      "added": "2025-12-17"
-    }
-  ],
-  "shipped": [
-    {"date": "2025-12-17", "type": "fix", "summary": "Typing indicator fix"}
-  ]
+  "currentFocus": [{"description": "Implementing dark mode", "files": ["src/theme.ts"]}],
+  "lastSession": {"date": "2025-12-17", "summary": "Fixed typing indicator bug"},
+  "backlog": [{"description": "Refactor status constants", "type": "tech-debt"}],
+  "shipped": [{"date": "2025-12-17", "type": "fix", "summary": "Typing indicator fix"}]
 }
 ```
 
-A SessionStart hook loads this automatically. The next Claude picks up where work left off.
-
-## Philosophy-Driven Commands
-
-These commands follow a core principle: **explain WHY, not just WHAT**.
-
-Claude 4 follows instructions precisely. Show it examples, it matches them. Give it rules, it follows them mechanically. But explain the reasoning behind what you want, and it generalizes intelligently to novel situations.
-
-Every command in this system teaches understanding rather than procedures. The result: commands that handle unexpected situations because they know the goal, not just the steps.
+A SessionStart hook loads this automatically. Claude picks up where work left off.
 
 ## Installation
 
 ```bash
 git clone https://github.com/ugzv/claude-code-setup.git
 cd claude-code-setup
-
-# macOS/Linux
-./install.sh
-
-# Windows
-install.bat
 ```
 
-Restart Claude Code to pick up the new commands.
+Then run the installer:
 
-## Quick Start
+- macOS/Linux: `./install.sh`
+- Windows: `install.bat`
 
-```
-/migrate
-```
-
-Creates the tracking system: `CLAUDE.md` with session protocol, `.claude/state.json`, and the SessionStart hook. Safe to run on new or existing projects.
+Restart Claude Code. Run `/migrate` in any project to set up tracking.
 
 ## Commands
 
-### Planning
+| Command | Purpose |
+|---------|---------|
+| `/migrate` | Set up tracking system in a project |
+| `/think` | Plan approach before complex tasks |
+| `/fix` | Auto-fix linting and formatting |
+| `/test` | Run tests intelligently |
+| `/commit` | Commit changes with clean messages |
+| `/push` | Push and update state tracking |
+| `/health` | Check project health (security, tests, deps) |
+| `/analyze` | Find code that resists change |
+| `/backlog` | Review and manage backlog items |
+| `/agent` | Audit Claude Agent SDK projects |
+| `/mcp` | Validate MCP server projects |
+| `/prompt-guide` | Load prompting philosophy for prompt work |
+| `/commands` | List available project commands |
 
-| Command | What It Does |
-|---------|--------------|
-| `/think` | Think through approach before complex tasks. Explores codebase in parallel, asks batched questions with options, proposes approach for approval. |
-
-### Development
-
-| Command | What It Does |
-|---------|--------------|
-| `/fix` | Auto-fix linting and formatting. Parallel detection of CI config, Python tools, JS tools, and configs. |
-| `/test` | Run tests. Parallel execution for polyglot/monorepo projects. |
-| `/commit` | Commit YOUR changes (or use `--all` to batch commit everything). Clean messages, no AI fingerprints. |
-| `/push` | Push to remote. Parallel pre-push CI checks, then update state tracking. |
-
-### Analysis
-
-| Command | What It Does |
-|---------|--------------|
-| `/health` | Assess whether the team can ship with confidence. Runs security, types, tests, lint, outdated, and debt scans in parallel. |
-| `/analyze` | Find code that resists change. Uses parallel subagents for complexity, churn, dead code, and coupling analysis. |
-| `/agent` | Audit Agent SDK projects. Parallel checks for agent loop, tools, prompts, and safety. |
-| `/mcp` | Validate MCP servers. Parallel checks for SDK version, tools, transport, and error handling. |
-
-### Context
-
-| Command | What It Does |
-|---------|--------------|
-| `/backlog` | Review and manage backlog items. |
-| `/commands` | List available project commands. |
-
-### Prompting
-
-| Command | What It Does |
-|---------|--------------|
-| `/prompt-guide` | Load prompting philosophy, apply to any prompt work (create, audit, improve). |
-
-### Setup
-
-| Command | What It Does |
-|---------|--------------|
-| `/migrate` | Set up tracking system (works for new or existing projects). |
+Commands use parallel subagents where beneficial. LSP integration is optional for more accurate code analysis in `/analyze` and `/think`.
 
 ## How It Works
 
-```
-Session start → Hook loads state.json → Claude has context
-                        ↓
-              /think (if complex task)
-                        ↓
-                      Work
-                        ↓
-                    /commit → Clean commits, capture discoveries
-                        ↓
-                     /push → Push + update state + resolve backlog items
-```
-
-### The Hook
-
-`.claude/settings.json` contains a SessionStart hook that fires on:
-- Claude Code startup
-- `/resume`
-- `/clear`
-- Context compaction
-
-```json
-{
-  "hooks": {
-    "SessionStart": [
-      {
-        "hooks": [
-          {
-            "type": "command",
-            "command": "cat .claude/state.json 2>/dev/null || echo '{\"note\": \"No state.json found.\"}'"
-          }
-        ]
-      }
-    ]
-  }
-}
-```
-
-### Parallel Sessions
-
-`currentFocus` is an array, supporting multiple Claude sessions working on different parts of the same project. Each session registers what files it's touching, enabling conflict detection.
+1. Session starts, hook loads `state.json`
+2. Claude has context from previous session
+3. `/think` if task is complex
+4. Work on the task
+5. `/commit` with clean messages, capture discoveries
+6. `/push` to remote, update state
 
 ## File Structure
 
-After setup:
+After `/migrate`:
 
 ```
 your-project/
-├── CLAUDE.md              # Session protocol at top
+├── CLAUDE.md              # Session protocol
 └── .claude/
     ├── state.json         # Tracking data
     └── settings.json      # SessionStart hook
 ```
 
-Global commands:
-
-```
-~/.claude/
-└── commands/
-    ├── think.md
-    ├── fix.md
-    ├── test.md
-    ├── commit.md
-    ├── push.md
-    ├── health.md
-    ├── analyze.md
-    ├── agent.md
-    ├── mcp.md
-    ├── backlog.md
-    ├── commands.md
-    ├── prompt-guide.md
-    └── migrate.md
-```
+Global commands installed to `~/.claude/commands/`.
 
 ## Design Principles
 
 **State as continuity.** Sessions end, but work continues. The state file bridges the gap.
 
-**Verification over speculation.** Analysis commands like `/refactor` require evidence. "This file changes frequently" needs git history to back it up. Claims without data are worthless.
+**Verification over speculation.** Analysis commands require evidence. Claims without data are worthless.
 
-**Philosophy over procedures.** Commands explain WHY something matters, not step-by-step HOW. Claude reasons about the goal and figures out the approach for each situation.
+**Philosophy over procedures.** Commands explain WHY, not step-by-step HOW. Claude reasons about the goal for each situation.
 
-**Clean commits as communication.** Commits are for humans reading history months later. Atomic changes, clear messages, no AI fingerprints.
-
-**Backlog as persistent memory.** Discoveries made while working get captured before context evaporates. Future sessions can act on them.
+**Clean commits.** Atomic changes, clear messages, no AI fingerprints.
 
 ## Development
 
-This repo is the source for the command system. To work on it:
+This repo is the source. Commands in `commands/*.md` get copied to `~/.claude/commands/` on install.
 
-```bash
-cd claude-code-setup
-```
+Run `./install.sh` after changes, then test in another project.
 
-**Key files:**
-- `commands/*.md` - Command source files (copied to `~/.claude/commands/` on install)
-- `install.sh` / `install.bat` - Installation scripts
-- `CLAUDE.md` - Instructions for Claude when working on THIS project
+## References
 
-**When adding/modifying commands, consider:**
-- Would this help during actual coding sessions?
-- Is it used frequently enough to justify existing?
-- Could it be consolidated with another command?
-- Does it explain WHY (philosophy) not just WHAT (procedures)?
+- [Claude Code][claude-code] - Anthropic's agentic coding tool
+- [Effective harnesses for long-running agents][harnesses] - Anthropic Engineering
+- [Language Server Protocol][lsp] - LSP specification
 
-**Testing changes:**
-Run `./install.sh` to copy updated commands to `~/.claude/commands/`, then test in another project.
-
-## Credits
-
-Inspired by [Effective harnesses for long-running agents](https://www.anthropic.com/engineering/effective-harnesses-for-long-running-agents) from Anthropic Engineering.
-
-Prompt philosophy based on [Claude 4 best practices](https://docs.anthropic.com/en/docs/build-with-claude/prompt-engineering/claude-4-best-practices).
+[claude-code]: https://docs.anthropic.com/en/docs/claude-code
+[harnesses]: https://www.anthropic.com/engineering/effective-harnesses-for-long-running-agents
+[lsp]: https://microsoft.github.io/language-server-protocol/
