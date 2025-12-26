@@ -2,12 +2,27 @@
   "project": "claude-code-setup",
   "currentFocus": [],
   "lastSession": {
-    "date": "2025-12-22",
-    "summary": "Added parallel subagent patterns to commands (health, refactor, mcp, agent, fix, push, test, spec). Renamed commands for clarity: /refactor→/analyze, /prompt→/prompt-guide, /spec→/think. Added Windows installer.",
-    "commits": ["b88654b", "281433a", "5bea56d", "9492168", "3dc300a"]
+    "date": "2025-12-26",
+    "summary": "Added optional LSP support to /analyze and /think commands. Simplified README and install scripts. Added cleanup of obsolete commands to installers.",
+    "commits": ["5c6db28", "a3d6e87", "c1646d0", "8d4b15e"]
   },
   "backlog": [],
   "shipped": [
+    {
+      "date": "2025-12-26",
+      "type": "feat",
+      "summary": "Add optional LSP support to /analyze and /think for more accurate code analysis"
+    },
+    {
+      "date": "2025-12-26",
+      "type": "docs",
+      "summary": "Simplify README and install script output"
+    },
+    {
+      "date": "2025-12-26",
+      "type": "fix",
+      "summary": "Install scripts now remove obsolete commands before copying"
+    },
     {
       "date": "2025-12-22",
       "type": "feat",
