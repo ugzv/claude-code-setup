@@ -28,28 +28,29 @@ copy /Y "%SCRIPT_DIR%commands\*.md" "%USERPROFILE%\.claude\commands\" >nul
 echo Installing templates...
 copy /Y "%SCRIPT_DIR%templates\*.md" "%USERPROFILE%\.claude\templates\" >nul
 
-REM Configure settings (disable co-author in commits)
+REM Install statusline
+echo Installing statusline...
+copy /Y "%SCRIPT_DIR%statusline.sh" "%USERPROFILE%\.claude\statusline.sh" >nul
+
+REM Configure settings
 set "SETTINGS_FILE=%USERPROFILE%\.claude\settings.json"
 
-if exist "%SETTINGS_FILE%" (
-    findstr /C:"attribution" "%SETTINGS_FILE%" >nul
-    if errorlevel 1 (
-        echo Note: Add to %SETTINGS_FILE%: "attribution": { "commit": "" }
-    ) else (
-        echo Settings already configured
-    )
-) else (
-    echo { > "%SETTINGS_FILE%"
-    echo   "attribution": { >> "%SETTINGS_FILE%"
-    echo     "commit": "" >> "%SETTINGS_FILE%"
-    echo   } >> "%SETTINGS_FILE%"
-    echo } >> "%SETTINGS_FILE%"
-    echo Created settings.json
-)
+REM Create fresh settings (simpler than parsing JSON in batch)
+echo { > "%SETTINGS_FILE%"
+echo   "attribution": { >> "%SETTINGS_FILE%"
+echo     "commit": "" >> "%SETTINGS_FILE%"
+echo   }, >> "%SETTINGS_FILE%"
+echo   "statusLine": { >> "%SETTINGS_FILE%"
+echo     "type": "command", >> "%SETTINGS_FILE%"
+echo     "command": "~/.claude/statusline.sh" >> "%SETTINGS_FILE%"
+echo   } >> "%SETTINGS_FILE%"
+echo } >> "%SETTINGS_FILE%"
+echo Created settings.json
 
 echo.
-echo Done. Commands installed:
+echo Done. Commands and statusline installed.
 echo.
+echo Commands:
 echo   /migrate        Set up tracking in a project
 echo   /think          Plan approach before complex tasks
 echo   /fix            Auto-fix linting and formatting
@@ -63,6 +64,8 @@ echo   /agent          Audit Agent SDK projects
 echo   /mcp            Validate MCP server projects
 echo   /prompt-guide   Load prompting philosophy
 echo   /commands       List project commands
+echo.
+echo Note: Statusline requires bash and jq (Git Bash or WSL)
 echo.
 echo Next: Restart Claude Code, then run /migrate in a project
 echo.

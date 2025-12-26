@@ -32,21 +32,35 @@ cp "$SCRIPT_DIR/commands/"*.md ~/.claude/commands/
 echo "Installing templates..."
 cp "$SCRIPT_DIR/templates/"*.md ~/.claude/templates/
 
-# Configure settings (disable co-author in commits)
+# Install statusline
+echo "Installing statusline..."
+cp "$SCRIPT_DIR/statusline.sh" ~/.claude/statusline.sh
+chmod +x ~/.claude/statusline.sh
+
+# Configure settings
 SETTINGS_FILE=~/.claude/settings.json
 
-if [ -f "$SETTINGS_FILE" ]; then
-  if grep -q '"attribution"' "$SETTINGS_FILE"; then
-    echo "Settings already configured"
-  else
-    sed -i.bak 's/^{$/{\n  "attribution": {\n    "commit": ""\n  },/' "$SETTINGS_FILE" && rm -f "$SETTINGS_FILE.bak"
-    echo "Updated settings.json"
-  fi
+if command -v jq &> /dev/null && [ -f "$SETTINGS_FILE" ]; then
+  # Use jq for reliable JSON manipulation
+  UPDATED=$(jq '
+    .attribution.commit = "" |
+    .statusLine = {
+      "type": "command",
+      "command": "~/.claude/statusline.sh"
+    }
+  ' "$SETTINGS_FILE")
+  echo "$UPDATED" > "$SETTINGS_FILE"
+  echo "Updated settings.json"
 else
+  # Create fresh settings file
   cat > "$SETTINGS_FILE" << 'EOF'
 {
   "attribution": {
     "commit": ""
+  },
+  "statusLine": {
+    "type": "command",
+    "command": "~/.claude/statusline.sh"
   }
 }
 EOF
@@ -54,8 +68,9 @@ EOF
 fi
 
 echo ""
-echo "Done. Commands installed:"
+echo "Done. Commands and statusline installed."
 echo ""
+echo "Commands:"
 echo "  /migrate        Set up tracking in a project"
 echo "  /think          Plan approach before complex tasks"
 echo "  /fix            Auto-fix linting and formatting"
@@ -69,6 +84,8 @@ echo "  /agent          Audit Agent SDK projects"
 echo "  /mcp            Validate MCP server projects"
 echo "  /prompt-guide   Load prompting philosophy"
 echo "  /commands       List project commands"
+echo ""
+echo "Note: Statusline requires jq (install: brew install jq)"
 echo ""
 echo "Next: Restart Claude Code, then run /migrate in a project"
 echo ""
