@@ -13,6 +13,14 @@ REM Create directories
 if not exist "%USERPROFILE%\.claude\commands" mkdir "%USERPROFILE%\.claude\commands"
 if not exist "%USERPROFILE%\.claude\templates" mkdir "%USERPROFILE%\.claude\templates"
 
+REM Clean up obsolete commands
+for %%f in ("%USERPROFILE%\.claude\commands\*.md") do (
+    if not exist "%SCRIPT_DIR%commands\%%~nxf" (
+        del "%%f"
+        echo Removed obsolete: %%~nxf
+    )
+)
+
 REM Copy files
 echo Installing commands...
 copy /Y "%SCRIPT_DIR%commands\*.md" "%USERPROFILE%\.claude\commands\" >nul

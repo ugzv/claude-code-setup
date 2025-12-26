@@ -14,6 +14,17 @@ SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 mkdir -p ~/.claude/commands
 mkdir -p ~/.claude/templates
 
+# Clean up obsolete commands
+if ls ~/.claude/commands/*.md >/dev/null 2>&1; then
+  for file in ~/.claude/commands/*.md; do
+    name=$(basename "$file")
+    if [ ! -f "$SCRIPT_DIR/commands/$name" ]; then
+      rm "$file"
+      echo "Removed obsolete: $name"
+    fi
+  done
+fi
+
 # Copy files
 echo "Installing commands..."
 cp "$SCRIPT_DIR/commands/"*.md ~/.claude/commands/
