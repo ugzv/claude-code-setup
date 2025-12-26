@@ -79,6 +79,20 @@ your-project/
 
 Global commands installed to `~/.claude/commands/`.
 
+## Statusline
+
+A minimal statusline shows context usage at a glance:
+
+```
+opus 4.5 │ main │ ●●●○○○○○○○  30%
+```
+
+- Model and git branch for orientation
+- Visual progress bar for context window usage
+- Color shifts: normal → white (60%) → yellow (75%) → red (90%)
+
+Requires `jq` (`brew install jq` on macOS).
+
 ## Design Principles
 
 **State as continuity.** Sessions end, but work continues. The state file bridges the gap.

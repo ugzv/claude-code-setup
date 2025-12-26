@@ -63,7 +63,7 @@ done
 
 # Output - uniform when calm, bar+percent get color when attention needed
 if [ -n "$branch" ]; then
-    printf "%s │ %s │ ${color}%s  %d%%${RESET}\n" "$model" "$branch" "$bar" "$percent"
+    printf "%s │ %s │ ${color}%s  %d%%${RESET}" "$model" "$branch" "$bar" "$percent"
 else
-    printf "%s │ ${color}%s  %d%%${RESET}\n" "$model" "$bar" "$percent"
+    printf "%s │ ${color}%s  %d%%${RESET}" "$model" "$bar" "$percent"
 fi
