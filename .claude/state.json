@@ -3,11 +3,16 @@
   "currentFocus": [],
   "lastSession": {
     "date": "2025-12-26",
-    "summary": "Added optional LSP support to /analyze and /think commands. Simplified README and install scripts. Added cleanup of obsolete commands to installers.",
-    "commits": ["5c6db28", "a3d6e87", "c1646d0", "8d4b15e"]
+    "summary": "Added context-aware statusline showing model, git branch, and context usage with visual progress bar and semantic color shifts.",
+    "commits": ["016ea93", "9bbdcf6", "ab65fdb"]
   },
   "backlog": [],
   "shipped": [
+    {
+      "date": "2025-12-26",
+      "type": "feat",
+      "summary": "Add context-aware statusline with visual progress bar for context usage"
+    },
     {
       "date": "2025-12-26",
       "type": "feat",
