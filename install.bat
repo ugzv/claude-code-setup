@@ -61,7 +61,7 @@ echo   /health         Check project health
 echo   /analyze        Find code that resists change
 echo   /backlog        Review and manage backlog
 echo   /agent          Audit Agent SDK projects
-echo   /mcp            Validate MCP server projects
+echo   /mcp-guide      Validate MCP server projects
 echo   /prompt-guide   Load prompting philosophy
 echo   /commands       List project commands
 echo.
