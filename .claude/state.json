@@ -2,12 +2,22 @@
   "project": "claude-code-setup",
   "currentFocus": [],
   "lastSession": {
-    "date": "2025-12-26",
-    "summary": "Added context-aware statusline showing model, git branch, and context usage with visual progress bar and semantic color shifts.",
-    "commits": ["016ea93", "9bbdcf6", "ab65fdb"]
+    "date": "2025-12-29",
+    "summary": "Added lockfile sync validation to /push and /fix to prevent CI failures from out-of-sync lockfiles. Renamed /mcp to /mcp-guide to avoid conflict with built-in command.",
+    "commits": ["bc8a477", "ef8d692"]
   },
   "backlog": [],
   "shipped": [
+    {
+      "date": "2025-12-29",
+      "type": "feat",
+      "summary": "Add lockfile sync validation to /push and /fix commands"
+    },
+    {
+      "date": "2025-12-29",
+      "type": "refactor",
+      "summary": "Rename /mcp to /mcp-guide to avoid builtin conflict"
+    },
     {
       "date": "2025-12-26",
       "type": "feat",
