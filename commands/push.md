@@ -45,6 +45,10 @@ Fallback to `pyproject.toml` / `package.json` if no CI config.
 ┌─────────────────────────────────────────────────────────┐
 │  SPAWN ALL AT ONCE (single message, multiple Task calls)│
 ├─────────────────────────────────────────────────────────┤
+│  0. lockfile-checker (ALWAYS RUN FIRST)                 │
+│     → Verify lockfile matches manifest                  │
+│     → Return: pass/fail + what's out of sync            │
+│                                                         │
 │  1. format-checker                                      │
 │     → black --check / prettier --check                  │
 │     → Return: pass/fail + files needing format          │
@@ -63,6 +67,31 @@ Fallback to `pyproject.toml` / `package.json` if no CI config.
 └─────────────────────────────────────────────────────────┘
 ```
 
+### Lockfile Sync Check (Critical)
+
+**Why this matters:** Lockfiles often get out of sync when dependencies are added/removed but the lockfile isn't regenerated. This passes locally but fails in CI with `--frozen-lockfile`.
+
+**Detection and verification by package manager:**
+
+| Lockfile | Manifest | Check Command |
+|----------|----------|---------------|
+| `pnpm-lock.yaml` | `package.json` | `pnpm install --frozen-lockfile` |
+| `package-lock.json` | `package.json` | `npm ci` (or `npm install --package-lock-only`) |
+| `yarn.lock` | `package.json` | `yarn install --frozen-lockfile` |
+| `uv.lock` | `pyproject.toml` | `uv lock --check` |
+| `poetry.lock` | `pyproject.toml` | `poetry check --lock` |
+| `Cargo.lock` | `Cargo.toml` | `cargo check --locked` |
+
+**On failure, report clearly:**
+```
+✗ lockfile: pnpm-lock.yaml is out of sync with package.json
+  → 1 dependency removed from package.json but still in lockfile
+
+  Fix: Run 'pnpm install' to regenerate lockfile, then commit it.
+```
+
+**Auto-fix option:** If lockfile is out of sync, offer to run the install command and commit the updated lockfile before proceeding.
+
 **Example subagent prompt:**
 ```
 Run format check for this project. Use the tool that CI uses:
@@ -80,6 +109,7 @@ After all checks complete:
 - **Any fail:** Stop and report which checks failed:
   ```
   Pre-push checks failed:
+  ✗ lockfile: pnpm-lock.yaml out of sync (1 removed dep)
   ✗ format: 3 files need formatting
   ✗ lint: 12 errors
   ✓ types: passed

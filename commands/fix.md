@@ -2,7 +2,7 @@
 description: Auto-fix all linting, formatting, and code quality issues
 ---
 
-You are cleaning up the codebase - fixing everything that can be auto-fixed.
+You are cleaning up the codebase - fixing everything that can be auto-fixed, including lockfile sync issues.
 
 ## Why This Matters
 
@@ -55,6 +55,12 @@ A well-configured linter that catches real issues is infinitely more valuable th
 │     → Check if detected tools have config files         │
 │     → Flag tools without configs (will need setup)      │
 │     → Return: {"configured": [...], "missing": [...]}   │
+│                                                         │
+│  5. lockfile-checker                                    │
+│     → Detect lockfile type (pnpm/npm/yarn/uv/poetry)    │
+│     → Run check command to verify sync                  │
+│     → Return: {"in_sync": bool, "lockfile": "...",      │
+│                "issues": [...]}                         │
 └─────────────────────────────────────────────────────────┘
 ```
 
@@ -221,6 +227,43 @@ go mod tidy                   # Clean up go.mod
 cargo fmt                     # Format
 cargo clippy --fix            # Lint fixes
 ```
+
+## Lockfile Sync
+
+**This is critical.** Lockfiles out of sync with manifests cause CI failures that pass locally. Always check and fix lockfile sync issues.
+
+### Detection
+
+Check which lockfile exists and verify it's in sync:
+
+| Lockfile | Check Command | Fix Command |
+|----------|---------------|-------------|
+| `pnpm-lock.yaml` | `pnpm install --frozen-lockfile` | `pnpm install` |
+| `package-lock.json` | `npm ci` | `npm install` |
+| `yarn.lock` | `yarn install --frozen-lockfile` | `yarn install` |
+| `uv.lock` | `uv lock --check` | `uv lock` |
+| `poetry.lock` | `poetry check --lock` | `poetry lock` |
+| `Cargo.lock` | `cargo check --locked` | `cargo update` |
+
+### Common Causes
+
+- **Dependency added** but lockfile not regenerated
+- **Dependency removed** but lockfile still contains it
+- **Version changed** in manifest but lockfile has old version
+- **Manual package.json edit** without running install
+
+### Fix Process
+
+1. Detect which lockfile exists
+2. Run the check command (dry-run where possible)
+3. If out of sync, run the fix command
+4. Report what changed: "Regenerated pnpm-lock.yaml (removed duo-icons@1.1.4)"
+
+### When to Run
+
+- **Always** during `/fix` - check lockfile sync first
+- **Always** during `/push` pre-checks
+- **After** any manual package.json/pyproject.toml edits
 
 ## What to Fix
 
