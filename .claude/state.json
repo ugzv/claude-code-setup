@@ -2,12 +2,17 @@
   "project": "claude-code-setup",
   "currentFocus": [],
   "lastSession": {
-    "date": "2025-12-29",
-    "summary": "Added lockfile sync validation to /push and /fix to prevent CI failures from out-of-sync lockfiles. Renamed /mcp to /mcp-guide to avoid conflict with built-in command.",
-    "commits": ["bc8a477", "ef8d692"]
+    "date": "2026-01-02",
+    "summary": "Removed mcp-guide command (253 lines) to reduce context overhead. Claude has built-in MCP knowledge now.",
+    "commits": ["9fb2554"]
   },
   "backlog": [],
   "shipped": [
+    {
+      "date": "2026-01-02",
+      "type": "chore",
+      "summary": "Remove mcp-guide command to reduce context overhead"
+    },
     {
       "date": "2025-12-29",
       "type": "feat",
