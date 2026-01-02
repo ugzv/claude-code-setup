@@ -50,7 +50,6 @@ Restart Claude Code. Run `/migrate` in any project to set up tracking.
 | `/analyze` | Find code that resists change |
 | `/backlog` | Review and manage backlog items |
 | `/agent` | Audit Claude Agent SDK projects |
-| `/mcp` | Validate MCP server projects |
 | `/prompt-guide` | Load prompting philosophy for prompt work |
 | `/commands` | List available project commands |
 
