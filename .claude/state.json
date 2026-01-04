@@ -3,15 +3,15 @@
   "currentFocus": [],
   "lastSession": {
     "date": "2026-01-04",
-    "summary": "Rewrote /analyze command: switched from reactive git-history analysis to proactive best-practices auditing. Added test-coverage, type-safety, error-handling, consistency, security analyzers. Historical analysis now opt-in via --history flag.",
-    "commits": ["4da4f1d"]
+    "summary": "Rewrote /analyze command twice: first to proactive best-practices auditing, then to constructive architecture advisor. Default now finds unification opportunities, abstraction candidates, module health issues. Issue detection moved to --audit, history to --history.",
+    "commits": ["4da4f1d", "9761d58"]
   },
   "backlog": [],
   "shipped": [
     {
       "date": "2026-01-04",
       "type": "refactor",
-      "summary": "Rewrite /analyze for proactive best-practices auditing with project-type detection"
+      "summary": "Make /analyze a constructive architecture advisor (unification, abstraction, module health)"
     },
     {
       "date": "2026-01-02",
