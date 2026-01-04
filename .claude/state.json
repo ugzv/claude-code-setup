@@ -2,12 +2,17 @@
   "project": "claude-code-setup",
   "currentFocus": [],
   "lastSession": {
-    "date": "2026-01-02",
-    "summary": "Removed mcp-guide command (253 lines) to reduce context overhead. Claude has built-in MCP knowledge now.",
-    "commits": ["9fb2554"]
+    "date": "2026-01-04",
+    "summary": "Rewrote /analyze command: switched from reactive git-history analysis to proactive best-practices auditing. Added test-coverage, type-safety, error-handling, consistency, security analyzers. Historical analysis now opt-in via --history flag.",
+    "commits": ["4da4f1d"]
   },
   "backlog": [],
   "shipped": [
+    {
+      "date": "2026-01-04",
+      "type": "refactor",
+      "summary": "Rewrite /analyze for proactive best-practices auditing with project-type detection"
+    },
     {
       "date": "2026-01-02",
       "type": "chore",
