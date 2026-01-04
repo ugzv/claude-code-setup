@@ -2,164 +2,168 @@
 description: Analyze codebase for refactoring opportunities
 ---
 
-You are investigating what would make this codebase more maintainable.
+You are an architecture advisor helping make this codebase better organized.
 
-## Two Modes of Analysis
+## Philosophy: Constructive, Not Defensive
 
-**Proactive (default):** What SHOULD be better according to best practices—regardless of whether it's caused problems yet.
+The question isn't "what's wrong?" but "what could be better?"
 
-**Historical (`$ARGUMENTS` contains `--history`):** What HAS caused problems based on git history and bug patterns.
+**Defensive analysis** finds problems: missing error handling, type gaps, security issues. That's useful but reactive—it's fixing what's broken.
 
-Most codebases need proactive analysis. Historical analysis is useful when you suspect specific pain points but can't pinpoint them.
+**Constructive analysis** finds opportunities: code that could be unified, patterns worth extracting, modules ready to split, abstractions waiting to emerge. This is proactive—it's making good code better.
 
-## Why Evidence Still Matters
+This command defaults to constructive. Use `--audit` for defensive issue-detection.
 
-Anyone can say "add more tests" or "this needs error handling." That's generic advice, not analysis.
+## Modes
 
-What makes your analysis valuable is **specificity**: "These 4 services have no test files. This function handles 3 API calls with no try/except. These 12 functions have no type hints in a typed codebase."
+| Mode | Focus | Use When |
+|------|-------|----------|
+| **Default** | Architecture & refactoring opportunities | "How can I make this codebase better?" |
+| `--audit` | Issues & gaps to fix | "What problems should I address?" |
+| `--history` | Git churn & bug patterns | "What keeps breaking?" |
 
-**If you can't point to specific files and lines, you don't have a finding.**
+## Phase 1: Understand the Codebase
 
-## Phase 1: Project Detection
-
-Before spawning analyzers, understand what you're analyzing:
+Before analyzing, map what exists:
 
 ```
-1. Detect project type(s):
-   - Python: pyproject.toml, requirements.txt, setup.py
-   - TypeScript/JS: package.json, tsconfig.json
-   - Multi-service: docker-compose.yml, multiple package.json/pyproject.toml
-   - Agent system: .claude/agents/, MCP configs
+1. Codebase shape:
+   - Languages and frameworks
+   - Directory structure and conventions
+   - Entry points and boundaries
+   - Shared code locations
 
-2. Detect existing tooling:
-   - Linting: eslint, ruff, pylint, mypy, tsc --strict
-   - Testing: pytest, vitest, jest (check for test directories)
-   - Formatting: prettier, black, configured in pyproject.toml
+2. Scale indicators:
+   - Total files by type
+   - Largest files (>500 lines)
+   - Deepest directories
+   - Most imported modules
 
 3. Read .claude/state.json:
-   - Skip issues already in backlog
+   - Skip items already in backlog
    - Note currentFocus to avoid conflicts
 ```
 
-This determines which analyzers to run and what standards to check against.
-
 ## Phase 2: Run Analyzers in Parallel
 
-**CRITICAL: Use subagents simultaneously.** These are independent—run them all at once in a single message with multiple Task calls.
+**CRITICAL: Spawn all analyzers at once** in a single message with multiple Task calls.
 
-### Core Analyzers (Always Run)
+### Default Mode: Architecture Advisor
 
 ```
 ┌─────────────────────────────────────────────────────────────────┐
-│  SPAWN ALL AT ONCE (single message, multiple Task calls)       │
+│  SPAWN ALL AT ONCE (single message, multiple Task calls)        │
 ├─────────────────────────────────────────────────────────────────┤
 │                                                                 │
-│  1. test-coverage-auditor                                       │
-│     → Find source files with NO corresponding test file         │
-│     → Find exported functions never imported in tests           │
-│     → Check: test directory exists? CI runs tests?              │
-│     → Output: list of untested files/functions with impact      │
+│  1. unification-finder                                          │
+│     → Find similar code across different files                  │
+│     → Look for: similar functions, repeated patterns,           │
+│       copy-pasted blocks with minor variations                  │
+│     → Output: groups of similar code with unification strategy  │
 │                                                                 │
-│  2. type-safety-auditor                                         │
-│     → Python: functions missing type hints, Any usage           │
-│       Run: mypy --strict (if available) or grep patterns        │
-│     → TypeScript: any/unknown abuse, missing return types       │
-│       Run: tsc --noEmit --strict or grep for ": any"            │
-│     → Output: files with type safety gaps, severity             │
+│  2. abstraction-detector                                        │
+│     → Find patterns that repeat 3+ times                        │
+│     → Look for: inline logic that could be a function,          │
+│       function groups that could be a class/module,             │
+│       repeated conditionals, similar error handling             │
+│     → Output: pattern + locations + suggested abstraction       │
 │                                                                 │
-│  3. error-handling-auditor                                      │
-│     → Find API calls, DB operations, file I/O without try/catch │
-│     → Find catch blocks that swallow errors silently            │
-│     → Find inconsistent error response formats                  │
-│     → Output: unprotected operations with file:line             │
+│  3. module-health-checker                                       │
+│     → Find files that have grown too large (>400 lines)         │
+│     → Find files with too many responsibilities                 │
+│     → Find directories that could be reorganized                │
+│     → Output: candidates for splitting with suggested structure │
 │                                                                 │
-│  4. consistency-auditor                                         │
-│     → Find same operation done multiple ways                    │
-│       (e.g., 3 different HTTP client patterns)                  │
-│     → Find naming convention violations                         │
-│     → Find copy-pasted code blocks (>10 similar lines)          │
-│     → Output: inconsistencies with examples of each variant     │
+│  4. dependency-mapper                                           │
+│     → Map import relationships                                  │
+│     → Find: highly coupled modules, circular deps,              │
+│       modules imported everywhere (candidates for /shared)      │
+│     → Output: dependency insights + reorganization suggestions  │
 │                                                                 │
-│  5. security-auditor                                            │
-│     → Hardcoded secrets (API keys, passwords in code)           │
-│     → Env vars used but not in .env.example                     │
-│     → Missing input validation at API boundaries                │
-│     → SQL/command injection patterns                            │
-│     → Output: security issues with severity rating              │
+│  5. consistency-reviewer                                        │
+│     → Find same operation done multiple different ways          │
+│     → Not "this is wrong" but "pick one and standardize"        │
+│     → Output: the variants + which is most common + suggestion  │
 │                                                                 │
 └─────────────────────────────────────────────────────────────────┘
 ```
 
-### Project-Type Specific Analyzers
+### Project-Type Specific (Auto-Detected)
 
 ```
 ┌─────────────────────────────────────────────────────────────────┐
-│  IF Multi-Service Architecture (docker-compose, multiple apps)  │
+│  IF Multi-Service (docker-compose, multiple apps)               │
 ├─────────────────────────────────────────────────────────────────┤
 │                                                                 │
-│  6. service-consistency-auditor                                 │
-│     → Port conflicts or gaps in registry                        │
-│     → Docker vs deployment config drift                         │
-│     → Missing health checks                                     │
-│     → Inconsistent service structure (some have X, others don't)│
-│     → Env var requirements differ between services              │
+│  6. service-structure-reviewer                                  │
+│     → Compare service structures for consistency opportunities  │
+│     → Find shared code that lives in individual services        │
+│     → Find services that have drifted from common patterns      │
+│     → Output: standardization opportunities across services     │
 │                                                                 │
 └─────────────────────────────────────────────────────────────────┘
 
 ┌─────────────────────────────────────────────────────────────────┐
-│  IF Agent System (.claude/agents/, MCP configs, agent SDK)      │
+│  IF Agent System (.claude/agents/, MCP, agent SDK)              │
 ├─────────────────────────────────────────────────────────────────┤
 │                                                                 │
-│  7. agent-architecture-auditor                                  │
-│     → Prompt format consistency (YAML frontmatter, structure)   │
-│     → MCP config completeness (tools declared but not configured)│
-│     → Tool/capability alignment (agent says it can do X,        │
-│       but no tool provides X)                                   │
-│     → Timeout and error handling in agent runners               │
-│                                                                 │
-└─────────────────────────────────────────────────────────────────┘
-
-┌─────────────────────────────────────────────────────────────────┐
-│  IF --history flag (Historical Analysis)                        │
-├─────────────────────────────────────────────────────────────────┤
-│                                                                 │
-│  8. churn-analyzer                                              │
-│     → git log --numstat for change frequency                    │
-│     → Classify commits: bug-fix, feature, refactor              │
-│       - Conventional commits (fix:, feat:, refactor:)           │
-│       - Non-conventional: analyze diff size + message keywords  │
-│     → Correlate: files with >50% bug-fix commits                │
-│                                                                 │
-│  9. complexity-analyzer                                         │
-│     → Cyclomatic complexity (radon, eslint-complexity)          │
-│     → Function length (>50 lines)                               │
-│     → Nesting depth (>4 levels)                                 │
-│     → Correlate with churn data                                 │
-│                                                                 │
-│  10. coupling-analyzer                                          │
-│      → Files imported by 10+ others (high fan-in)               │
-│      → Files importing 10+ others (high fan-out)                │
-│      → Circular dependencies                                    │
-│      → WITH LSP: findReferences for precise counts              │
+│  7. agent-pattern-reviewer                                      │
+│     → Compare agent implementations for shared patterns         │
+│     → Find tool implementations that could be generalized       │
+│     → Find prompt patterns that could be templated              │
+│     → Output: agent architecture improvement opportunities      │
 │                                                                 │
 └─────────────────────────────────────────────────────────────────┘
 ```
 
-### Dead Code Analyzer (Always Run)
+### --audit Mode: Issue Detection
 
 ```
 ┌─────────────────────────────────────────────────────────────────┐
-│  11. dead-code-finder                                           │
+│  ONLY WHEN --audit FLAG IS PRESENT                              │
 ├─────────────────────────────────────────────────────────────────┤
-│     → JS/TS: npx knip (configure first if no knip.json)         │
-│     → Python: vulture, ruff --select F401,F841                  │
-│     → Unused dependencies in package.json/pyproject.toml        │
-│     → Files with no inbound imports                             │
-│     → VERIFY before flagging:                                   │
-│       - Check for dynamic imports                               │
-│       - Check if it's a public API entry point                  │
-│       - Check if it's test utilities                            │
-│     → WITH LSP: findReferences returning 0 = truly unused       │
+│                                                                 │
+│  A. test-coverage-auditor                                       │
+│     → Source files with no corresponding test                   │
+│     → Critical paths that are untested                          │
+│                                                                 │
+│  B. type-safety-auditor                                         │
+│     → Missing type hints, Any abuse                             │
+│     → TypeScript strict mode violations                         │
+│                                                                 │
+│  C. error-handling-auditor                                      │
+│     → Unprotected API/DB/IO operations                          │
+│     → Swallowed errors, inconsistent error responses            │
+│                                                                 │
+│  D. security-auditor                                            │
+│     → Hardcoded secrets, missing validation                     │
+│     → Injection risks                                           │
+│                                                                 │
+│  E. dead-code-finder                                            │
+│     → Unused exports, orphan files                              │
+│     → Unused dependencies                                       │
+│                                                                 │
+└─────────────────────────────────────────────────────────────────┘
+```
+
+### --history Mode: Churn Analysis
+
+```
+┌─────────────────────────────────────────────────────────────────┐
+│  ONLY WHEN --history FLAG IS PRESENT                            │
+├─────────────────────────────────────────────────────────────────┤
+│                                                                 │
+│  H1. churn-analyzer                                             │
+│      → Most modified files, bug-fix correlation                 │
+│      → Classify commits: bug-fix vs feature vs refactor         │
+│                                                                 │
+│  H2. complexity-analyzer                                        │
+│      → Cyclomatic complexity, function length, nesting          │
+│      → Correlate with churn for priority ranking                │
+│                                                                 │
+│  H3. coupling-analyzer                                          │
+│      → High fan-in/fan-out, circular dependencies               │
+│      → Correlate with churn for architectural problems          │
 │                                                                 │
 └─────────────────────────────────────────────────────────────────┘
 ```
@@ -167,204 +171,288 @@ This determines which analyzers to run and what standards to check against.
 ## Example Subagent Prompts
 
 ```
-# test-coverage-auditor
-Analyze test coverage for this project at [path].
-
-1. Find all source directories (src/, lib/, app/, services/)
-2. Find all test directories (tests/, __tests__/, *.test.*, *.spec.*)
-3. For each source file, check if a corresponding test file exists
-4. For key exported functions, grep test files to see if they're imported
-
-Output format:
-- Untested files: [list with paths]
-- Untested critical functions: [function names + file:line]
-- Test infrastructure: [exists/missing, framework used]
-- Estimated coverage gap: [high/medium/low based on findings]
-```
-
-```
-# error-handling-auditor
-Analyze error handling patterns in [path].
+# unification-finder
+Find code that could be unified in this codebase at [path].
 
 Look for:
-1. HTTP/fetch calls without try/catch or .catch()
-2. Database operations (query, insert, update) without error handling
-3. File I/O (read, write, open) without error handling
-4. Catch blocks that only log or do nothing (swallowed errors)
-5. Inconsistent error response formats across API endpoints
+1. Functions that do similar things in different files
+   - Same/similar name, different implementation
+   - Different name, same logic
+   - Copy-pasted with minor modifications
 
-For each finding, provide:
-- File and line number
-- The unprotected operation
-- Severity (critical if user-facing, medium if internal, low if dev-only)
-```
+2. Repeated code blocks (>5 lines appearing 2+ times)
+   - Exact duplicates
+   - Near-duplicates (same structure, different variables)
 
-```
-# consistency-auditor
-Analyze code consistency in [path].
-
-Find:
-1. Same operation implemented differently:
-   - HTTP clients (fetch vs axios vs httpx patterns)
-   - Date handling (multiple libraries or manual formatting)
-   - Error creation (new Error vs custom classes vs objects)
-   - Logging (console.log vs logger vs print)
-
-2. Naming violations:
-   - Mixed camelCase/snake_case in same language
-   - Inconsistent file naming (UserService.ts vs user-service.ts)
-
-3. Duplicate code:
-   - Blocks >10 lines that appear multiple times
-   - Same logic copy-pasted with minor variations
+3. Similar classes/modules that could share a base
+   - Services with same method signatures
+   - Components with same patterns
 
 For each finding:
-- Show 2-3 examples of the different approaches
-- Identify which pattern is most common (likely the "right" one)
+- Show the similar code snippets side-by-side
+- Explain what makes them candidates for unification
+- Suggest HOW to unify (shared function, base class, utility module)
+- Note any variations that would need to be parameterized
+
+Output format:
+## Unification Opportunity: [Name]
+**What:** [Description of the similar code]
+**Where:**
+- file1.py:45-67 - [brief description]
+- file2.py:23-41 - [brief description]
+**Similarity:** [What's the same]
+**Differences:** [What varies - these become parameters]
+**Suggested approach:** [How to unify]
+**Estimated impact:** [Lines saved, maintenance benefit]
 ```
 
 ```
-# churn-analyzer (for --history mode)
-Analyze git history for [path].
+# abstraction-detector
+Find patterns worth abstracting in this codebase at [path].
 
-1. Run: git log --numstat --since="6 months ago" --pretty=format:"%H|%s"
-2. Parse output to get: file, commit_hash, commit_message, lines_changed
+Look for:
+1. Inline logic that repeats (candidates for functions)
+   - Same conditional patterns
+   - Same data transformations
+   - Same validation sequences
 
-3. Classify each commit:
-   - bug-fix: message contains fix/bug/patch/issue/error/crash OR
-              message starts with "fix:" OR
-              diff is small (<50 lines) and touches existing code
-   - feature: message contains feat/add/implement/new OR
-              message starts with "feat:" OR
-              creates new files
-   - refactor: message contains refactor/clean/rename/move OR
-               message starts with "refactor:"
-   - chore: everything else
+2. Function groups that belong together (candidates for modules/classes)
+   - Functions that always get imported together
+   - Functions that operate on same data structures
+   - Related utilities scattered across files
 
-4. For each file, calculate:
-   - Total changes
-   - Bug-fix ratio (bug-fix commits / total commits)
-   - Last bug-fix date
+3. Repeated structural patterns (candidates for base classes/mixins)
+   - Same method signatures across classes
+   - Same initialization patterns
+   - Same lifecycle hooks
 
-Output the top 15 files by churn with bug-fix correlation.
-```
+For each pattern:
+- Show 3+ examples of where it appears
+- Suggest the abstraction (function signature, class interface, etc.)
+- Explain the benefit (DRY, single point of change, clearer intent)
 
-## Phase 3: Correlate and Prioritize
-
-After all subagents return, synthesize findings:
-
-### Priority Matrix
-
-| Finding Type | Impact | Effort | Priority |
-|--------------|--------|--------|----------|
-| Security issue (hardcoded secret) | Critical | Low | **P0 - Fix Now** |
-| No error handling on user-facing API | High | Low | **P1 - Quick Win** |
-| Critical path with no tests | High | Medium | **P1** |
-| Type safety gaps in shared code | Medium | Medium | **P2** |
-| Inconsistent patterns | Low | High | **P3 - Backlog** |
-| Dead code | Low | Low | **P3 - Quick cleanup** |
-
-### For --history mode, add correlations:
-- High complexity + high churn + high bug-ratio = **P0 refactor target**
-- High coupling + high churn = **architectural problem**
-
-## LSP Enhancement (Optional)
-
-If LSP is available, it provides more accurate analysis:
-
-```
-Check LSP availability:
-→ Try: LSP documentSymbol on a main source file
-→ If works: Use for coupling/dead-code (findReferences, incomingCalls)
-→ If errors: Fall back to grep/static analysis
-
-LSP advantages:
-- findReferences: exact call sites, not grep matches in comments
-- incomingCalls/outgoingCalls: precise call hierarchy
-- Dead code: findReferences returning 0 = truly unused
-```
-
-**Don't block on LSP.** Proceed with standard tools if unavailable.
-
-## Configure Tools Before Running
-
-Unconfigured tools produce noise. Before running analysis tools:
-
-**For knip (JS/TS dead code):**
-```json
-{
-  "$schema": "https://unpkg.com/knip@latest/schema.json",
-  "entry": ["src/index.ts"],
-  "project": ["src/**/*.ts"],
-  "ignore": ["dist/**", "**/*.test.ts"]
-}
-```
-
-**For vulture (Python dead code):**
-Create `.vulture_whitelist.py` for framework hooks:
+Output format:
+## Abstraction Candidate: [Name]
+**Pattern:** [What repeats]
+**Occurrences:**
+1. file1.py:34 - `code snippet`
+2. file2.py:89 - `code snippet`
+3. file3.py:12 - `code snippet`
+**Suggested abstraction:**
 ```python
-# Vulture whitelist
-_.on_startup  # FastAPI lifecycle
-_.tool  # MCP decorators
+def suggested_function(param1, param2):
+    # unified implementation
+```
+**Benefits:** [Why this abstraction helps]
 ```
 
-**For mypy (Python types):**
-Check if `pyproject.toml` has `[tool.mypy]`. If not, run with `--ignore-missing-imports`.
+```
+# module-health-checker
+Analyze module health and find splitting opportunities at [path].
 
-## Output Format
+Look for:
+1. Large files (>400 lines)
+   - What distinct responsibilities exist?
+   - Where are the natural split points?
+   - What would the resulting modules be?
 
-Structure your findings clearly:
+2. Files with too many imports (>15)
+   - Sign of too many responsibilities
+   - Which imports cluster together?
+
+3. Files with too many exports (>10)
+   - Might be doing too much
+   - Which exports are related?
+
+4. Directories that have grown messy
+   - Mix of related and unrelated files
+   - Missing subdirectory organization
+
+For each candidate:
+- Current state (lines, imports, exports, responsibilities)
+- Suggested split (new file names, what goes where)
+- Migration path (how to split without breaking imports)
+
+Output format:
+## Split Candidate: [filename]
+**Current state:**
+- Lines: X
+- Imports: Y
+- Exports: Z
+- Responsibilities: [list them]
+
+**Suggested split:**
+1. `new_file1.py` - [responsibility A]
+   - Move: function1, function2, ClassA
+2. `new_file2.py` - [responsibility B]
+   - Move: function3, ClassB
+
+**Migration:** [How to do it safely]
+```
+
+```
+# consistency-reviewer
+Find inconsistent patterns that should be standardized at [path].
+
+Look for variations in:
+1. How common operations are done
+   - HTTP clients (fetch vs axios vs httpx)
+   - Date handling (libraries, formats)
+   - Logging (console vs logger, formats)
+   - Error creation and handling
+
+2. Naming conventions
+   - File naming (UserService.ts vs user-service.ts)
+   - Function naming (camelCase vs snake_case)
+   - Variable naming patterns
+
+3. Code organization
+   - Import ordering
+   - Function ordering within files
+   - Directory structure across similar modules
+
+For each inconsistency:
+- Show the variants that exist
+- Count occurrences of each
+- Recommend which to standardize on (usually the most common)
+- Note any cases where variation is actually appropriate
+
+Output format:
+## Inconsistency: [What varies]
+**Variants found:**
+1. Pattern A (15 occurrences): `example`
+2. Pattern B (8 occurrences): `example`
+3. Pattern C (3 occurrences): `example`
+
+**Recommendation:** Standardize on Pattern A
+**Rationale:** [Why - most common, clearest, matches conventions]
+**Exception:** [If any variant is appropriate in certain contexts]
+```
+
+```
+# service-structure-reviewer (multi-service only)
+Compare service structures to find standardization opportunities at [path].
+
+1. Map each service's structure:
+   - Directory layout
+   - Common files (main.py, config.py, etc.)
+   - Patterns used (how endpoints defined, how errors handled)
+
+2. Find inconsistencies:
+   - Service A does X, Service B does Y for same thing
+   - Some services have feature Z, others don't
+
+3. Find shared code opportunities:
+   - Similar utilities in multiple services
+   - Same patterns reimplemented differently
+
+Output format:
+## Service Structure Comparison
+
+| Aspect | service-a | service-b | service-c |
+|--------|-----------|-----------|-----------|
+| Config pattern | X | Y | X |
+| Error handling | A | A | B |
+| ...
+
+## Standardization Opportunities
+1. [Description of what could be unified]
+2. ...
+
+## Shared Code Candidates
+1. [Code that exists in multiple services, could move to shared/]
+```
+
+## Phase 3: Synthesize and Prioritize
+
+After analyzers return, organize findings by impact:
+
+### Priority Framework
+
+**High Impact** (do these first):
+- Unifications that save >50 lines across files
+- Abstractions that simplify 5+ call sites
+- Splits that separate genuinely different concerns
+- Consistency fixes that affect >10 files
+
+**Medium Impact** (good improvements):
+- Unifications that reduce duplication
+- Abstractions that clarify intent
+- Reorganizations that improve discoverability
+
+**Lower Impact** (nice to have):
+- Minor consistency standardizations
+- Small-scale cleanups
+- Stylistic improvements
+
+### Output Format
 
 ```markdown
 ## Analysis Summary
 
-**Project Type:** [Python/TypeScript/Multi-service/Agent System]
-**Mode:** [Proactive/Historical]
-**Analyzers Run:** [list]
+**Project:** [type and scale]
+**Mode:** [Default/Audit/History]
+**Key insight:** [One sentence - the most important finding]
 
-## Critical Findings (Fix Now)
+---
 
-### [Finding Title]
-- **What:** [Specific issue]
-- **Where:** [file:line or list of files]
-- **Why it matters:** [Impact]
-- **Fix:** [Specific action]
+## High-Impact Opportunities
 
-## High Priority (Quick Wins)
+### 1. [Title - what could be better]
+**What:** [Clear description]
+**Where:** [Files involved]
+**Why it matters:** [Benefit - maintenance, clarity, DRY]
+**How:** [Concrete steps to implement]
+**Scope:** [Rough size - small/medium/large refactor]
 
-...
+### 2. ...
 
-## Medium Priority
+---
 
-...
+## Medium-Impact Opportunities
 
-## Low Priority / Backlog
+### 3. ...
 
-...
+---
 
-## What I Couldn't Verify
+## Quick Wins
 
-[List anything you suspected but couldn't confirm with tooling]
+- [Small improvement 1]
+- [Small improvement 2]
+
+---
+
+## Observations
+
+[Any architectural insights that aren't actionable but worth noting]
 ```
+
+## What Makes a Good Finding
+
+**Constructive:** "These could be unified" not "this is duplicated"
+**Specific:** Exact files and line numbers, not vague areas
+**Actionable:** Clear path to implementation
+**Worthwhile:** The improvement justifies the effort
 
 ## What to Leave Out
 
-- Findings without specific file/line references
-- Style preferences without consistency violations
-- "Best practices" that don't apply to this project type
-- Anything you couldn't verify with actual tool output
-- Suggestions that would require major rewrites without clear benefit
+- Tiny duplications (2-3 lines) - not worth abstracting
+- Stylistic preferences without consistency benefit
+- Theoretical improvements without concrete path
+- Refactors that would require rewriting everything
+- "Best practices" that don't fit this codebase's context
 
 ## After Analysis
 
-Don't just report. Offer to act:
+Offer to implement the highest-impact opportunity:
 
-1. **For P0 issues:** Offer to fix immediately
-2. **For P1 quick wins:** Offer to fix a batch
-3. **For P2/P3:** Add to backlog with evidence gathered
+"The biggest win here is [X]. Want me to start on that?"
 
-Ask: "Want me to start with [highest priority finding]?"
+For refactoring work:
+1. Register in `currentFocus` before starting
+2. Make changes incrementally with tests passing
+3. Commit logical chunks, not one massive commit
 
-The measure of success: concrete improvements the user can verify, not a list of theoretical problems.
+The measure of success: code that's easier to understand, modify, and extend—not just "cleaner" in abstract terms.
 
 $ARGUMENTS
