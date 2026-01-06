@@ -3,11 +3,16 @@
   "currentFocus": [],
   "lastSession": {
     "date": "2026-01-06",
-    "summary": "Merged notification hooks from my-claude-code-hooks repo. Unified Python installer handles commands, scripts, templates, statusline, and settings merging. Desktop + sound notifications on task completion.",
-    "commits": ["c720d68", "8c5232a", "cf54376", "867cc7e"]
+    "summary": "Merged hooks repo into unified installer, added auto-install of terminal-notifier on macOS via Homebrew.",
+    "commits": ["867cc7e", "f9956ea"]
   },
   "backlog": [],
   "shipped": [
+    {
+      "date": "2026-01-06",
+      "type": "feat",
+      "summary": "Auto-install terminal-notifier on macOS via Homebrew during install"
+    },
     {
       "date": "2026-01-06",
       "type": "feat",
@@ -52,11 +57,6 @@
       "date": "2025-12-26",
       "type": "feat",
       "summary": "Add optional LSP support to /analyze and /think for more accurate code analysis"
-    },
-    {
-      "date": "2025-12-26",
-      "type": "docs",
-      "summary": "Simplify README and install script output"
     }
   ]
 }
