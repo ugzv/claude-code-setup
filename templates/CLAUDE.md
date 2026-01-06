@@ -4,24 +4,15 @@
 
 ## On Session Start
 
-1. **Read Project State**:
-   ```bash
-   cat .claude/state.json
-   ```
+1. **State is auto-loaded** via SessionStart hook
 
-2. **Understand Context**:
-   - `currentFocus` → What we're working on (set by user)
-   - `lastSession` → What happened last time
-   - `backlog` → Open items to potentially work on
-   - `shipped` → Recent completions
-
-3. **Summarize**: Briefly state your understanding before proceeding:
+2. **Summarize** your understanding before proceeding:
    ```
    "Based on state.json: Last session you [X]. Current focus is [Y].
    There are [N] open backlog items. Ready to continue."
    ```
 
-4. **If no currentFocus**: Ask "What should we work on today?"
+3. **If no currentFocus**: Ask "What should we work on today?"
 
 ## Commands Available
 - `/commit` - Commit changes (clean, no AI mentions)

@@ -37,11 +37,10 @@ mkdir -p .claude
 - If exists but no protocol → prepend protocol, keep existing content below
 - If doesn't exist → create with protocol only
 
-The protocol should instruct Claude to:
-1. Read `.claude/state.json` on session start
-2. Understand `currentFocus`, `lastSession`, `backlog`, `shipped`
-3. Summarize context before proceeding
-4. Ask what to work on if no currentFocus
+The protocol should state that:
+1. State is auto-loaded via SessionStart hook
+2. Summarize context before proceeding
+3. Ask what to work on if no currentFocus
 
 Include rules: only user sets currentFocus, add discoveries during /push, never commit without being asked.
 
@@ -61,7 +60,20 @@ If exists: upgrade `currentFocus` from null/string to array if needed.
 
 ## 7. Configure Hooks
 
-Create/merge `.claude/settings.json` with SessionStart hook that runs `cat .claude/state.json`.
+Create/merge `.claude/settings.json` with SessionStart hook:
+
+```json
+{
+  "hooks": {
+    "SessionStart": [{
+      "hooks": [{
+        "type": "command",
+        "command": "cat .claude/state.json 2>/dev/null || echo '{\"note\": \"No state.json found. Run /migrate to set up tracking.\"}'"
+      }]
+    }]
+  }
+}
+```
 
 SessionStart fires on: startup, resume, /clear, context compaction.
 

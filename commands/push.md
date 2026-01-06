@@ -11,9 +11,11 @@ Claude sessions are ephemeral. State tracking creates continuity - next session 
 ## What State Captures
 
 - **lastSession**: Date, summary, commits pushed
-- **shipped**: Meaningful completions (features, fixes worth noting)
+- **shipped**: Last 10 completions only (older history in git commits)
 - **currentFocus**: Remove this session's focus when pushing; others stay
 - **backlog**: Auto-resolve items that match what was pushed
+
+**Keep state.json small**: Trim shipped to 10 entries when saving. For older history, use `git log`.
 
 ## Pre-Push CI Checks (Parallel)
 
