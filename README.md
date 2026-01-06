@@ -1,8 +1,10 @@
 # Claude Code Setup
 
-Session tracking and commands for [Claude Code](https://docs.anthropic.com/en/docs/claude-code).
+Session tracking, commands, and notifications for [Claude Code](https://docs.anthropic.com/en/docs/claude-code).
 
 ## Quick Start
+
+Requires Python 3.8+.
 
 ```bash
 git clone https://github.com/ugzv/claude-code-setup.git
@@ -82,7 +84,20 @@ your-project/
 
 Global commands: `~/.claude/commands/`
 
-## Optional: Statusline
+## Notifications
+
+Desktop notifications when Claude finishes a task. Works with multiple instances—each notification shows which terminal/editor and project.
+
+**macOS:** Install `terminal-notifier` for better notifications:
+```bash
+brew install terminal-notifier
+```
+
+**Supported apps:** Cursor, VSCode, Windsurf, iTerm, Warp, Terminal, Windows Terminal, and more.
+
+**Disable notifications:** Run `python install.py --uninstall` to remove notification hooks while keeping commands.
+
+## Statusline
 
 Shows context usage at a glance:
 
