@@ -2,6 +2,8 @@
 
 Session tracking, commands, and notifications for [Claude Code](https://docs.anthropic.com/en/docs/claude-code).
 
+**Platforms:** macOS and Windows.
+
 ## Quick Start
 
 Requires Python 3.8+.
@@ -88,10 +90,7 @@ Global commands: `~/.claude/commands/`
 
 Desktop notifications when Claude finishes a task. Works with multiple instances—each notification shows which terminal/editor and project.
 
-**macOS:** Install `terminal-notifier` for better notifications:
-```bash
-brew install terminal-notifier
-```
+On macOS, the installer automatically installs `terminal-notifier` via Homebrew if available.
 
 **Supported apps:** Cursor, VSCode, Windsurf, iTerm, Warp, Terminal, Windows Terminal, and more.
 

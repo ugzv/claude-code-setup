@@ -18,6 +18,7 @@ Usage:
 
 import json
 import shutil
+import subprocess
 import sys
 import platform
 import stat
@@ -27,6 +28,49 @@ from datetime import datetime
 
 IS_WINDOWS = platform.system() == "Windows"
 IS_MACOS = platform.system() == "Darwin"
+
+
+def install_macos_deps(dry_run: bool = False) -> None:
+    """Install terminal-notifier on macOS if brew is available."""
+    if not IS_MACOS:
+        return
+
+    # Check if terminal-notifier already installed
+    result = subprocess.run(
+        ["which", "terminal-notifier"],
+        capture_output=True,
+        text=True
+    )
+    if result.returncode == 0:
+        print("  terminal-notifier already installed")
+        return
+
+    # Check if brew is available
+    result = subprocess.run(
+        ["which", "brew"],
+        capture_output=True,
+        text=True
+    )
+    if result.returncode != 0:
+        print("  terminal-notifier not found (optional, using osascript fallback)")
+        print("  Install with: brew install terminal-notifier")
+        return
+
+    # Install via brew
+    if dry_run:
+        print("  Would install: terminal-notifier (via brew)")
+    else:
+        print("  Installing terminal-notifier...")
+        result = subprocess.run(
+            ["brew", "install", "terminal-notifier"],
+            capture_output=True,
+            text=True
+        )
+        if result.returncode == 0:
+            print("  terminal-notifier installed")
+        else:
+            print("  Failed to install terminal-notifier (notifications will use fallback)")
+            print(f"  Error: {result.stderr.strip()}")
 
 
 def get_claude_dir() -> Path:
@@ -342,13 +386,19 @@ def install(dry_run: bool = False) -> bool:
         print(f"  {script_count} scripts installed")
     print()
 
-    # Step 4: Copy statusline
-    print("Step 4: Installing statusline...")
+    # Step 4: Install macOS dependencies
+    if IS_MACOS:
+        print("Step 4: Checking macOS dependencies...")
+        install_macos_deps(dry_run)
+        print()
+
+    # Step 5: Copy statusline
+    print("Step 5: Installing statusline...")
     copy_statusline(dry_run)
     print()
 
-    # Step 5: Load and backup settings
-    print("Step 5: Loading settings...")
+    # Step 6: Load and backup settings
+    print("Step 6: Loading settings...")
     settings = load_settings()
     if settings:
         print(f"  Found existing settings")
@@ -360,8 +410,8 @@ def install(dry_run: bool = False) -> bool:
         print("  No existing settings, creating new")
     print()
 
-    # Step 6: Merge settings
-    print("Step 6: Merging configuration...")
+    # Step 7: Merge settings
+    print("Step 7: Merging configuration...")
     new_config = get_full_config()
     merged = merge_settings(settings, new_config)
 
