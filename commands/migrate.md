@@ -14,7 +14,7 @@ Report what exists.
 
 ## 2. Show Setup Plan
 
-BEFORE making changes, show what will be created/modified and wait for confirmation.
+Briefly report what will be created/modified, then proceed immediately. The user ran /migrate—that's explicit intent. Don't ask for confirmation.
 
 ## 3. Backup Existing Files
 
@@ -79,7 +79,7 @@ SessionStart fires on: startup, resume, /clear, context compaction.
 
 ## 8. Migrate Old Format (if found)
 
-Check for `.claude/progress.md`, `changelog.json`, `backlog.json`. Offer to migrate data and remove old files.
+Check for `.claude/progress.md`, `changelog.json`, `backlog.json`. Migrate data and remove old files.
 
 ## 9. LSP Setup (Optional)
 
@@ -87,10 +87,10 @@ Detect project language, check if LSP works (`documentSymbol` on a main file). I
 
 ## 10. Update .gitignore
 
-Offer to add `.claude/*.backup`.
+Add `.claude/*.backup` if not present.
 
 ## 11. Summary
 
-Report what was created/modified, hooks configured, next steps. Offer to commit tracking files.
+Report what was created/modified. Done.
 
 $ARGUMENTS
