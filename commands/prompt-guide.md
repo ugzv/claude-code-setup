@@ -64,10 +64,20 @@ Understanding the goal lets Claude apply spirit over letter in edge cases.
 5. **Conflicting instructions** - "Be concise" + "Include all details" → Clear priority
 6. **Threshold-based rules** - "If X > 5, flag as high" → Teaches matching, not judgment. Describe patterns that suggest problems instead.
 
+## When Generating Prompts
+
+**Avoid hardcoded examples in your output.** You know The Example Trap—apply it to what you write:
+- State principles abstractly, not through specific instances
+- If examples are essential, use placeholders like `[domain-specific term]` or describe the pattern generically
+- Never use examples that could bias toward a specific language, culture, domain, or style
+
+The agent reading your prompt will learn from every detail. Keep it clean.
+
 ## Review Checklist
 
 - [ ] Instructions are principles, not if-then rules?
 - [ ] Examples demonstrate principles, not patterns?
+- [ ] No hardcoded examples that could bias the target agent?
 - [ ] No unnecessary overlap or contradictions?
 - [ ] Would removing any instruction improve it?
 - [ ] Does Claude understand WHY?
