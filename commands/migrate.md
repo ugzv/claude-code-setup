@@ -2,40 +2,19 @@
 description: Set up Claude tracking system (new or existing projects)
 ---
 
-Set up the Claude tracking system. Works for both new and existing projects. NON-DESTRUCTIVE and IDEMPOTENT—safe to run multiple times.
+Set up the Claude tracking system. Non-destructive and idempotent.
 
 ## 1. Audit Existing Setup
 
 ```bash
-ls -la CLAUDE.md .claude/ .claude/settings.json 2>/dev/null
-cat CLAUDE.md 2>/dev/null | grep -c "SESSION PROTOCOL" || echo "0"
-test -f .claude/state.json && echo "STATE_EXISTS" || echo "NO_STATE"
+ls -la CLAUDE.md .claude/ 2>/dev/null
 ```
 
-Report findings to user.
+Report what exists.
 
 ## 2. Show Setup Plan
 
-BEFORE making changes, show:
-
-```
-SETUP PLAN
-==========
-CLAUDE.md:
-  - [EXISTS/MISSING]
-  - Has Session Protocol? [YES=skip / NO=prepend at TOP]
-
-.claude/state.json:    [EXISTS=check format / MISSING=create]
-  - currentFocus format: [array=ok / null/string=upgrade to array]
-.claude/settings.json: [EXISTS=merge hooks / MISSING=create with hooks]
-
-Hooks to configure:
-  - SessionStart: Read state.json on startup, resume, /clear, compaction
-
-Proceed? (y/n)
-```
-
-STOP and wait for confirmation.
+BEFORE making changes, show what will be created/modified and wait for confirmation.
 
 ## 3. Backup Existing Files
 
@@ -44,234 +23,62 @@ test -f CLAUDE.md && cp CLAUDE.md CLAUDE.md.backup
 test -f .claude/settings.json && cp .claude/settings.json .claude/settings.json.backup
 ```
 
-## 4. Create .claude Directory
+## 4. Create Structure
 
 ```bash
 mkdir -p .claude
 ```
 
-## 5. Handle CLAUDE.md - PREPEND at TOP
+## 5. Handle CLAUDE.md
 
-**IMPORTANT: Session protocol goes at the TOP of CLAUDE.md so Claude sees it first!**
+**Session protocol goes at TOP** so Claude sees it first.
 
-**If CLAUDE.md already has "SESSION PROTOCOL":**
-- SKIP - already migrated
+- If already has "SESSION PROTOCOL" → skip
+- If exists but no protocol → prepend protocol, keep existing content below
+- If doesn't exist → create with protocol only
 
-**If CLAUDE.md exists but no protocol:**
-- Read existing content
-- Create NEW file with protocol at TOP, then existing content below:
+The protocol should instruct Claude to:
+1. Read `.claude/state.json` on session start
+2. Understand `currentFocus`, `lastSession`, `backlog`, `shipped`
+3. Summarize context before proceeding
+4. Ask what to work on if no currentFocus
 
-```markdown
-# SESSION PROTOCOL
+Include rules: only user sets currentFocus, add discoveries during /push, never commit without being asked.
 
-> **IMPORTANT: Follow this protocol at the start of EVERY conversation and after /clear**
-
-## On Session Start
-
-1. **Read Project State**:
-   ```bash
-   cat .claude/state.json
-   ```
-
-2. **Understand Context**:
-   - `currentFocus` → Array of active work (multiple sessions supported)
-   - `lastSession` → What happened last time
-   - `backlog` → Open items to potentially work on
-   - `shipped` → Recent completions
-
-3. **Summarize**: Briefly state your understanding before proceeding:
-   ```
-   "Based on state.json: Last session you [X]. Current focus is [Y].
-   There are [N] open backlog items. Ready to continue."
-   ```
-
-4. **If no currentFocus**: Ask "What should we work on today?"
-
-## Commands Available
-- `/commit` - Commit changes (clean, no AI mentions)
-- `/push` - Push + update state.json + backlog check
-- `/backlog` - Review and manage backlog items
-
-## Rules
-- Only USER sets `currentFocus` - never assume or change it
-- Add discoveries to backlog during `/push`, not randomly
-- Keep backlog clean - resolve items when addressed
-- **Never commit on your own** - wait for user to run `/commit`. Exception: post-commit fixes (e.g., hook failures)
-
----
-
-[EXISTING CLAUDE.md CONTENT GOES HERE]
-```
-
-**If CLAUDE.md doesn't exist:**
-- Create with just the protocol section above (without the placeholder line)
-
-## 6. Create/Update State File (.claude/state.json)
-
-**If it doesn't exist**, create it:
+## 6. Create/Update state.json
 
 ```json
 {
-  "project": "[detect from package.json name, git remote, or folder name]",
+  "project": "[detect from package.json/git/folder]",
   "currentFocus": [],
-  "lastSession": {
-    "date": "[today]",
-    "summary": "Initialized Claude tracking system",
-    "commits": []
-  },
+  "lastSession": {"date": "[today]", "summary": "Initialized tracking", "commits": []},
   "backlog": [],
   "shipped": []
 }
 ```
 
-Note: `currentFocus` is an array to support multiple parallel Claude sessions. Each focus item looks like:
-```json
-{
-  "description": "what you're working on",
-  "files": ["src/auth.ts", "src/api/login.ts"],
-  "started": "YYYY-MM-DD"
-}
-```
+If exists: upgrade `currentFocus` from null/string to array if needed.
 
-**If it exists**, check for format upgrades:
-- If `currentFocus` is `null` or a string → convert to `[]`
-- If `currentFocus` is already an array → leave it alone
+## 7. Configure Hooks
 
-## 7. Configure Hooks (.claude/settings.json)
+Create/merge `.claude/settings.json` with SessionStart hook that runs `cat .claude/state.json`.
 
-Create or merge into `.claude/settings.json`:
+SessionStart fires on: startup, resume, /clear, context compaction.
 
-```json
-{
-  "hooks": {
-    "SessionStart": [
-      {
-        "hooks": [
-          {
-            "type": "command",
-            "command": "cat .claude/state.json 2>/dev/null || echo '{\"note\": \"No state.json found. Run /migrate to set up tracking.\"}'"
-          }
-        ]
-      }
-    ]
-  }
-}
-```
+## 8. Migrate Old Format (if found)
 
-**SessionStart fires on:** startup, resume, /clear, and context compaction - all scenarios where Claude needs fresh context.
+Check for `.claude/progress.md`, `changelog.json`, `backlog.json`. Offer to migrate data and remove old files.
 
-**If settings.json already exists:**
-- Read existing content
-- Merge the hooks (don't overwrite other settings)
-- If SessionStart hook already exists for state.json, skip
+## 9. LSP Setup (Optional)
 
-## 8. Remove Old Files (if migrating from previous version)
+Detect project language, check if LSP works (`documentSymbol` on a main file). If not available, offer to install appropriate language server.
 
-Check for old format files:
-```bash
-ls .claude/progress.md .claude/changelog.json .claude/backlog.json 2>/dev/null
-```
+## 10. Update .gitignore
 
-If found, ask: "Found old tracking files. Migrate data to state.json and remove them?"
-
-If yes:
-- Read progress.md → extract to lastSession.summary
-- Read changelog.json → extract recent entries to shipped
-- Read backlog.json → merge into backlog
-- Remove old files after migration
-
-## 9. LSP Server Setup (Optional)
-
-LSP (Language Server Protocol) enables more accurate code analysis in `/analyze` and `/think` commands.
-
-**Detect project language:**
-```bash
-ls package.json pyproject.toml go.mod Cargo.toml 2>/dev/null
-```
-
-**Check if LSP is already working:**
-```
-Try: LSP documentSymbol on a main source file
-- If it works → LSP already configured, skip
-- If it errors → Offer to install
-```
-
-**If LSP not available, ask:**
-```
-LSP enables more accurate code analysis (find exact usages, call hierarchy).
-Install language server for this project?
-
-Detected: [TypeScript/Python/Go/Rust]
-Install command: [see below]
-
-(y/n)
-```
-
-**Installation commands by language:**
-
-| Language | Install Command | Notes |
-|----------|-----------------|-------|
-| TypeScript/JS | `npm install -g typescript-language-server typescript` | Requires Node.js |
-| Python | `pip install python-lsp-server` or `pip install pyright` | pylsp or pyright |
-| Go | `go install golang.org/x/tools/gopls@latest` | Requires Go |
-| Rust | `rustup component add rust-analyzer` | Via rustup |
-
-**After installation**, Claude Code should auto-detect the LSP. Test with:
-```
-LSP documentSymbol on src/index.ts (or main entry file)
-```
-
-If it still fails after installation, the user may need to configure their LSP settings in Claude Code.
-
-## 10. Update .gitignore (Optional)
-
-Ask: "Add `.claude/*.backup` to .gitignore? (recommended)"
-
-If yes:
-```bash
-echo ".claude/*.backup" >> .gitignore
-```
+Offer to add `.claude/*.backup`.
 
 ## 11. Summary
 
-```
-SETUP COMPLETE
-==============
-Created:
-  ✓ .claude/state.json
-  ✓ .claude/settings.json (with hooks)
-
-Modified:
-  ✓ CLAUDE.md (protocol prepended at TOP)
-
-Backups:
-  • CLAUDE.md.backup
-  • .claude/settings.json.backup (if existed)
-
-Hooks configured:
-  • SessionStart → reads state.json on startup/resume/clear/compaction
-
-Next steps:
-  1. Review CLAUDE.md - customize if needed
-  2. Update .claude/state.json with current project state
-  3. Delete .backup files when satisfied
-  4. Commit: git add CLAUDE.md .claude/ && git commit -m "chore: add Claude tracking"
-
-LSP Status:
-  • [Installed/Not installed] - [language server name]
-  • Run /analyze or /think to use enhanced code intelligence
-```
-
-## 12. Commit (Optional)
-
-Ask: "Commit tracking files now?"
-
-If yes:
-```bash
-git add CLAUDE.md .claude/state.json .claude/settings.json
-git commit -m "chore: set up Claude tracking system"
-```
-
-Do NOT add .backup files.
+Report what was created/modified, hooks configured, next steps. Offer to commit tracking files.
 
 $ARGUMENTS

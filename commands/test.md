@@ -2,93 +2,57 @@
 description: Run tests intelligently based on what's available
 ---
 
-You are verifying the code works.
+Verify the code works.
 
-## Detect Test Frameworks
+## Detect Framework
 
-Check what this project uses:
-- `pyproject.toml` or `pytest.ini` or `tests/` → pytest (Python)
-- `package.json` scripts → jest, vitest, mocha (JS/TS)
-- `go.mod` with `_test.go` files → go test (Go)
-- `Cargo.toml` → cargo test (Rust)
+- `pyproject.toml` / `pytest.ini` / `tests/` → pytest
+- `package.json` scripts → jest, vitest, mocha
+- `go.mod` + `_test.go` → go test
+- `Cargo.toml` → cargo test
 
-## Parallel Test Execution (Polyglot/Monorepo Projects)
+## Parallel Execution (Multi-Framework)
 
-**If multiple test frameworks are detected**, run them in parallel using subagents:
+**If multiple frameworks detected, spawn all at once:**
 
 ```
-┌─────────────────────────────────────────────────────────┐
-│  SPAWN IF MULTIPLE FRAMEWORKS DETECTED                  │
-├─────────────────────────────────────────────────────────┤
-│  1. python-tests (if pytest/pyproject.toml found)       │
-│     → pytest tests/ -v                                  │
-│     → Return: pass/fail count, failure details          │
-│                                                         │
-│  2. js-tests (if package.json with test script)         │
-│     → npm test / vitest run / jest                      │
-│     → Return: pass/fail count, failure details          │
-│                                                         │
-│  3. go-tests (if go.mod + *_test.go files)              │
-│     → go test ./...                                     │
-│     → Return: pass/fail count, failure details          │
-│                                                         │
-│  4. rust-tests (if Cargo.toml)                          │
-│     → cargo test                                        │
-│     → Return: pass/fail count, failure details          │
-└─────────────────────────────────────────────────────────┘
+┌────────────────────────────────────────────────────────┐
+│  SPAWN IF MULTIPLE FRAMEWORKS                          │
+├────────────────────────────────────────────────────────┤
+│  1. python-tests → pytest -v                           │
+│  2. js-tests → npm test / vitest / jest                │
+│  3. go-tests → go test ./...                           │
+│  4. rust-tests → cargo test                            │
+└────────────────────────────────────────────────────────┘
 ```
 
-**For single-language projects**, just run tests directly (no subagent overhead needed).
+For single-language projects, run directly (no subagent overhead).
 
-## Run Tests
+## Run Commands
 
-### Python
 ```bash
-# pytest is standard
+# Python
 pytest tests/ -v
 
-# With coverage if available
-pytest tests/ -v --cov=src --cov-report=term-missing
+# JS/TS
+npm test  # or: npx vitest run, npx jest
 
-# Skip slow tests (if marked)
-pytest tests/ -v -m "not slow"
-```
+# Go
+go test ./...
 
-### JavaScript/TypeScript
-```bash
-# Check package.json scripts
-npm test           # or: yarn test, pnpm test
-
-# Direct runners
-npx vitest run     # Vitest
-npx jest           # Jest
-```
-
-### Go
-```bash
-go test ./...      # All packages
-go test -v ./...   # Verbose
-```
-
-### Rust
-```bash
+# Rust
 cargo test
 ```
 
 ## Arguments
 
-If the user provides arguments, pass them through:
-- `/test auth` → run tests matching "auth"
-- `/test -k login` → pytest with -k flag
+Pass user arguments through:
+- `/test auth` → tests matching "auth"
+- `/test -k login` → pytest -k flag
 - `/test --watch` → watch mode if supported
 
 ## After Running
 
-Report results clearly:
-- How many tests passed/failed
-- Which tests failed and why (show error messages)
-- If all passed, confirm briefly
-
-If tests fail, offer to investigate and fix the failures.
+Report: passed/failed counts, failure details. If failures, offer to investigate and fix.
 
 $ARGUMENTS

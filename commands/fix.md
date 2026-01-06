@@ -2,293 +2,104 @@
 description: Auto-fix all linting, formatting, and code quality issues
 ---
 
-You are cleaning up the codebase - fixing everything that can be auto-fixed, including lockfile sync issues.
+Clean up the codebase - fix everything that can be auto-fixed.
 
-## Why This Matters
+## CI Config is Source of Truth
 
-Manual cleanup is tedious. Unused imports, inconsistent formatting, simple lint errors - these accumulate and make code harder to read. Modern tools can fix most of these automatically. Your job is to run everything available and make the codebase cleaner.
-
-## Tools Need Configs to Work Well
-
-A tool without a config is a tool waiting to fail. Running `ruff check` with no config uses defaults that might be too strict or too loose for the project. Running `eslint --fix` without a config often does nothing useful.
-
-**Your job isn't just to run tools—it's to ensure they're set up correctly for this specific project.**
-
-When you find a tool installed but unconfigured:
-1. Check if a config file exists (pyproject.toml sections, eslint.config.js, etc.)
-2. If missing, create one tuned for the project type (MCP server, Agent SDK, web app)
-3. Match existing project style (line length, quote style) by sampling a few files
-4. Then run the tool
-
-A well-configured linter that catches real issues is infinitely more valuable than an unconfigured one that spews noise or misses everything.
-
-## CI Config is the Source of Truth
-
-**Check CI first.** If `.github/workflows/*.yml` exists, parse it to see what tools the CI actually runs. Your goal is to ensure CI passes, not just "code looks formatted."
-
-**Run what CI runs.** If CI uses `black --check`, run `black .` locally. If CI uses `ruff`, run `ruff`. Don't assume one replaces the other—they have subtle differences that cause CI failures.
+**Check CI first.** Parse `.github/workflows/*.yml` to see what tools CI actually runs. Your goal is CI passing, not just "code looks formatted."
 
 ## Parallel Detection Phase
 
-**IMPORTANT: Use subagents to detect available tools simultaneously.** Don't wait for CI parsing to finish before checking pyproject.toml.
+**Spawn all detectors at once:**
 
 ```
-┌─────────────────────────────────────────────────────────┐
-│  SPAWN ALL AT ONCE (single message, multiple Task calls)│
-├─────────────────────────────────────────────────────────┤
-│  1. ci-parser                                           │
-│     → Parse .github/workflows/*.yml                     │
-│     → Extract: which linters, formatters CI runs        │
-│     → Return: {"tools": [...], "commands": [...]}       │
-│                                                         │
-│  2. python-detector                                     │
-│     → Check pyproject.toml for [tool.ruff], [tool.black]│
-│     → Check if ruff/black/isort installed               │
-│     → Return: {"available": [...], "configured": [...]} │
-│                                                         │
-│  3. js-detector                                         │
-│     → Check package.json devDependencies                │
-│     → Look for eslint, prettier, biome configs          │
-│     → Return: {"available": [...], "configured": [...]} │
-│                                                         │
-│  4. config-validator                                    │
-│     → Check if detected tools have config files         │
-│     → Flag tools without configs (will need setup)      │
-│     → Return: {"configured": [...], "missing": [...]}   │
-│                                                         │
-│  5. lockfile-checker                                    │
-│     → Detect lockfile type (pnpm/npm/yarn/uv/poetry)    │
-│     → Run check command to verify sync                  │
-│     → Return: {"in_sync": bool, "lockfile": "...",      │
-│                "issues": [...]}                         │
-└─────────────────────────────────────────────────────────┘
+┌────────────────────────────────────────────────────────┐
+│  SPAWN ALL AT ONCE                                     │
+├────────────────────────────────────────────────────────┤
+│  1. ci-parser                                          │
+│     → Parse .github/workflows/*.yml                    │
+│     → Return: {"tools": [...], "commands": [...]}      │
+│                                                        │
+│  2. python-detector                                    │
+│     → Check pyproject.toml for ruff/black configs      │
+│     → Return: {"available": [...], "configured": [...]}│
+│                                                        │
+│  3. js-detector                                        │
+│     → Check package.json, eslint/prettier configs      │
+│     → Return: {"available": [...], "configured": [...]}│
+│                                                        │
+│  4. lockfile-checker                                   │
+│     → Verify lockfile matches manifest                 │
+│     → Return: {"in_sync": bool, "issues": [...]}       │
+└────────────────────────────────────────────────────────┘
 ```
 
-### Detection Priority (After Parallel Results)
+## Detection Priority
 
-1. **CI config** - highest priority, this is what actually runs
-2. **pyproject.toml / package.json** - fallback if no CI config
-3. **Installed tools** - last resort, detect what's available
+1. **CI config** - what actually runs in CI
+2. **pyproject.toml / package.json** - fallback
+3. **Installed tools** - last resort
 
-### Apply Fixes (Sequential)
+## Apply Fixes (Sequential)
 
-After detection, run fixes in the correct order:
-- **Lint first** (finds issues), then **format** (may change what lint found)
-- For Python with both ruff and black: `ruff check --fix .` then `black .`
+Run fixes in correct order: **lint first** (finds issues), then **format** (may change what lint found).
 
 ### Python
-
-**First, check what CI uses:**
 ```bash
-# Parse CI config for Python tools
-grep -E "black|ruff|flake8|isort|mypy" .github/workflows/*.yml
-```
-
-**Then run the matching tools:**
-
-```bash
-# If CI uses black (even if ruff is also installed)
-black .
-isort .  # if used
-
-# If CI uses ruff
-ruff check --fix .
-ruff format .
-
-# If CI uses both (some projects do)
-ruff check --fix .
-black .  # run black AFTER ruff to ensure black's formatting wins
-```
-
-**If no CI config**, fall back to pyproject.toml detection:
-- `[tool.ruff]` → run ruff
-- `[tool.black]` → run black
-- Neither → check what's installed
-
-**If no tools installed**, offer to add ruff:
-```bash
-uv add --dev ruff   # or: pip install ruff
-```
-
-**If ruff is installed but no config exists** (`[tool.ruff]` missing from pyproject.toml), create one tuned for the project:
-
-```toml
-[tool.ruff]
-line-length = 120  # Or match existing style
-target-version = "py311"  # Match project's Python version
-
-[tool.ruff.lint]
-select = [
-    "E",      # pycodestyle errors
-    "F",      # pyflakes
-    "I",      # isort
-    "UP",     # pyupgrade
-    "B",      # flake8-bugbear (catches real bugs)
-    "SIM",    # flake8-simplify
-]
-ignore = [
-    "E501",   # Line length (handled by formatter)
-]
-
-[tool.ruff.lint.per-file-ignores]
-"tests/*" = ["S101"]  # Allow assert in tests
-```
-
-For **MCP servers** (FastMCP/Python), add:
-```toml
-[tool.ruff.lint.per-file-ignores]
-"src/server.py" = ["ARG001"]  # Unused args OK in tool handlers
-```
-
-For **Agent SDK projects**, add:
-```toml
-[tool.ruff.lint]
-extend-ignore = ["PLR0913"]  # Allow many args in agent configs
+# Match what CI uses
+ruff check --fix . && ruff format .  # or
+black . && isort .                    # if CI uses these
 ```
 
 ### JavaScript/TypeScript
-
-**First, check what CI uses:**
 ```bash
-grep -E "eslint|prettier|biome" .github/workflows/*.yml
-```
-
-**Then run the matching tools:**
-```bash
-# If CI uses eslint
 npx eslint --fix .
-
-# If CI uses prettier
 npx prettier --write .
-
-# If CI uses biome
-npx biome check --apply .
-```
-
-**If no CI config**, fall back to package.json devDependencies detection.
-
-**If no tools installed**, offer to add eslint + prettier:
-```bash
-npm install -D eslint prettier eslint-config-prettier
-```
-
-**If eslint is installed but no config exists**, create one tuned for the project:
-
-For **TypeScript projects** (MCP servers, etc.), create `eslint.config.js`:
-```javascript
-import eslint from '@eslint/js';
-import tseslint from 'typescript-eslint';
-
-export default tseslint.config(
-  eslint.configs.recommended,
-  ...tseslint.configs.recommended,
-  {
-    rules: {
-      '@typescript-eslint/no-unused-vars': ['error', { argsIgnorePattern: '^_' }],
-      '@typescript-eslint/no-explicit-any': 'warn',
-    },
-  },
-  {
-    ignores: ['dist/', 'build/', 'node_modules/'],
-  }
-);
-```
-
-For **Prettier**, create `.prettierrc`:
-```json
-{
-  "semi": true,
-  "singleQuote": true,
-  "tabWidth": 2,
-  "trailingComma": "es5"
-}
-```
-
-**If using Biome** (faster alternative), create `biome.json`:
-```json
-{
-  "organizeImports": { "enabled": true },
-  "linter": { "enabled": true },
-  "formatter": { "enabled": true, "indentStyle": "space" }
-}
+# or: npx biome check --apply .
 ```
 
 ### Go
-
 ```bash
-gofmt -w .                    # Format
-goimports -w .                # Fix imports (install: go install golang.org/x/tools/cmd/goimports@latest)
-go mod tidy                   # Clean up go.mod
+gofmt -w . && goimports -w . && go mod tidy
 ```
 
 ### Rust
-
 ```bash
-cargo fmt                     # Format
-cargo clippy --fix            # Lint fixes
+cargo fmt && cargo clippy --fix
 ```
 
 ## Lockfile Sync
 
-**This is critical.** Lockfiles out of sync with manifests cause CI failures that pass locally. Always check and fix lockfile sync issues.
+**Critical** - out-of-sync lockfiles pass locally but fail CI.
 
-### Detection
-
-Check which lockfile exists and verify it's in sync:
-
-| Lockfile | Check Command | Fix Command |
-|----------|---------------|-------------|
+| Lockfile | Check | Fix |
+|----------|-------|-----|
 | `pnpm-lock.yaml` | `pnpm install --frozen-lockfile` | `pnpm install` |
 | `package-lock.json` | `npm ci` | `npm install` |
 | `yarn.lock` | `yarn install --frozen-lockfile` | `yarn install` |
 | `uv.lock` | `uv lock --check` | `uv lock` |
 | `poetry.lock` | `poetry check --lock` | `poetry lock` |
-| `Cargo.lock` | `cargo check --locked` | `cargo update` |
 
-### Common Causes
+## Tools Need Configs
 
-- **Dependency added** but lockfile not regenerated
-- **Dependency removed** but lockfile still contains it
-- **Version changed** in manifest but lockfile has old version
-- **Manual package.json edit** without running install
-
-### Fix Process
-
-1. Detect which lockfile exists
-2. Run the check command (dry-run where possible)
-3. If out of sync, run the fix command
-4. Report what changed: "Regenerated pnpm-lock.yaml (removed duo-icons@1.1.4)"
-
-### When to Run
-
-- **Always** during `/fix` - check lockfile sync first
-- **Always** during `/push` pre-checks
-- **After** any manual package.json/pyproject.toml edits
+If a tool is installed but unconfigured, create an appropriate config for the project type before running. Match existing project style (line length, quote style) by sampling files.
 
 ## What to Fix
 
-Run everything that auto-fixes. Common categories:
-
-- **Unused imports** - Remove them, they're clutter
-- **Unused variables** - Remove or prefix with `_` if intentional
-- **Import sorting** - Consistent ordering
-- **Formatting** - Consistent style
-- **Simple lint errors** - Whatever the linter can auto-fix
+- Unused imports - remove
+- Unused variables - remove or prefix with `_`
+- Import sorting - consistent ordering
+- Formatting - consistent style
+- Simple lint errors - auto-fixable issues
 
 ## What NOT to Do
 
 - Don't change logic or behavior
-- Don't remove code that looks unused but might be (check for dynamic usage)
-- Don't fix things that require human judgment
-- Don't commit - that's `/commit` when the user is ready
+- Don't remove code that might be dynamically used
+- Don't commit - that's `/commit`
 
 ## After Fixing
 
-Report what was fixed:
-- Which tools ran
-- Summary of changes (e.g., "Removed 12 unused imports, formatted 8 files")
-- Any errors or files that couldn't be fixed
-
-If significant unused code was found, mention it but don't delete functions/classes automatically - that needs human review.
+Report: which tools ran, summary of changes, any errors that couldn't be auto-fixed.
 
 $ARGUMENTS
