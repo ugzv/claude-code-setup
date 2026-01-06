@@ -11,16 +11,7 @@ Create a spec before writing code. Prevents wasted work on wrong approaches.
 
 ## Phase 1: Understand
 
-Restate what you're being asked in one sentence.
-
-If unclear, batch 2-3 clarifying questions with concrete options:
-```
-1. **Scope:** All users or admins only?
-   - A) All users (simpler)
-   - B) Admin-only (needs permission check)
-```
-
-Use AskUserQuestion tool. Options with trade-offs, not open-ended questions.
+Restate what you're being asked in one sentence. If fundamentally unclear, ask - but batch questions and offer concrete options.
 
 ## Phase 2: Explore (Parallel)
 
@@ -50,18 +41,22 @@ If LSP available, use `workspaceSymbol` and `goToDefinition` for faster explorat
 
 ## Phase 3: Propose
 
-Present approach concisely:
+Based on exploration, **recommend the optimal approach** - don't default to presenting options.
+
 ```
-**Approach:** [what you'll do]
+**Approach:** [what you'll do and why it fits this codebase]
 **Files:** [count] touched
 - path/to/file.ts (new/modify)
 
-**Open question:** [if any architectural choice]
-- A) Option with trade-off
-- B) Alternative with trade-off
-
-Ready to proceed after your input.
+Ready to proceed, or want me to explain the reasoning?
 ```
+
+**Only present options when:**
+- Multiple genuinely valid approaches exist with real trade-offs
+- The choice depends on user preference (not technical merit)
+- Exploration revealed conflicting patterns in the codebase
+
+If you must present options, recommend one and explain why.
 
 ## Phase 4: Confirm and Continue
 
@@ -70,11 +65,18 @@ Wait for user confirmation, then implement. No plan files unless task spans sess
 ## What NOT to Do
 
 - Don't write code during planning
-- Don't ask >3 questions per batch
-- Don't skip exploration and guess
+- Don't ask questions you can answer by exploring
+- Don't present options when one approach is clearly better
 
 ## Large Tasks
 
-If >10-12 distinct tasks, suggest breaking into phases. Plan and implement Phase 1 first, re-plan Phase 2 with learnings.
+If >10-12 distinct tasks, break into phases small enough to complete in one session.
+
+When user confirms:
+1. Current phase → `currentFocus` with description + files
+2. Remaining phases → `backlog` with `blocked_by`
+3. Start work
+
+**If context runs low mid-task:** Update `currentFocus` with progress (`completed`, `remaining`, `next_step`) before session ends. Next session picks up exactly where you left off.
 
 $ARGUMENTS
