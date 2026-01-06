@@ -55,6 +55,7 @@ A hook loads this on session start. `/push` trims `shipped` to 10 entries—olde
 |---------|---------|
 | `/think` | Plan before complex tasks |
 | `/backlog` | Review open items |
+| `/prompt-guide` | Prompting philosophy for agent work |
 
 **Setup & utilities:**
 
@@ -64,6 +65,7 @@ A hook loads this on session start. `/push` trims `shipped` to 10 entries—olde
 | `/dev` | Start dev server (kills port first) |
 | `/health` | Check project health |
 | `/analyze` | Find code that resists change |
+| `/agent` | Audit Agent SDK projects |
 | `/commands` | List available commands |
 
 ## File Structure
