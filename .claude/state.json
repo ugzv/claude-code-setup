@@ -2,12 +2,22 @@
   "project": "claude-code-setup",
   "currentFocus": [],
   "lastSession": {
-    "date": "2026-01-04",
-    "summary": "Rewrote /analyze command twice: first to proactive best-practices auditing, then to constructive architecture advisor. Default now finds unification opportunities, abstraction candidates, module health issues. Issue detection moved to --audit, history to --history.",
-    "commits": ["4da4f1d", "9761d58"]
+    "date": "2026-01-06",
+    "summary": "Slimmed all 13 commands by ~55% (2200→995 lines). Removed hand-holding, inline configs, verbose examples while preserving parallel subagent patterns. Updated /think to recommend optimal approach instead of defaulting to options, added state.json tracking for large multi-session tasks.",
+    "commits": ["5b784b9", "a98ef4a", "2d24755", "25dacbc"]
   },
   "backlog": [],
   "shipped": [
+    {
+      "date": "2026-01-06",
+      "type": "refactor",
+      "summary": "Slim all commands ~55% to reduce context usage, trust Claude's intelligence"
+    },
+    {
+      "date": "2026-01-06",
+      "type": "refactor",
+      "summary": "/think: recommend optimal approach, track large tasks in state.json for session continuity"
+    },
     {
       "date": "2026-01-04",
       "type": "refactor",
@@ -72,46 +82,6 @@
       "date": "2025-12-21",
       "type": "feat",
       "summary": "Add config creation for linting/analysis tools in /fix and /refactor"
-    },
-    {
-      "date": "2025-12-21",
-      "type": "refactor",
-      "summary": "Rename /plan to /spec to avoid built-in command conflict"
-    },
-    {
-      "date": "2025-12-21",
-      "type": "feat",
-      "summary": "Enhance /push: CI status check + pre-push lint detection"
-    },
-    {
-      "date": "2025-12-21",
-      "type": "feat",
-      "summary": "Add /spec for spec-driven planning before complex tasks"
-    },
-    {
-      "date": "2025-12-21",
-      "type": "refactor",
-      "summary": "Remove /orient, redundant with session protocol"
-    },
-    {
-      "date": "2025-12-21",
-      "type": "feat",
-      "summary": "Add /agent and /mcp commands for SDK project auditing"
-    },
-    {
-      "date": "2025-12-21",
-      "type": "refactor",
-      "summary": "Consolidate /commit-all into /commit --all, /deps into /health"
-    },
-    {
-      "date": "2025-12-20",
-      "type": "feat",
-      "summary": "Add /fix (auto-fix linting, formatting, unused imports) and /test (run tests intelligently)"
-    },
-    {
-      "date": "2025-12-20",
-      "type": "refactor",
-      "summary": "Consolidate commands: /init-project→/migrate, /todo-scan→/health, /unused→/refactor, /prompt-audit+/prompt-create→/prompt"
     }
   ]
 }
