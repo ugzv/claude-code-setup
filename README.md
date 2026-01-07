@@ -69,6 +69,7 @@ A hook loads this on session start. `/push` trims `shipped` to 10 entries—olde
 | `/dev` | Start dev server (kills port first) |
 | `/health` | Check project health |
 | `/analyze` | Find code that resists change |
+| `/ux` | Simulate users to find gaps and feature ideas |
 | `/agent` | Audit Agent SDK projects |
 | `/commands` | List available commands |
 
