@@ -435,7 +435,7 @@ def install(dry_run: bool = False) -> bool:
         print("INSTALLED!")
         print()
         print("Commands: /migrate, /think, /commit, /push, /fix, /test,")
-        print("          /health, /analyze, /backlog, /agent, /dev,")
+        print("          /health, /analyze, /ux, /backlog, /agent, /dev,")
         print("          /commands, /prompt-guide")
         print()
         print("Features: Desktop notifications on task completion")
