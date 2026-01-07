@@ -125,8 +125,22 @@ Skip: pure implementation details not tied to user experience, style preferences
 ## After Audit
 
 Offer to:
-1. Add high-priority items to backlog
-2. Implement the most impactful quick fix
-3. Design a solution for the biggest gap
+1. Generate handoff blocks for high-priority issues
+2. Add items to backlog
+3. Implement a quick fix (if confident in the solution)
+
+## Handoff Blocks
+
+For issues to address later, generate a **self-contained handoff block** that a new session can act on.
+
+**Why this matters**: Sub-agents found symptoms, not necessarily root causes. They had limited context. A handoff should prompt investigation, not prescribe a fix.
+
+**A good handoff includes**:
+- The user experience (what went wrong, first-person)
+- Where to start looking (files/lines as hypothesis, not conclusion)
+- What "fixed" looks like (observable outcome to verify)
+- Prompts to analyze before implementing (what should the new session understand first?)
+
+**Principle**: Give enough context to investigate properly. The new session should understand the problem deeply before proposing solutions.
 
 $ARGUMENTS
