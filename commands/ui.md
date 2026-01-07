@@ -1,16 +1,16 @@
 ---
-description: Audit visual implementation for consistency, accessibility, and component quality
+description: Audit visual consistency, component patterns, and implementation quality
 ---
 
 Systematic visual interface review.
 
 ## Philosophy
 
-**Implementation reveals intent.** The codebase shows what designers decided mattered. Find where reality drifts from that intent—inconsistent spacing, orphaned styles, accessibility afterthoughts.
-
-**Accessibility is correctness.** A button that can't be reached by keyboard is as broken as one that doesn't submit. Treat a11y issues as bugs, not enhancements.
+**Implementation reveals intent.** The codebase shows what designers decided mattered. Find where reality drifts from that intent—inconsistent spacing, orphaned styles, missing states.
 
 **Patterns over instances.** One hardcoded color is a typo. Ten hardcoded colors is a missing abstraction. Look for what the codebase is trying to systematize and where it fails.
+
+**Balance the audit.** Visual consistency, component quality, state coverage, and responsiveness matter as much as accessibility. Don't let any single dimension dominate findings.
 
 ## The Process
 
@@ -31,16 +31,15 @@ This prevents flagging intentional variation as bugs.
 Review each dimension, noting patterns not just instances:
 
 **Visual Consistency**
-- Color usage: palette adherence, semantic meaning (error=red, success=green)
+- Color usage: palette adherence, semantic meaning
 - Typography: hierarchy, font stacks, size scales
 - Spacing: consistent rhythm or arbitrary values
 - Component styling: similar elements styled similarly
 
-**Accessibility**
-- Color contrast (WCAG AA minimum: 4.5:1 text, 3:1 large text/UI)
-- Keyboard navigation: focus states, tab order, skip links
-- Screen reader: semantic HTML, ARIA where needed, alt text
-- Motion: reduced motion support, no seizure triggers
+**Component Quality**
+- Reusability: props-driven or copy-pasted variants
+- Composition: flexible or rigid structures
+- Naming: semantic intent or visual description
 
 **State Coverage**
 - Loading states: skeleton, spinner, or nothing?
@@ -50,13 +49,13 @@ Review each dimension, noting patterns not just instances:
 
 **Responsiveness**
 - Breakpoint strategy: consistent or ad-hoc?
-- Touch targets: minimum 44x44px on mobile
+- Touch targets on mobile
 - Content priority: what shows/hides at each breakpoint
 
-**Component Quality**
-- Reusability: props-driven or copy-pasted variants
-- Composition: flexible or rigid structures
-- Naming: semantic intent or visual description
+**Accessibility**
+- Keyboard navigation and focus states
+- Screen reader compatibility where relevant
+- Contrast issues if visually obvious
 
 ### 3. Categorize Findings
 
@@ -79,13 +78,6 @@ Problems requiring design system or architectural changes.
 - Why it matters (user/developer impact)
 - Scope (how widespread)
 - Evidence (file:line examples)
-
-## Accessibility Gaps
-Issues affecting users with disabilities.
-- The barrier (what user can't do)
-- WCAG criterion if applicable
-- Severity (blocker vs. degraded experience)
-- Affected components
 
 ## Inconsistencies
 Same concept, different implementations.
