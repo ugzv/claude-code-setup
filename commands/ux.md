@@ -6,125 +6,121 @@ Product discovery through user empathy simulation.
 
 ## Philosophy
 
-**This is not QA or stress testing.** You're spawning simulated users with real goals who explore the app and report:
-- "I wanted to do X but couldn't"
-- "This worked for A but when I tried B it didn't make sense"
-- "I expected... but it doesn't"
-- "Feature idea: what if..."
+**This is not QA or stress testing.** You're simulating real users with real goals who navigate your app and report what they experience - not what the code does internally.
 
-**Hypothesis-driven exploration**: Each user forms beliefs about how things should work based on what they see, then tests those beliefs against the actual code. The gap between expectation and reality is where insights live.
+**Hypothesis-driven exploration**: Users form beliefs about how things should work based on what they see (labels, layout, affordances). Then they act. The gap between expectation and reality is where insights live.
+
+**User experience, not implementation details**: Report what users *experience*, not internal code behavior. "I clicked Research and nothing happened" matters. "The handler doesn't call the API" is implementation detail - only include it as supporting evidence.
 
 ## Phase 1: Deep Project Immersion
 
-**Before anything else, thoroughly understand the project.** Users can't form realistic hypotheses without knowing what exists.
+**Understand what exists before simulating users.** You can't form realistic hypotheses about an app you don't know.
 
-Explore:
-- **Purpose**: README, package.json description, main entry points - what problem does this solve?
-- **User-facing surfaces**: Routes, pages, components, CLI commands - what can users interact with?
-- **Data model**: Types, schemas, database models - what entities exist and how do they relate?
-- **Core flows**: Follow the main paths through the code - how does data flow from input to output?
-- **State**: Where does the app read/write? APIs, databases, files, external services?
-
-You need enough understanding to generate realistic scenarios and to give each agent the context they need to explore meaningfully.
+Explore until you can answer:
+- What problem does this app solve? Who is it for?
+- What can users see and interact with? (pages, buttons, forms, flows)
+- What are the main journeys through the app?
+- What data matters to users? What can they create, view, modify?
 
 ## Phase 2: Generate User Scenarios
 
-Based on your understanding, create 7-10 diverse **goal-based scenarios**. Not skill levels (power user, beginner) - real intentions:
+Create 7-10 diverse **goal-based scenarios**. These are intentions, not personas:
 
+- What are users actually trying to accomplish?
 - Range from obvious use cases to edge cases to "what if someone tried..."
 - Each scenario should exercise different parts of the app
-- Include at least one scenario that might break assumptions the app makes
-- Think about what users ACTUALLY want vs what the app was designed for
+- Include at least one that might break assumptions the app makes
+
+**List your scenarios in the output** so readers understand the coverage.
 
 ## Phase 3: Spawn User Agents in Parallel
 
 **CRITICAL: Spawn all at once** in a single message with multiple Task calls.
 
 Each agent needs:
-1. **Project context** - share your understanding so they're not starting cold
+1. **Project context** - what the app does, key flows, what's where
 2. **Their specific goal** - what they're trying to accomplish
-3. **The hypothesis principle** - how to explore
+3. **The exploration principle** - how to think
 
 ```
 ┌────────────────────────────────────────────────────────────┐
 │  AGENT PROMPT PRINCIPLES                                   │
 ├────────────────────────────────────────────────────────────┤
-│  Give each agent:                                          │
+│  You're a user trying to: [GOAL]                           │
 │                                                            │
-│  1. Project context you gathered (key files, flows, model) │
+│  Navigate the app as that user would. At each step:        │
 │                                                            │
-│  2. Their goal: "You're a user trying to [SCENARIO]"       │
+│  1. What do I see? (read the actual UI)                    │
+│  2. What do I expect will happen if I do X?                │
+│  3. What actually happens? (verify against code)           │
+│  4. Was there a gap? Confusion? Delight?                   │
 │                                                            │
-│  3. Exploration principle:                                 │
-│     "Form hypotheses about how things work based on what   │
-│      you see (UI, labels, structure). Then verify against  │
-│      the actual code. When expectation ≠ reality, that's   │
-│      a finding. When you wish something existed, that's    │
-│      a feature idea."                                      │
+│  Think out loud: "I see a Search button. I expect it to    │
+│  search all my projects. Let me check... it only searches  │
+│  the current one. That's confusing because..."             │
 │                                                            │
-│  4. Ground in code:                                        │
-│     "Read actual components, routes, handlers. Reference   │
-│      specific files and logic in your findings."           │
+│  Report experiences, not implementation:                   │
+│  - "I couldn't find how to export" (experience)            │
+│  - "The export function isn't wired up" (implementation)   │
 │                                                            │
-│  Findings to report:                                       │
-│  - Friction: where you got stuck or confused               │
-│  - Logic gaps: works for X but not Y                       │
-│  - Missing: I wish I could...                              │
-│  - Unexpected: I expected A but got B                      │
+│  Include file:line references as supporting evidence,      │
+│  not as the primary finding.                               │
 └────────────────────────────────────────────────────────────┘
 ```
 
 ## Phase 4: Synthesize Findings
 
-Collect all user reports and organize by type:
+Collect all user reports. **Count how many users hit each issue** - convergence signals importance.
 
 ### Output Format
 
 ```markdown
 ## UX Audit Summary
 **App:** [what it does]
-**Users simulated:** [count]
-**Key insight:** [one sentence - the biggest gap or opportunity]
+**Key insight:** [one sentence - the most important finding]
 
-## Critical Gaps
-Things multiple users hit that block their goals:
-### 1. [Gap]
-**Scenario:** [which user(s) hit this]
-**Expected:** [what they expected]
-**Actual:** [what happened]
-**Impact:** [why this matters]
+## Scenarios Simulated
+[List all 7-10 scenarios so readers understand coverage]
+
+## Critical Gaps (blocked multiple users)
+### 1. [Gap - user experience framing]
+**Who hit this:** [N of M users - which scenarios]
+**The experience:** "I tried to... I expected... but..."
+**Impact:** [why this blocks the user's goal]
+**Evidence:** [file:line references]
 
 ## Feature Opportunities
-Things users wished existed:
-### 1. [Feature idea]
-**Scenario:** [who wanted this]
-**Use case:** [what they were trying to do]
-**Suggestion:** [how it might work]
+### 1. [What users wished existed]
+**Who wanted this:** [which scenarios]
+**The need:** [what they were trying to do]
+**Idea:** [how it might work]
 
 ## Logic Inconsistencies
-Works in case A but not case B:
-### 1. [Inconsistency]
-**Works:** [scenario where it works]
-**Breaks:** [scenario where it doesn't]
-**Why:** [the underlying assumption that breaks]
+### 1. [Works sometimes, breaks other times]
+**Works when:** [scenario/condition]
+**Breaks when:** [scenario/condition]
+**The experience:** [what the user sees]
 
 ## Friction Points
-Not blocking but annoying:
-- [friction] → [which user, what they expected]
+Minor annoyances that didn't block goals:
+- [experience] → [N users, which scenarios]
 
-## Edge Cases Discovered
-Unusual but valid usage patterns:
-- [edge case] → [what would happen]
+## Edge Cases
+Unusual but valid usage discovered:
+- [what a user might try] → [what would happen]
 ```
 
 ## What Makes Good Findings
 
-- **Grounded in code** - Point to actual components, routes, handlers
-- **User-centric** - "As someone trying to X, I expected Y"
-- **Actionable** - Clear what would fix or improve it
-- **Prioritized** - Multiple users hitting same issue = higher priority
+**User-centric framing**: "As someone trying to X, I expected Y" - not "the code does Z"
 
-Skip: hypothetical issues not grounded in actual code, pure style preferences, things that would require complete redesign.
+**Convergence matters**: Issues multiple users hit independently are more important than edge cases one user found
+
+**Experience over implementation**: The finding is what users experience. Code references are evidence, not the finding itself.
+
+**Actionable**: Clear what would improve the experience
+
+Skip: pure implementation details not tied to user experience, style preferences, complete redesigns
 
 ## After Audit
 
