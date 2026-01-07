@@ -2,12 +2,17 @@
   "project": "claude-code-setup",
   "currentFocus": [],
   "lastSession": {
-    "date": "2026-01-06",
-    "summary": "Merged hooks repo into unified installer, added auto-install of terminal-notifier on macOS via Homebrew.",
-    "commits": ["867cc7e", "f9956ea"]
+    "date": "2026-01-07",
+    "summary": "Rebalanced /ui command to give equal weight to visual consistency and component quality alongside accessibility.",
+    "commits": ["dee9993"]
   },
   "backlog": [],
   "shipped": [
+    {
+      "date": "2026-01-07",
+      "type": "refactor",
+      "summary": "Rebalance /ui audit toward visual/component quality, reduce accessibility dominance"
+    },
     {
       "date": "2026-01-06",
       "type": "feat",
@@ -52,11 +57,6 @@
       "date": "2025-12-26",
       "type": "feat",
       "summary": "Add context-aware statusline with visual progress bar for context usage"
-    },
-    {
-      "date": "2025-12-26",
-      "type": "feat",
-      "summary": "Add optional LSP support to /analyze and /think for more accurate code analysis"
     }
   ]
 }
