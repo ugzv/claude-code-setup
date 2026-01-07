@@ -1,146 +1,165 @@
 ---
-description: Simulate diverse users exploring your app to discover gaps and feature ideas
+description: Simulate real users exploring your app to discover dead paths, inconsistencies, and opportunities
 ---
 
 Product discovery through user empathy simulation.
 
 ## Philosophy
 
-**This is not QA or stress testing.** You're simulating real users with real goals who navigate your app and report what they experience - not what the code does internally.
+**Ground users in reality.** Don't invent hypothetical personas—discover who this product actually serves from the codebase itself, then simulate those specific users with their real contexts and goals.
 
-**Hypothesis-driven exploration**: Users form beliefs about how things should work based on what they see (labels, layout, affordances). Then they act. The gap between expectation and reality is where insights live.
+**Hypothesis-driven exploration.** Users form beliefs about how things should work based on what they see. Then they act. The gap between expectation and reality is where insights live.
 
-**User experience, not implementation details**: Report what users *experience*, not internal code behavior. "I clicked Research and nothing happened" matters. "The handler doesn't call the API" is implementation detail - only include it as supporting evidence.
+**Experience over implementation.** Report what users experience, not what code does. "I clicked Save and nothing happened" is a finding. "The handler doesn't call the API" is supporting evidence.
 
-## Phase 1: Deep Project Immersion
+## The Process
 
-**Understand what exists before simulating users.** You can't form realistic hypotheses about an app you don't know.
+### 1. Discover Target Users
 
-Explore until you can answer:
-- What problem does this app solve? Who is it for?
-- What can users see and interact with? (pages, buttons, forms, flows)
+Before simulating anyone, find who this app is built for:
+
+- What does the README/docs say about target users?
+- What user types appear in onboarding, marketing, or feature design?
+- What problems does the app claim to solve, and for whom?
+- What assumptions does the UI make about user knowledge/context?
+
+**Output this explicitly**: "This app serves [User Type A] who needs X, [User Type B] who needs Y..."
+
+This grounds everything that follows.
+
+### 2. Understand the Product
+
+Explore until you can map:
+- What can users see and interact with?
 - What are the main journeys through the app?
-- What data matters to users? What can they create, view, modify?
+- What data matters? What can users create, view, modify?
 
-## Phase 2: Generate User Scenarios
+### 3. Generate Grounded Scenarios
 
-Create 7-10 diverse **goal-based scenarios**. These are intentions, not personas:
+Create 7-10 scenarios FROM the discovered user types:
 
-- What are users actually trying to accomplish?
-- Range from obvious use cases to edge cases to "what if someone tried..."
-- Each scenario should exercise different parts of the app
-- Include at least one that might break assumptions the app makes
+- Each scenario is a specific user type with a specific goal
+- Cover the obvious use cases AND the edge cases
+- Include scenarios that might break assumptions the app makes
+- At least one "what if this user tried something the designers didn't anticipate"
 
-**List your scenarios in the output** so readers understand the coverage.
+**List scenarios in your output** so readers understand coverage.
 
-## Phase 3: Spawn User Agents in Parallel
+### 4. Spawn User Agents
 
 **CRITICAL: Spawn all at once** in a single message with multiple Task calls.
 
-Each agent needs:
-1. **Project context** - what the app does, key flows, what's where
-2. **Their specific goal** - what they're trying to accomplish
-3. **The exploration principle** - how to think
+Each agent receives:
+- Who they are (the discovered user type, their context)
+- What they're trying to accomplish
+- The exploration principle below
 
 ```
-┌────────────────────────────────────────────────────────────┐
-│  AGENT PROMPT PRINCIPLES                                   │
-├────────────────────────────────────────────────────────────┤
-│  You're a user trying to: [GOAL]                           │
-│                                                            │
-│  Navigate the app as that user would. At each step:        │
-│                                                            │
-│  1. What do I see? (read the actual UI)                    │
-│  2. What do I expect will happen if I do X?                │
-│  3. What actually happens? (verify against code)           │
-│  4. Was there a gap? Confusion? Delight?                   │
-│                                                            │
-│  Think out loud: "I see a Search button. I expect it to    │
-│  search all my projects. Let me check... it only searches  │
-│  the current one. That's confusing because..."             │
-│                                                            │
-│  Report experiences, not implementation:                   │
-│  - "I couldn't find how to export" (experience)            │
-│  - "The export function isn't wired up" (implementation)   │
-│                                                            │
-│  Include file:line references as supporting evidence,      │
-│  not as the primary finding.                               │
-└────────────────────────────────────────────────────────────┘
+EXPLORATION PRINCIPLE
+
+You are [USER TYPE] trying to [GOAL].
+
+Navigate as this user would. At each step:
+- What do I see? (read the actual UI)
+- What do I expect will happen?
+- What actually happens?
+- Gap? Confusion? Delight?
+
+Think out loud in first person. Report experiences, not implementation.
+Include file:line as evidence, not as the finding itself.
 ```
 
-## Phase 4: Synthesize Findings
+### 5. Synthesize Findings
 
-Collect all user reports. **Count how many users hit each issue** - convergence signals importance.
+Collect reports. **Count convergence** - issues multiple users hit independently matter more.
 
-### Output Format
+## Output
 
 ```markdown
-## UX Audit Summary
-**App:** [what it does]
+## UX Audit: [App Name]
+
+**Built for:** [discovered user types and their needs]
 **Key insight:** [one sentence - the most important finding]
 
 ## Scenarios Simulated
-[List all 7-10 scenarios so readers understand coverage]
+[List all scenarios with user type + goal]
 
-## Critical Gaps (blocked multiple users)
-### 1. [Gap - user experience framing]
-**Who hit this:** [N of M users - which scenarios]
-**The experience:** "I tried to... I expected... but..."
-**Impact:** [why this blocks the user's goal]
-**Evidence:** [file:line references]
+## Critical Gaps
+Issues that blocked users from achieving their goals.
+- What happened (user experience framing)
+- Who hit it (N of M, which scenarios)
+- Impact on user goal
+- Evidence (file:line)
+
+## Dead Paths
+Features or flows that exist but don't work or lead nowhere.
+
+## Behavioral Inconsistencies
+Same action, different results in different contexts.
+- Works when: [condition]
+- Breaks when: [condition]
 
 ## Feature Opportunities
-### 1. [What users wished existed]
-**Who wanted this:** [which scenarios]
-**The need:** [what they were trying to do]
-**Idea:** [how it might work]
-
-## Logic Inconsistencies
-### 1. [Works sometimes, breaks other times]
-**Works when:** [scenario/condition]
-**Breaks when:** [scenario/condition]
-**The experience:** [what the user sees]
+Things users wanted but couldn't do.
+- The need (what they were trying to accomplish)
+- Who wanted it
 
 ## Friction Points
-Minor annoyances that didn't block goals:
-- [experience] → [N users, which scenarios]
+Minor annoyances that didn't block goals.
 
 ## Edge Cases
-Unusual but valid usage discovered:
-- [what a user might try] → [what would happen]
+Unusual but valid usage and what would happen.
 ```
 
 ## What Makes Good Findings
 
-**User-centric framing**: "As someone trying to X, I expected Y" - not "the code does Z"
+**Grounded**: Findings come from simulating discovered users, not invented personas
 
-**Convergence matters**: Issues multiple users hit independently are more important than edge cases one user found
-
-**Experience over implementation**: The finding is what users experience. Code references are evidence, not the finding itself.
+**Convergent**: Multiple users hitting the same issue independently signals importance
 
 **Actionable**: Clear what would improve the experience
 
-Skip: pure implementation details not tied to user experience, style preferences, complete redesigns
+**Experience-framed**: "I tried to X, expected Y, got Z" - not "the code does W"
 
-## After Audit
+## After the Audit
 
 Offer to:
-1. Generate handoff blocks for high-priority issues
+1. Generate handoff blocks for issues to address later
 2. Add items to backlog
-3. Implement a quick fix (if confident in the solution)
+3. Fix something immediately if confident
 
 ## Handoff Blocks
 
-For issues to address later, generate a **self-contained handoff block** that a new session can act on.
+Generate copy-paste ready prompts for new Claude Code sessions. Each handoff should trigger investigation, validation, and proper solution design—not blind fixing.
 
-**Why this matters**: Sub-agents found symptoms, not necessarily root causes. They had limited context. A handoff should prompt investigation, not prescribe a fix.
+**Structure each handoff as:**
 
-**A good handoff includes**:
-- The user experience (what went wrong, first-person)
-- Where to start looking (files/lines as hypothesis, not conclusion)
-- What "fixed" looks like (observable outcome to verify)
-- Prompts to analyze before implementing (what should the new session understand first?)
+```markdown
+## Issue: [Short descriptive title]
 
-**Principle**: Give enough context to investigate properly. The new session should understand the problem deeply before proposing solutions.
+### The Problem
+[User experience framing: "When a user tries to X, they expect Y but get Z"]
+
+### Evidence from Audit
+- Observed behavior: [what happened]
+- Affected scenarios: [which user types hit this]
+- Relevant files (hypothesis, verify these): [file:line references]
+
+### Your Task
+1. **Verify** this issue exists—reproduce the problem, understand the actual behavior
+2. **Investigate** root cause—the files above are starting points, not conclusions
+3. **Propose** your solution approach before implementing—explain tradeoffs
+4. **Implement** only after you understand the problem fully
+
+### Success Criteria
+[Observable outcome: "User can now X and sees Y"]
+
+### Questions to Answer First
+- Is this actually a bug, or intentional behavior?
+- What's the minimal change that fixes this?
+- Are there other places with the same pattern that need the same fix?
+```
+
+**Principle**: The receiving session should think "let me understand this" not "let me implement this fix." Investigation prevents wrong solutions.
 
 $ARGUMENTS
