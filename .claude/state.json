@@ -2,12 +2,27 @@
   "project": "claude-code-setup",
   "currentFocus": [],
   "lastSession": {
-    "date": "2026-01-07",
-    "summary": "Rebalanced /ui command to give equal weight to visual consistency and component quality alongside accessibility.",
-    "commits": ["dee9993"]
+    "date": "2026-01-11",
+    "summary": "Added /reflect command for pre-mortem change analysis, enhanced /analyze with --deps/--naming/--comments/--debt modes, improved /ui to detect AI-generated look issues.",
+    "commits": ["9a66839", "32edb41", "5c28974", "a849900"]
   },
   "backlog": [],
   "shipped": [
+    {
+      "date": "2026-01-11",
+      "type": "feat",
+      "summary": "Add /reflect pre-mortem command with auto-detect for uncommitted vs recent commits"
+    },
+    {
+      "date": "2026-01-11",
+      "type": "feat",
+      "summary": "Add /analyze focused modes: --deps, --naming, --comments, --debt"
+    },
+    {
+      "date": "2026-01-11",
+      "type": "feat",
+      "summary": "Enhance /ui to detect visual polish issues and AI-generated look patterns"
+    },
     {
       "date": "2026-01-07",
       "type": "refactor",
@@ -42,21 +57,6 @@
       "date": "2026-01-02",
       "type": "chore",
       "summary": "Remove mcp-guide command to reduce context overhead"
-    },
-    {
-      "date": "2025-12-29",
-      "type": "feat",
-      "summary": "Add lockfile sync validation to /push and /fix commands"
-    },
-    {
-      "date": "2025-12-29",
-      "type": "refactor",
-      "summary": "Rename /mcp to /mcp-guide to avoid builtin conflict"
-    },
-    {
-      "date": "2025-12-26",
-      "type": "feat",
-      "summary": "Add context-aware statusline with visual progress bar for context usage"
     }
   ]
 }
