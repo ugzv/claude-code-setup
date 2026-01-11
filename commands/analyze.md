@@ -1,5 +1,5 @@
 ---
-description: "Analyze codebase [--audit|--deps|--naming|--comments|--debt|--history]"
+description: "Analyze codebase [--audit|--clarity|--deps|--naming|--comments|--debt|--history]"
 ---
 
 Architecture advisor for improving codebase organization.
@@ -21,6 +21,7 @@ Architecture advisor for improving codebase organization.
 | `--naming` | Naming consistency and clarity |
 | `--comments` | Comment quality (stale, misleading, redundant) |
 | `--debt` | Technical debt markers (TODOs, FIXMEs, temporary hacks) |
+| `--clarity` | AI comprehension audit—where assumptions don't match reality |
 
 ## Phase 1: Understand
 
@@ -153,6 +154,57 @@ Technical debt inventory:
 ```
 
 Oldest debt = most likely forgotten. Offer to convert high-priority items to backlog.
+
+### --clarity Mode
+
+AI comprehension audit. Tests how easily an AI (or new developer) can understand the codebase correctly.
+
+**The process:**
+
+1. **First pass - Form assumptions** (before reading implementation):
+   - Scan file names, function names, class names, comments
+   - What do you think each module/function does?
+   - What's the assumed architecture?
+   - Document these assumptions explicitly
+
+2. **Second pass - Verify assumptions:**
+   - Read the actual implementations
+   - Where were you wrong?
+   - What misled you?
+
+3. **Report the gaps:**
+
+| What I assumed | What it actually does | What misled me |
+|----------------|----------------------|----------------|
+| `handleAuth()` manages login | It only refreshes tokens | Name suggests broader scope |
+| `utils/` has generic helpers | It has business logic | Directory name |
+| `// validates input` | It transforms, doesn't validate | Stale comment |
+
+**Categories of misleading signals:**
+- **Names that lie**: Function/file/class names suggesting wrong behavior
+- **Comments that mislead**: Descriptions that don't match code
+- **Structure that confuses**: Files in wrong directories, unclear boundaries
+- **Missing context**: Complex logic with no explanation of WHY
+- **Tribal knowledge**: Things you can only understand if you already know
+
+**Output:**
+```markdown
+## Clarity Audit: [Project]
+
+**First impression:** [What you thought this codebase was about]
+**Reality:** [What it actually is]
+
+## Where I Was Misled
+
+### 1. [Misleading element]
+- **Assumed:** [what you thought]
+- **Actually:** [what it does]
+- **Misled by:** [name/comment/structure]
+- **Suggestion:** [how to fix]
+
+## Suggestions for Clarity
+[Prioritized list of changes that would help AI/new devs understand faster]
+```
 
 ## Phase 3: Synthesize
 
