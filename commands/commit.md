@@ -1,5 +1,5 @@
 ---
-description: "Commit changes [--all to batch uncommitted changes]"
+description: "Commit changes [--all|--push]"
 ---
 
 Commit code changes that YOU (this Claude session) made. Execute without asking for confirmation.
@@ -9,6 +9,8 @@ Commit code changes that YOU (this Claude session) made. Execute without asking 
 **Default:** Commit changes you made this session as a single atomic commit.
 
 **With `--all` flag:** Find ALL uncommitted changes and group them intelligently into multiple commits. Use this when returning to a project with accumulated changes from multiple work sessions.
+
+**With `--push` flag:** After committing, automatically run `/push` (update state.json, run CI checks, push to remote). Can combine: `--all --push`.
 
 ## Why This Matters
 
@@ -57,6 +59,6 @@ Don't pad the backlog with noise. If you discovered nothing worth tracking, that
 
 Report what was committed (and how it was grouped, if using `--all`). If you added backlog items, commit that state change separately.
 
-Don't push—that's `/push` when the user is ready.
+If `--push` was specified, proceed to run `/push` automatically. Otherwise, don't push—that's `/push` when the user is ready.
 
 $ARGUMENTS
