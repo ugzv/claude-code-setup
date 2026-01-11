@@ -18,15 +18,25 @@ Critical examination of recent changes. Scales from quick sanity checks to deep 
 
 ### 1. Gather and Assess
 
-Get the changes:
+**Auto-detect what to analyze:**
+
+1. Check `git status` and `git diff` first
+2. If uncommitted changes exist → analyze those
+3. If working tree is clean → check recent commits:
+   - Look at last few commits (messages, timestamps, files touched)
+   - If related (same feature/fix, close in time) → analyze together
+   - If unrelated → just analyze the last one
+4. If user specifies a scope → use that instead
 
 | Argument | Scope |
 |----------|-------|
-| (none) | Uncommitted changes (staged + unstaged) |
+| (none) | Auto-detect (uncommitted → recent related commits → last commit) |
 | `--staged` | Only staged changes |
 | `--last` | Last commit |
 | `--last N` | Last N commits |
 | `[commit-range]` | Specific range (e.g., `main..HEAD`) |
+
+**State what you're analyzing:** "Analyzing [uncommitted changes / last commit / commit range X]"
 
 **Immediately assess the change character:**
 
