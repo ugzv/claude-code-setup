@@ -138,22 +138,33 @@ Comment quality analysis. Focus on AI-readability:
 
 ### --debt Mode
 
-Technical debt inventory:
+Technical debt isn't marked with TODO comments—it's visible in the code's shape.
 
-- **TODO/FIXME/HACK/XXX markers**: extract with context
-- **Temporary solutions**: `// temporary`, `// workaround`, `// quick fix`
-- **Disabled tests**: skipped tests with excuses
-- **Dead feature flags**: toggles that are always on/off
-- **Age analysis**: how old is each debt marker? (git blame)
+**What debt looks like** (principles, not string matches):
+
+- **Deferred decisions**: Hardcoded values that should be configurable, magic numbers without explanation
+- **Complexity hotspots**: Deeply nested logic (>3 levels), functions doing multiple unrelated things, long parameter lists
+- **Fragile patterns**: Catch blocks that swallow errors, type assertions/casts bypassing safety, copy-pasted code with slight variations
+- **Stale code**: Files untouched for 12+ months in active areas, imports that are declared but unused, commented-out code blocks
+- **Test gaps**: Critical paths without test coverage, skipped/disabled tests, tests that assert nothing meaningful
+- **Implicit contracts**: Functions that assume caller state, undocumented preconditions, order-dependent operations
+
+**How to find it:**
+
+1. Use git history to identify active vs abandoned areas
+2. Look for complexity through code structure, not keywords
+3. Find patterns that suggest "someone meant to fix this later"
+4. Check for inconsistencies—where does the code not follow its own patterns?
 
 **Output format:**
 ```markdown
-| Marker | Location | Age | Context |
-|--------|----------|-----|---------|
-| TODO | file:line | 6mo | "add validation" |
+| Debt Type | Location | Evidence | Impact |
+|-----------|----------|----------|--------|
+| Complexity hotspot | file:line | 5-level nesting, 3 concerns | Hard to modify safely |
+| Deferred decision | file:line | Hardcoded API URL | Will break in other envs |
 ```
 
-Oldest debt = most likely forgotten. Offer to convert high-priority items to backlog.
+Prioritize by impact: What would hurt most if left unfixed? Offer to convert high-priority items to backlog.
 
 ### --clarity Mode
 
