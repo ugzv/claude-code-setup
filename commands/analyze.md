@@ -1,5 +1,5 @@
 ---
-description: Analyze codebase for refactoring opportunities
+description: "Analyze codebase [--audit|--deps|--naming|--comments|--debt|--history]"
 ---
 
 Architecture advisor for improving codebase organization.

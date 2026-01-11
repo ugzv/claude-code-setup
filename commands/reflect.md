@@ -1,5 +1,5 @@
 ---
-description: Pre-mortem analysis of changes - find what will break before it does
+description: "Pre-mortem analysis [--staged|--last|--last N|commit-range]"
 ---
 
 Critical examination of recent changes. Scales from quick sanity checks to deep analysis.
