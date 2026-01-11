@@ -48,17 +48,19 @@ A hook loads this on session start. `/push` trims `shipped` to 10 entries—olde
 
 | Command | Purpose |
 |---------|---------|
-| `/commit` | Commit with clean messages |
-| `/push` | Push and update state |
+| `/commit [--all\|--push]` | Commit changes. `--all` batches uncommitted, `--push` auto-pushes |
+| `/push [--force]` | Push and update state. `--force` skips CI checks |
 | `/fix` | Auto-fix linting and formatting |
-| `/test` | Run tests |
+| `/test [--watch]` | Run tests |
+| `/reflect` | Pre-mortem analysis—find what will break before it does |
 
-**Planning:**
+**Planning & analysis:**
 
 | Command | Purpose |
 |---------|---------|
 | `/think` | Plan before complex tasks |
 | `/backlog` | Review open items |
+| `/analyze [mode]` | Codebase analysis. Modes: `--audit`, `--deps`, `--naming`, `--comments`, `--debt`, `--history` |
 | `/prompt-guide` | Prompting philosophy for agent work |
 
 **Setup & utilities:**
@@ -66,11 +68,10 @@ A hook loads this on session start. `/push` trims `shipped` to 10 entries—olde
 | Command | Purpose |
 |---------|---------|
 | `/migrate` | Set up tracking in a project |
-| `/dev` | Start dev server (kills port first) |
+| `/dev [--frontend\|--backend\|--all]` | Start dev server (kills port first) |
 | `/health` | Check project health |
-| `/analyze` | Find code that resists change |
 | `/ux` | Simulate users to find UX gaps and feature ideas |
-| `/ui` | Audit visual consistency, components, states |
+| `/ui` | Audit visual consistency, detect "AI-generated look" issues |
 | `/agent` | Audit Agent SDK projects |
 | `/commands` | List available commands |
 
