@@ -17,6 +17,10 @@ Architecture advisor for improving codebase organization.
 | **Default** | Architecture & refactoring opportunities |
 | `--audit` | Issues & gaps to fix |
 | `--history` | Git churn & bug patterns |
+| `--deps` | Dependency health (outdated, unused, vulnerable) |
+| `--naming` | Naming consistency and clarity |
+| `--comments` | Comment quality (stale, misleading, redundant) |
+| `--debt` | Technical debt markers (TODOs, FIXMEs, temporary hacks) |
 
 ## Phase 1: Understand
 
@@ -87,6 +91,68 @@ Quick scan before spawning analyzers:
 │  H3. coupling-analyzer → fan-in/out, circular deps     │
 └────────────────────────────────────────────────────────┘
 ```
+
+### --deps Mode
+
+Dependency health check. No parallel agents needed—sequential analysis:
+
+1. **Scan dependency files** (package.json, requirements.txt, go.mod, Cargo.toml, etc.)
+2. **Check for issues:**
+   - Outdated packages (major versions behind)
+   - Unused dependencies (declared but not imported)
+   - Duplicate dependencies (same thing, different packages)
+   - Known vulnerabilities (if audit tools available: `npm audit`, `pip-audit`, etc.)
+   - Pinning issues (loose versions that could break)
+
+**Output focus:** Actionable list with upgrade commands or removal candidates.
+
+### --naming Mode
+
+Naming consistency analysis. Spawn if codebase is large, otherwise analyze directly:
+
+- **Inconsistent conventions**: camelCase vs snake_case mixing, abbreviation inconsistency
+- **Misleading names**: functions that do something different from what name suggests
+- **Naming drift**: same concept with different names across files
+- **Vague names**: `data`, `info`, `handle`, `process`, `manager` without specificity
+- **Boolean naming**: missing `is`/`has`/`should` prefixes causing ambiguity
+
+**Why this matters for AI:** Claude infers behavior from names. Misleading names = wrong assumptions.
+
+### --comments Mode
+
+Comment quality analysis. Focus on AI-readability:
+
+- **Stale comments**: describe behavior that code no longer has
+- **Contradicting comments**: say one thing, code does another
+- **Obvious comments**: `// increment i` above `i++`
+- **Commented-out code**: dead code preserved "just in case"
+- **Missing context**: complex logic with no explanation of WHY
+
+**How to detect stale comments:**
+- Compare comment claims to actual code behavior
+- Look for comments referencing removed variables/functions
+- Check git blame—old comment on recently changed code is suspect
+
+**Output:** List with recommendation (update, delete, or add context).
+
+### --debt Mode
+
+Technical debt inventory:
+
+- **TODO/FIXME/HACK/XXX markers**: extract with context
+- **Temporary solutions**: `// temporary`, `// workaround`, `// quick fix`
+- **Disabled tests**: skipped tests with excuses
+- **Dead feature flags**: toggles that are always on/off
+- **Age analysis**: how old is each debt marker? (git blame)
+
+**Output format:**
+```markdown
+| Marker | Location | Age | Context |
+|--------|----------|-----|---------|
+| TODO | file:line | 6mo | "add validation" |
+```
+
+Oldest debt = most likely forgotten. Offer to convert high-priority items to backlog.
 
 ## Phase 3: Synthesize
 
