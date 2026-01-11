@@ -1,5 +1,5 @@
 ---
-description: Start dev server (kills port 3000 first)
+description: "Start dev server [--frontend|--backend|--all]"
 ---
 
 Start the development server. Auto-detects project structure, kills existing processes, runs the right command.

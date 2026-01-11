@@ -1,5 +1,5 @@
 ---
-description: Run tests intelligently based on what's available
+description: "Run tests [--watch for watch mode]"
 ---
 
 Verify the code works.

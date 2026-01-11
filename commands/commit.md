@@ -1,5 +1,5 @@
 ---
-description: Commit only the changes YOU made in this session
+description: "Commit changes [--all to batch uncommitted changes]"
 ---
 
 Commit code changes that YOU (this Claude session) made. Execute without asking for confirmation.

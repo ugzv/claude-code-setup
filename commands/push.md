@@ -1,5 +1,5 @@
 ---
-description: Push changes and update project state
+description: "Push changes and update state [--force to skip checks]"
 ---
 
 Push to remote and update `.claude/state.json`. Fully automatic.
