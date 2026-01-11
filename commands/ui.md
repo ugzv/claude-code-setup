@@ -10,6 +10,8 @@ Systematic visual interface review.
 
 **Patterns over instances.** One hardcoded color is a typo. Ten hardcoded colors is a missing abstraction. Look for what the codebase is trying to systematize and where it fails.
 
+**Spot the "AI-generated look."** Formulaic patterns, clashing accent colors, walls of text, redundant labels, badges that don't fit the palette—these make UIs look unpolished. A professional UI has intentional hierarchy, harmonious colors, and information density that respects scanning.
+
 **Balance the audit.** Visual consistency, component quality, state coverage, and responsiveness matter as much as accessibility. Don't let any single dimension dominate findings.
 
 ## The Process
@@ -35,6 +37,20 @@ Review each dimension, noting patterns not just instances:
 - Typography: hierarchy, font stacks, size scales
 - Spacing: consistent rhythm or arbitrary values
 - Component styling: similar elements styled similarly
+
+**Visual Polish** (the "does this look AI-generated" check)
+- Color harmony: do accent colors work with the palette, or clash?
+- Badge/tag consistency: same element type styled differently in different contexts?
+- Visual hierarchy: can you scan it, or is everything the same weight?
+- Proportions: elements that feel "off" - too big, too small, wrong padding
+- Generic patterns: formulaic layouts that ignore content needs
+
+**Content Presentation**
+- Text density: walls of text vs. scannable chunks
+- Information hierarchy: what's important is visually prominent
+- Redundancy: same information repeated (e.g., "analyst:Analyst Report")
+- Truncation: long text handled gracefully or just cut off
+- Labels: clear and necessary, or cluttering the UI
 
 **Component Quality**
 - Reusability: props-driven or copy-pasted variants
@@ -71,6 +87,20 @@ Review each dimension, noting patterns not just instances:
 
 **Design system status:** [exists/partial/none] - [brief description]
 **Key insight:** [one sentence - the most important finding]
+
+## Visual Polish Issues
+Things that make the UI look unpolished or AI-generated.
+- What looks off (be specific: color clash, badge inconsistency, visual weight)
+- Why it matters (professional appearance, user trust)
+- Fix approach (palette adjustment, component unification, hierarchy fix)
+- Evidence (file:line or screenshot reference)
+
+## Content Problems
+Information presentation issues.
+- Text density / readability issues
+- Redundant information (X repeated in Y)
+- Missing hierarchy (can't scan, everything same weight)
+- Evidence
 
 ## Systematic Issues
 Problems requiring design system or architectural changes.
