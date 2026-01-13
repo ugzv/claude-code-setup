@@ -29,7 +29,7 @@ def get_bundle_id_for_app(app_name: str) -> str:
         )
         if result.returncode == 0:
             return result.stdout.strip()
-    except:
+    except Exception:
         pass
     return ""
 
@@ -42,7 +42,7 @@ def send_notification_macos(title: str, message: str, subtitle: str = "", app_na
         result = subprocess.run(["which", "terminal-notifier"], capture_output=True, text=True)
         if result.returncode == 0:
             terminal_notifier_path = result.stdout.strip()
-    except:
+    except Exception:
         pass
 
     if terminal_notifier_path:
@@ -164,7 +164,7 @@ def send_notification_windows(title: str, message: str, subtitle: str = "", app_
                 stdin=subprocess.DEVNULL,
                 creationflags=subprocess.CREATE_NO_WINDOW
             )
-        except:
+        except Exception:
             pass
 
         log_debug(f"  → Windows notification fallback used: {str(e)}")

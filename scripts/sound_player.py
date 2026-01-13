@@ -5,11 +5,8 @@ Cross-platform: macOS (afplay) and Windows (winsound).
 """
 
 import subprocess
-import platform
 
-# Detect operating system
-IS_WINDOWS = platform.system() == "Windows"
-IS_MACOS = platform.system() == "Darwin"
+from lib.platform_detection import IS_MACOS, IS_WINDOWS
 
 
 def play_sound_macos(sound_file: str) -> None:

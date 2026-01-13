@@ -26,8 +26,37 @@ import argparse
 from pathlib import Path
 from datetime import datetime
 
+# Note: Duplicated from scripts/lib/platform_detection.py for standalone installer use
 IS_WINDOWS = platform.system() == "Windows"
 IS_MACOS = platform.system() == "Darwin"
+
+# Scripts we install as hooks - used for filtering during merge/uninstall
+OUR_SCRIPTS = ["play_sound.py", "notify_completion.py"]
+
+
+def _filter_hooks(hook_configs: list, exclude_scripts: list) -> list:
+    """Filter out hooks whose commands contain any of the exclude_scripts.
+
+    Args:
+        hook_configs: List of hook configuration dicts
+        exclude_scripts: List of script names to filter out
+
+    Returns:
+        Filtered list with matching hooks removed
+    """
+    cleaned = []
+    for config in hook_configs:
+        if "hooks" in config:
+            filtered = [
+                h for h in config["hooks"]
+                if not any(s in h.get("command", "") for s in exclude_scripts)
+            ]
+            if filtered:
+                config["hooks"] = filtered
+                cleaned.append(config)
+        else:
+            cleaned.append(config)
+    return cleaned
 
 
 def install_macos_deps(dry_run: bool = False) -> None:
@@ -171,28 +200,13 @@ def merge_settings(existing: dict, new_config: dict) -> dict:
         if "hooks" not in settings:
             settings["hooks"] = {}
 
-        our_scripts = ["play_sound.py", "notify_completion.py"]
-
         for hook_type, hook_configs in new_config["hooks"].items():
             if hook_type not in settings["hooks"]:
                 settings["hooks"][hook_type] = hook_configs
             else:
                 existing_hooks = settings["hooks"][hook_type]
-
-                # Remove old versions of our hooks
-                cleaned = []
-                for config in existing_hooks:
-                    if "hooks" in config:
-                        filtered = [
-                            h for h in config["hooks"]
-                            if not any(s in h.get("command", "") for s in our_scripts)
-                        ]
-                        if filtered:
-                            config["hooks"] = filtered
-                            cleaned.append(config)
-                    else:
-                        cleaned.append(config)
-
+                # Remove old versions of our hooks before adding new ones
+                cleaned = _filter_hooks(existing_hooks, OUR_SCRIPTS)
                 settings["hooks"][hook_type] = cleaned + hook_configs
 
     return settings
@@ -204,23 +218,9 @@ def remove_our_hooks(existing: dict) -> dict:
     if "hooks" not in settings:
         return settings
 
-    our_scripts = ["play_sound.py", "notify_completion.py"]
-
     for hook_type in list(settings["hooks"].keys()):
         existing_hooks = settings["hooks"][hook_type]
-        cleaned = []
-
-        for config in existing_hooks:
-            if "hooks" in config:
-                filtered = [
-                    h for h in config["hooks"]
-                    if not any(s in h.get("command", "") for s in our_scripts)
-                ]
-                if filtered:
-                    config["hooks"] = filtered
-                    cleaned.append(config)
-            else:
-                cleaned.append(config)
+        cleaned = _filter_hooks(existing_hooks, OUR_SCRIPTS)
 
         if cleaned:
             settings["hooks"][hook_type] = cleaned
@@ -233,6 +233,90 @@ def remove_our_hooks(existing: dict) -> dict:
     return settings
 
 
+def copy_files(
+    source_dir: Path,
+    dest_dir: Path,
+    pattern: str,
+    dry_run: bool = False,
+    make_executable: bool = False,
+    remove_obsolete: bool = False,
+    prefix: str = ""
+) -> int:
+    """
+    Generic file copy function.
+
+    Args:
+        source_dir: Source directory to copy from
+        dest_dir: Destination directory to copy to
+        pattern: Glob pattern for files to copy (e.g., "*.md", "*.py")
+        dry_run: If True, only print what would be done
+        make_executable: If True, set executable permissions on copied files (Unix only)
+        remove_obsolete: If True, remove files in dest that don't exist in source
+        prefix: Optional prefix for log messages (e.g., "lib/")
+
+    Returns:
+        Number of files copied
+    """
+    if not source_dir.exists():
+        return 0
+
+    if not dry_run:
+        dest_dir.mkdir(parents=True, exist_ok=True)
+
+    # Clean obsolete files if requested
+    if remove_obsolete and dest_dir.exists():
+        for existing in dest_dir.glob(pattern):
+            if not (source_dir / existing.name).exists():
+                if dry_run:
+                    print(f"  Would remove obsolete: {prefix}{existing.name}")
+                else:
+                    existing.unlink()
+                    print(f"  Removed obsolete: {prefix}{existing.name}")
+
+    # Copy files
+    copied = 0
+    for src_file in source_dir.glob(pattern):
+        target = dest_dir / src_file.name
+        if dry_run:
+            print(f"  Would copy: {prefix}{src_file.name}")
+        else:
+            shutil.copy2(src_file, target)
+            if make_executable and not IS_WINDOWS:
+                target.chmod(target.stat().st_mode | stat.S_IXUSR | stat.S_IXGRP | stat.S_IXOTH)
+        copied += 1
+
+    return copied
+
+
+def _copy_lib_subdir(source: Path, dest: Path, dry_run: bool = False) -> int:
+    """
+    Copy lib/ subdirectory for scripts.
+
+    Args:
+        source: Source scripts directory
+        dest: Destination scripts directory
+        dry_run: If True, only print what would be done
+
+    Returns:
+        Number of files copied from lib/
+    """
+    lib_source = source / "lib"
+    lib_dest = dest / "lib"
+
+    if not lib_source.exists():
+        return 0
+
+    return copy_files(
+        source_dir=lib_source,
+        dest_dir=lib_dest,
+        pattern="*.py",
+        dry_run=dry_run,
+        make_executable=False,
+        remove_obsolete=False,
+        prefix="lib/"
+    )
+
+
 def copy_commands(dry_run: bool = False) -> int:
     """Copy command files to ~/.claude/commands/"""
     repo_dir = get_repo_dir()
@@ -243,30 +327,14 @@ def copy_commands(dry_run: bool = False) -> int:
         print(f"  WARNING: Commands directory not found: {source}")
         return 0
 
-    if not dry_run:
-        dest.mkdir(parents=True, exist_ok=True)
-
-    # Clean obsolete commands
-    if dest.exists():
-        for existing in dest.glob("*.md"):
-            if not (source / existing.name).exists():
-                if dry_run:
-                    print(f"  Would remove obsolete: {existing.name}")
-                else:
-                    existing.unlink()
-                    print(f"  Removed obsolete: {existing.name}")
-
-    # Copy commands
-    copied = 0
-    for cmd in source.glob("*.md"):
-        target = dest / cmd.name
-        if dry_run:
-            print(f"  Would copy: {cmd.name}")
-        else:
-            shutil.copy2(cmd, target)
-        copied += 1
-
-    return copied
+    return copy_files(
+        source_dir=source,
+        dest_dir=dest,
+        pattern="*.md",
+        dry_run=dry_run,
+        make_executable=False,
+        remove_obsolete=True
+    )
 
 
 def copy_templates(dry_run: bool = False) -> int:
@@ -275,22 +343,14 @@ def copy_templates(dry_run: bool = False) -> int:
     source = repo_dir / "templates"
     dest = get_claude_dir() / "templates"
 
-    if not source.exists():
-        return 0
-
-    if not dry_run:
-        dest.mkdir(parents=True, exist_ok=True)
-
-    copied = 0
-    for template in source.glob("*.md"):
-        target = dest / template.name
-        if dry_run:
-            print(f"  Would copy: {template.name}")
-        else:
-            shutil.copy2(template, target)
-        copied += 1
-
-    return copied
+    return copy_files(
+        source_dir=source,
+        dest_dir=dest,
+        pattern="*.md",
+        dry_run=dry_run,
+        make_executable=False,
+        remove_obsolete=False
+    )
 
 
 def copy_scripts(dry_run: bool = False) -> int:
@@ -303,37 +363,18 @@ def copy_scripts(dry_run: bool = False) -> int:
         print(f"  WARNING: Scripts directory not found: {source}")
         return 0
 
-    if not dry_run:
-        dest.mkdir(parents=True, exist_ok=True)
-
-    copied = 0
-
     # Copy root-level Python scripts
-    for script in source.glob("*.py"):
-        target = dest / script.name
-        if dry_run:
-            print(f"  Would copy: {script.name}")
-        else:
-            shutil.copy2(script, target)
-            if not IS_WINDOWS:
-                target.chmod(target.stat().st_mode | stat.S_IXUSR | stat.S_IXGRP | stat.S_IXOTH)
-        copied += 1
+    copied = copy_files(
+        source_dir=source,
+        dest_dir=dest,
+        pattern="*.py",
+        dry_run=dry_run,
+        make_executable=True,
+        remove_obsolete=False
+    )
 
     # Copy lib/ subdirectory
-    lib_source = source / "lib"
-    lib_dest = dest / "lib"
-
-    if lib_source.exists():
-        if not dry_run:
-            lib_dest.mkdir(parents=True, exist_ok=True)
-
-        for script in lib_source.glob("*.py"):
-            target = lib_dest / script.name
-            if dry_run:
-                print(f"  Would copy: lib/{script.name}")
-            else:
-                shutil.copy2(script, target)
-            copied += 1
+    copied += _copy_lib_subdir(source, dest, dry_run)
 
     return copied
 

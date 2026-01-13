@@ -29,7 +29,7 @@ def log_debug(message: str, *, path: str | None = None) -> None:
         target = path or DEBUG_LOG_PATH
         with open(target, "a") as f:
             f.write(f"{message}\n")
-    except:
+    except Exception:
         pass
 
 
