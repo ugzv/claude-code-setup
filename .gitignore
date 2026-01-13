@@ -1,1 +1,4 @@
 .claude/*.backup
+tmpclaude*
+__pycache__/
+nul
