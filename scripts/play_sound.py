@@ -9,6 +9,8 @@ Usage:
 """
 
 import sys
+from typing import Optional
+
 from sound_player import IS_MACOS, IS_WINDOWS, play_sound
 
 # Sound definitions by type and platform
@@ -24,7 +26,7 @@ SOUNDS = {
 }
 
 
-def get_sound(sound_type: str) -> str | None:
+def get_sound(sound_type: str) -> Optional[str]:
     """Get sound file path for the given type and current platform."""
     if IS_MACOS:
         return SOUNDS.get(sound_type, {}).get("Darwin")

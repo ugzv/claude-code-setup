@@ -6,7 +6,19 @@ Session tracking, commands, and notifications for [Claude Code](https://docs.ant
 
 ## Quick Start
 
-Requires Python 3.8+.
+### Prerequisites
+
+**Python 3.8+** must be installed and available in your PATH. Hooks run Python scripts from any directory, so `python` (or `python3`) must work globally.
+
+Verify with:
+
+```bash
+python --version   # or python3 --version on macOS/Linux
+```
+
+If this fails, install Python from [python.org](https://www.python.org/downloads/) and ensure "Add to PATH" is checked during installation.
+
+### Install
 
 ```bash
 git clone https://github.com/ugzv/claude-code-setup.git
@@ -14,7 +26,11 @@ cd claude-code-setup
 ./install.sh   # or install.bat on Windows
 ```
 
-Restart Claude Code. In any project:
+This copies commands to `~/.claude/commands/` and configures hooks in `~/.claude/settings.json`.
+
+### Setup a project
+
+Restart Claude Code, then in any project:
 
 ```
 /migrate

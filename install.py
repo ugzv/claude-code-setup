@@ -25,6 +25,7 @@ import stat
 import argparse
 from pathlib import Path
 from datetime import datetime
+from typing import Optional
 
 # Note: Duplicated from scripts/lib/platform_detection.py for standalone installer use
 IS_WINDOWS = platform.system() == "Windows"
@@ -135,7 +136,7 @@ def load_settings() -> dict:
         return {}
 
 
-def backup_settings() -> Path | None:
+def backup_settings() -> Optional[Path]:
     settings_path = get_settings_path()
     if not settings_path.exists():
         return None

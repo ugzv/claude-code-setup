@@ -8,6 +8,7 @@ import os
 import platform
 import subprocess
 from pathlib import Path
+from typing import Optional
 
 # =============================================================================
 # Platform Constants
@@ -21,7 +22,7 @@ DEBUG_LOG_PATH = Path.home() / ".claude" / "notification_debug.log"
 DEBUG_ENABLED = os.environ.get("CLAUDE_HOOKS_DEBUG", "").lower() in ("1", "true", "yes")
 
 
-def log_debug(message: str, *, path: str | None = None) -> None:
+def log_debug(message: str, *, path: Optional[str] = None) -> None:
     """Silently append to debug log if DEBUG_ENABLED. Never raises."""
     if not DEBUG_ENABLED:
         return
