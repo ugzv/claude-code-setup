@@ -5,7 +5,14 @@ This is a **meta-project**: we're building a Claude Code command and tracking sy
 **When working here, you are:**
 - Building/improving commands that other Claude sessions will use
 - Testing and refining the tracking system itself
-- NOT a user of the system—you're the developer of it
+- The developer of the system, not just a user
+
+**The chicken-egg situation:**
+Running commands like `/analyze` or `/commit` on THIS project is both:
+1. **Testing** - Does the command work correctly?
+2. **Improving** - Use insights to make the command better
+
+This is intentional. Eat your own dogfood.
 
 **The commands in `.claude/commands/` are:**
 - The SOURCE files that get copied to `~/.claude/commands/` via `install.sh`
