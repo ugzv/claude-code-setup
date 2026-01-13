@@ -19,23 +19,23 @@ An unhealthy project has hope instead of feedback.
 │  SPAWN ALL AT ONCE                                     │
 ├────────────────────────────────────────────────────────┤
 │  1. security-check                                     │
-│     → npm audit / pip-audit / govulncheck              │
+│     → npm audit / pip-audit / govulncheck / composer audit │
 │     → Return: {critical, high, details}                │
 │                                                        │
 │  2. type-check                                         │
-│     → tsc / mypy / pyright                             │
+│     → tsc / mypy / pyright / phpstan                   │
 │     → Return: pass/fail + error count                  │
 │                                                        │
 │  3. test-runner                                        │
-│     → pytest / npm test / go test                      │
+│     → pytest / npm test / go test / phpunit            │
 │     → Return: pass/fail + failure summary              │
 │                                                        │
 │  4. lint-check                                         │
-│     → eslint / ruff / golangci-lint                    │
+│     → eslint / ruff / golangci-lint / pint / phpcs     │
 │     → Return: error/warning counts                     │
 │                                                        │
 │  5. outdated-check                                     │
-│     → npm outdated / pip list --outdated               │
+│     → npm outdated / pip list --outdated / composer outdated │
 │     → Return: packages behind + severity               │
 │                                                        │
 │  6. debt-scan                                          │

@@ -97,7 +97,7 @@ Quick scan before spawning analyzers:
 
 Dependency health check. No parallel agents needed—sequential analysis:
 
-1. **Scan dependency files** (package.json, requirements.txt, go.mod, Cargo.toml, etc.)
+1. **Scan dependency files** (package.json, requirements.txt, go.mod, Cargo.toml, composer.json, etc.)
 2. **Check for issues:**
    - Outdated packages (major versions behind)
    - Unused dependencies (declared but not imported)

@@ -32,11 +32,11 @@ Claude sessions are ephemeral. State tracking creates continuity - next session 
 │     → Return: pass/fail + what's out of sync           │
 │                                                        │
 │  1. format-checker                                     │
-│     → black --check / prettier --check                 │
+│     → black --check / prettier --check / pint --test   │
 │     → Return: pass/fail + files needing format         │
 │                                                        │
 │  2. lint-checker                                       │
-│     → ruff check / eslint                              │
+│     → ruff check / eslint / phpstan / phpcs            │
 │     → Return: pass/fail + error count                  │
 │                                                        │
 │  3. type-checker (if CI uses it)                       │
@@ -44,7 +44,7 @@ Claude sessions are ephemeral. State tracking creates continuity - next session 
 │     → Return: pass/fail + error count                  │
 │                                                        │
 │  4. test-runner (if CI runs tests)                     │
-│     → pytest / npm test                                │
+│     → pytest / npm test / phpunit                      │
 │     → Return: pass/fail + failure summary              │
 └────────────────────────────────────────────────────────┘
 ```

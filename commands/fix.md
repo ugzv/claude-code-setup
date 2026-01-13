@@ -68,6 +68,20 @@ gofmt -w . && goimports -w . && go mod tidy
 cargo fmt && cargo clippy --fix
 ```
 
+### PHP/Laravel
+```bash
+./vendor/bin/pint                    # Laravel Pint (official style fixer)
+./vendor/bin/php-cs-fixer fix .      # or PHP-CS-Fixer if not Laravel
+./vendor/bin/phpstan analyse         # static analysis (won't auto-fix, but reports issues)
+```
+
+### WordPress
+```bash
+./vendor/bin/phpcbf --standard=WordPress .   # auto-fix WP coding standards
+./vendor/bin/phpcs --standard=WordPress .    # lint (reports remaining issues)
+npm run build                                 # theme/plugin asset compilation if present
+```
+
 ## Lockfile Sync
 
 **Critical** - out-of-sync lockfiles pass locally but fail CI.
@@ -79,6 +93,7 @@ cargo fmt && cargo clippy --fix
 | `yarn.lock` | `yarn install --frozen-lockfile` | `yarn install` |
 | `uv.lock` | `uv lock --check` | `uv lock` |
 | `poetry.lock` | `poetry check --lock` | `poetry lock` |
+| `composer.lock` | `composer validate` | `composer update --lock` |
 
 ## Tools Need Configs
 

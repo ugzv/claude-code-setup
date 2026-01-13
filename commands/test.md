@@ -10,6 +10,8 @@ Verify the code works.
 - `package.json` scripts → jest, vitest, mocha
 - `go.mod` + `_test.go` → go test
 - `Cargo.toml` → cargo test
+- `phpunit.xml` / `composer.json` with phpunit → phpunit
+- `wp-tests-config.php` / WordPress plugin/theme → phpunit with WP bootstrap
 
 ## Parallel Execution (Multi-Framework)
 
@@ -42,6 +44,12 @@ go test ./...
 
 # Rust
 cargo test
+
+# PHP
+./vendor/bin/phpunit  # or: php artisan test (Laravel)
+
+# WordPress
+./vendor/bin/phpunit -c phpunit.xml  # with WP test bootstrap
 ```
 
 ## Arguments
