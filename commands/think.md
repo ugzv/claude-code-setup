@@ -4,6 +4,8 @@ description: Spec out complex tasks before implementing
 
 Create a spec before writing code. Prevents wasted work on wrong approaches.
 
+**Flag: `--review`** - After proposing, get GPT review via Codex CLI (optional, requires `codex` installed).
+
 ## When to Plan
 
 - **Skip**: Simple fixes, single-file changes, clear requirements
@@ -57,6 +59,25 @@ Ready to proceed, or want me to explain the reasoning?
 - Exploration revealed conflicting patterns in the codebase
 
 If you must present options, recommend one and explain why.
+
+## Phase 3.5: GPT Review (only with `--review` flag)
+
+**Why:** A second model catches blind spots you might miss. Claude plans, GPT reviews - complementary strengths.
+
+**Principle:** Use Codex CLI for GPT review if available. Never block the workflow - if Codex isn't set up, skip gracefully and continue.
+
+**When `--review` is set:**
+
+1. Check if `codex` CLI is installed and authenticated
+2. If available: Ask GPT to review your proposed approach for blind spots, edge cases, or simpler alternatives
+3. If unavailable or errors: Note it and continue - the review is additive, not required
+4. Incorporate valid feedback into your final proposal
+
+**What to ask GPT:** Focus the review on what you might have missed, not a full re-plan. You want a second opinion, not a competing plan.
+
+**Model:** Use `gpt-5-codex high` reasoning level. Match quality - you're Opus 4.5, the reviewer should be GPT's best.
+
+**Setup tip for users:** `npm i -g @openai/codex` then run `codex` once to authenticate.
 
 ## Phase 4: Confirm and Continue
 
