@@ -75,9 +75,12 @@ If you must present options, recommend one and explain why.
 
 **What to ask GPT:** Focus the review on what you might have missed, not a full re-plan. You want a second opinion, not a competing plan.
 
-**Model:** Use `gpt-5-codex high` reasoning level. Match quality - you're Opus 4.5, the reviewer should be GPT's best.
+**Invocation:**
+```bash
+codex exec --full-auto -m gpt-5-codex -c model_reasoning_effort=high "Review this plan for blind spots: [your proposal]"
+```
 
-**Setup tip for users:** `npm i -g @openai/codex` then run `codex` once to authenticate.
+**Setup tip for users:** `npm i -g @openai/codex` or `brew install codex`, then run `codex` once to authenticate.
 
 ## Phase 4: Confirm and Continue
 
