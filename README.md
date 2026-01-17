@@ -60,36 +60,57 @@ A hook loads this on session start. `/push` trims `shipped` to 10 entries—olde
 
 ## Commands
 
-**Daily workflow:**
+### Daily Workflow
 
-| Command | Purpose |
-|---------|---------|
-| `/commit [--all\|--push]` | Commit changes. `--all` batches uncommitted, `--push` auto-pushes |
-| `/push [--force]` | Push and update state. `--force` skips CI checks |
-| `/fix` | Auto-fix linting and formatting |
-| `/test [--watch]` | Run tests |
-| `/reflect` | Pre-mortem analysis—find what will break before it does |
+**`/commit`** — Commit changes
+- `--all` — Batch all uncommitted changes into logical commits
+- `--push` — Auto-push after committing
 
-**Planning & analysis:**
+**`/push`** — Push and update state.json
+- `--force` — Skip CI checks
 
-| Command | Purpose |
-|---------|---------|
-| `/think` | Plan before complex tasks |
-| `/backlog` | Review open items |
-| `/analyze [mode]` | Codebase analysis. Modes: `--audit`, `--deps`, `--naming`, `--comments`, `--debt`, `--history` |
-| `/prompt-guide` | Prompting philosophy for agent work |
+**`/fix`** — Auto-fix linting and formatting
 
-**Setup & utilities:**
+**`/test`** — Run tests
+- `--watch` — Watch mode
 
-| Command | Purpose |
-|---------|---------|
-| `/migrate` | Set up tracking in a project |
-| `/dev [--frontend\|--backend\|--all]` | Start dev server (kills port first) |
-| `/health` | Check project health |
-| `/ux` | Simulate users to find UX gaps and feature ideas |
-| `/ui` | Audit visual consistency, detect "AI-generated look" issues |
-| `/agent` | Audit Agent SDK projects |
-| `/commands` | List available commands |
+**`/reflect`** — Pre-mortem analysis (find what will break before it does)
+
+### Planning & Analysis
+
+**`/think`** — Plan before complex tasks
+- `--gpt` — Get second opinion from GPT via Codex CLI
+
+**`/backlog`** — Review and manage open items
+
+**`/analyze`** — Codebase analysis
+- `--audit` — Architecture review
+- `--deps` — Dependency analysis
+- `--naming` — Naming consistency
+- `--comments` — Comment quality
+- `--debt` — Tech debt scan
+- `--history` — Git history analysis
+
+**`/prompt-guide`** — Prompting philosophy for agent work
+
+### Setup & Utilities
+
+**`/migrate`** — Set up tracking in a project
+
+**`/dev`** — Start dev server (kills port first)
+- `--frontend` — Frontend only
+- `--backend` — Backend only
+- `--all` — Both
+
+**`/health`** — Check project health
+
+**`/ux`** — Simulate users to find UX gaps
+
+**`/ui`** — Audit visual consistency
+
+**`/agent`** — Audit Agent SDK projects
+
+**`/commands`** — List available commands
 
 ## File Structure
 

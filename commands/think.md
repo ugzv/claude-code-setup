@@ -4,7 +4,7 @@ description: Spec out complex tasks before implementing
 
 Create a spec before writing code. Prevents wasted work on wrong approaches.
 
-**Flag: `--review`** - After proposing, get GPT review via Codex CLI (optional, requires `codex` installed).
+**Flag: `--gpt`** - Get a second opinion from GPT via Codex CLI (optional, requires `codex` installed).
 
 ## When to Plan
 
@@ -60,13 +60,13 @@ Ready to proceed, or want me to explain the reasoning?
 
 If you must present options, recommend one and explain why.
 
-## Phase 3.5: GPT Review (only with `--review` flag)
+## Phase 3.5: GPT Second Opinion (only with `--gpt` flag)
 
 **Why:** A second model catches blind spots you might miss. Claude plans, GPT reviews - complementary strengths.
 
-**Principle:** Use Codex CLI for GPT review if available. Never block the workflow - if Codex isn't set up, skip gracefully and continue.
+**Principle:** Use Codex CLI for GPT feedback if available. Never block the workflow - if Codex isn't set up, skip gracefully and continue.
 
-**When `--review` is set:**
+**When `--gpt` is set:**
 
 1. Check if `codex` CLI is installed and authenticated
 2. If available: Ask GPT to review your proposed approach for blind spots, edge cases, or simpler alternatives
