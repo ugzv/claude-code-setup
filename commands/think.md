@@ -62,25 +62,29 @@ If you must present options, recommend one and explain why.
 
 ## Phase 3.5: GPT Second Opinion (only with `--gpt` flag)
 
-**Why:** A second model catches blind spots you might miss. Claude plans, GPT reviews - complementary strengths.
-
-**Principle:** Use Codex CLI for GPT feedback if available. Never block the workflow - if Codex isn't set up, skip gracefully and continue.
+Quick sanity check from a different model. Not a full review - catches obvious blind spots.
 
 **When `--gpt` is set:**
 
-1. Check if `codex` CLI is installed and authenticated
-2. If available: Ask GPT to review your proposed approach for blind spots, edge cases, or simpler alternatives
-3. If unavailable or errors: Note it and continue - the review is additive, not required
-4. Incorporate valid feedback into your final proposal
+1. Check if `codex` is installed: `which codex` - if not, skip gracefully
+2. Synthesize a context block (keep under 1500 chars):
+   ```
+   PROBLEM: [one sentence]
+   APPROACH: [key decisions, not implementation details]
+   TOUCHES: [file list]
+   CONCERNS: [what you're unsure about]
+   ```
+3. Ask ONE focused question about your blind spots:
+   - Cross-codebase effects (code that depends on what you're changing)
+   - Existing patterns you might be duplicating
+   - Whatever you're least certain about in your proposal
+4. Run: `codex exec --full-auto "Context: [block]. Question: [your question]"`
+5. Incorporate useful feedback. Ignore noise.
 
-**What to ask GPT:** Focus the review on what you might have missed, not a full re-plan. You want a second opinion, not a competing plan.
+**Expect:** A perspective you hadn't considered.
+**Don't expect:** Comprehensive review or alternative architectures.
 
-**Invocation:**
-```bash
-codex exec --full-auto -m gpt-5-codex -c model_reasoning_effort=high "Review this plan for blind spots: [your proposal]"
-```
-
-**Setup tip for users:** `npm i -g @openai/codex` or `brew install codex`, then run `codex` once to authenticate.
+**Setup:** `npm i -g @openai/codex`, then `codex` once to authenticate.
 
 ## Phase 4: Confirm and Continue
 
