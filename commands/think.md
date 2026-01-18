@@ -78,7 +78,9 @@ Quick sanity check from a different model. Not a full review - catches obvious b
    - Cross-codebase effects (code that depends on what you're changing)
    - Existing patterns you might be duplicating
    - Whatever you're least certain about in your proposal
-4. Run: `codex exec --full-auto "Context: [block]. Question: [your question]"`
+4. Run synchronously (don't background - wait for response):
+   `codex exec --full-auto "Context: [block]. Question: [your question]"`
+   Give it 90 seconds. If no response, proceed without it.
 5. Incorporate useful feedback. Ignore noise.
 
 **Expect:** A perspective you hadn't considered.
