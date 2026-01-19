@@ -2,12 +2,17 @@
   "project": "claude-code-setup",
   "currentFocus": [],
   "lastSession": {
-    "date": "2026-01-13",
-    "summary": "Fixed Python 3.8 compatibility (replaced X|Y union syntax with Optional), improved README installation docs.",
-    "commits": ["30e370c"]
+    "date": "2026-01-19",
+    "summary": "Improved /think --gpt flag: structured context blocks, principle-based questions, user-configured model defaults, synchronous execution to prevent premature kill.",
+    "commits": ["3230cbb", "96cdd0d", "e85f129", "4f107a8", "4131fda"]
   },
   "backlog": [],
   "shipped": [
+    {
+      "date": "2026-01-19",
+      "type": "refactor",
+      "summary": "Improve /think --gpt with structured context, focused questions, and synchronous codex execution"
+    },
     {
       "date": "2026-01-13",
       "type": "fix",
@@ -52,11 +57,6 @@
       "date": "2026-01-06",
       "type": "refactor",
       "summary": "/think: recommend optimal approach, track large tasks in state.json for session continuity"
-    },
-    {
-      "date": "2026-01-04",
-      "type": "refactor",
-      "summary": "Make /analyze a constructive architecture advisor (unification, abstraction, module health)"
     }
   ]
 }
