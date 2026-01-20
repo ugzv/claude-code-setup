@@ -9,7 +9,7 @@
           },
           {
             "type": "command",
-            "command": "cat .claude/handoffs.json 2>/dev/null || true"
+            "command": "cat .claude/handoffs.json 2>nul || echo."
           }
         ]
       }

@@ -82,13 +82,15 @@ Create/merge `.claude/settings.json` with SessionStart hooks:
         },
         {
           "type": "command",
-          "command": "cat .claude/handoffs.json 2>/dev/null || true"
+          "command": "cat .claude/handoffs.json 2>nul || echo."
         }
       ]
     }]
   }
 }
 ```
+
+**Note:** Uses `2>nul` and `echo.` for Windows compatibility (`|| true` doesn't work on Windows).
 
 **Upgrade logic:**
 - If no SessionStart hooks → add both
