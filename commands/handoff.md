@@ -243,36 +243,88 @@ Tasks for this phase:
 Ready to work on this phase."
 ```
 
-### 5. Execute and Update
+### 5. Execute with Parallel Agents
+
+**Philosophy:** Main agent coordinates; subagents execute. This keeps main context fresh for validation and synthesis while leveraging parallel execution for independent tasks.
 
 **Immediately after loading:**
 - Update `lastTouched` to current ISO timestamp
 
-**As you work:**
-- Track task progress mentally (or via internal todo)
-- Don't update handoffs.json on every small step
+**Analyze task independence:**
 
-**When phase complete:**
-1. Gather validation evidence (test output, working feature, concrete proof)
-2. Capture learnings (what worked, what didn't, insights)
-3. Update handoffs.json:
-   ```json
-   {
-     "status": "complete",
-     "completedAt": "{date}",
-     "validation": {
-       "criteria": "{from .md}",
-       "evidence": "{concrete proof}",
-       "confidence": "high|medium|low"
-     },
-     "learnings": "{insights for future sessions}"
-   }
-   ```
-4. Advance `currentPhase`
-5. Update `lastTouched`
+```
+Review the phase's tasks. Ask:
+- Can tasks run without depending on each other's output?
+- Do tasks modify different files/areas?
+- Would running them in parallel cause conflicts?
+
+Independent tasks → Spawn parallel agents
+Sequential dependencies → Execute in order (or spawn first, then continue)
+Single complex task → Single agent or main handles directly
+```
+
+**Spawn parallel agents when beneficial:**
+
+**CRITICAL: Spawn all at once** in a single message with multiple Task calls.
+
+```
+For each independent task group:
+  → Spawn agent with:
+    - Task description from handoff .md
+    - Relevant file scope
+    - Philosophy/constraints from handoff
+    - Clear success criteria
+    - "Report what you changed and any issues encountered"
+```
+
+Example spawn pattern:
+```
+┌────────────────────────────────────────────────────────┐
+│  SPAWN ALL AT ONCE                                     │
+├────────────────────────────────────────────────────────┤
+│  Task 1 Agent: "Implement X in files A, B"             │
+│  Task 2 Agent: "Implement Y in files C, D"             │
+│  Task 3 Agent: "Add tests for feature Z"               │
+└────────────────────────────────────────────────────────┘
+```
+
+**Main agent role during execution:**
+- Monitor agent completion
+- Do NOT duplicate work agents are doing
+- Prepare validation criteria
+
+**After agents complete — Validate:**
+
+Main agent validates ALL changes before marking phase complete:
+1. Review what each agent changed
+2. Run tests/builds to verify nothing broke
+3. Check changes align with handoff philosophy
+4. Resolve any conflicts between agent changes
+
+**Update handoffs.json after validation:**
+```json
+{
+  "status": "complete",
+  "completedAt": "{date}",
+  "validation": {
+    "criteria": "{from .md}",
+    "evidence": "{concrete proof: test output, build success}",
+    "confidence": "high|medium|low"
+  },
+  "learnings": "{what worked, what agents found, insights}"
+}
+```
+
+Advance `currentPhase` and update `lastTouched`.
+
+**When NOT to use parallel agents:**
+- Tasks with sequential dependencies (B needs A's output)
+- Single focused task that's easier to do directly
+- Tasks that modify the same files (conflict risk)
+- Simple changes where coordination overhead exceeds benefit
 
 **If blocked:**
-- Add to `blockers` array
+- Add to `blockers` array with specific issue
 - Add `notes` explaining current state
 - Keep status as `in_progress`
 - Update `lastTouched`
@@ -369,30 +421,42 @@ User: /handoff
 Claude: Creates .claude/handoffs/{slug}.md + updates handoffs.json
         "Handoff created: {slug}. N phases. Ready for fresh session."
 
-# Session 2: Execution (fresh context)
+# Session 2: Execution with parallel agents
 User: /handoff --continue
 Claude: [reads handoffs.json, checks lastTouched, reads .md]
         "Continuing: {title}
          Phase 1/3: {name}
-         Tasks: [list from .md]
-         Ready to work on this phase."
-        [executes, validates, captures learnings]
-        [updates handoffs.json with evidence + learnings]
-        "Phase 1 complete. Evidence: tests pass.
+         Tasks:
+         - Add user service (files: src/services/)
+         - Add user API routes (files: src/routes/)
+         - Add user tests (files: tests/)
+
+         These tasks are independent. Spawning 3 parallel agents."
+
+        [Spawns all agents in single message]
+        ┌─────────────────────────────────────────┐
+        │ Agent 1: Implement user service         │
+        │ Agent 2: Implement API routes           │
+        │ Agent 3: Write tests                    │
+        └─────────────────────────────────────────┘
+
+        [Agents complete, main validates:]
+        "All agents complete. Validating changes..."
+        [runs tests, checks for conflicts]
+
+        "Phase 1 complete. Evidence: 12 tests pass, build succeeds.
+         Learnings: Service pattern worked well.
          Starting Phase 2..."
 
-# Session 3: If context ran low
+# Session 3: Sequential phase (no parallel needed)
 User: /handoff --continue
-Claude: [reads state, sees notes from prior session]
-        "Continuing: {title}
-         Phase 2/3: {name}
-         Last session notes: {notes}
-         Picking up where we left off."
+Claude: "Continuing: {title}
+         Phase 2/3: Integration
+         Tasks: Wire components together
 
-# Multiple handoffs
-User: /handoff --continue auth
-Claude: [matches "auth" to "user-authentication" handoff]
-        "Continuing: User Authentication..."
+         Single task with dependencies—handling directly."
+        [executes, validates]
+        "Phase 2 complete."
 
 # When all phases done
 User: /push
