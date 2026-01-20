@@ -78,11 +78,13 @@ Create/merge `.claude/settings.json` with SessionStart hooks:
       "hooks": [
         {
           "type": "command",
-          "command": "cat .claude/state.json 2>/dev/null || echo '{\"note\": \"No state.json found. Run /migrate to set up tracking.\"}'"
+          "command": "python -c \"import os; f='.claude/state.json'; print(open(f).read() if os.path.exists(f) else '{\\\"note\\\": \\\"No state.json found. Run /migrate to set up tracking.\\\"}')\"",
+          "timeout": 5
         },
         {
           "type": "command",
-          "command": "cat .claude/handoffs.json 2>nul || echo."
+          "command": "python -c \"import os; f='.claude/handoffs.json'; os.path.exists(f) and print(open(f).read())\"",
+          "timeout": 5
         }
       ]
     }]
@@ -90,7 +92,7 @@ Create/merge `.claude/settings.json` with SessionStart hooks:
 }
 ```
 
-**Note:** Uses `2>nul` and `echo.` for Windows compatibility (`|| true` doesn't work on Windows).
+**Note:** Uses Python for cross-platform compatibility (works on Windows, macOS, Linux).
 
 **Upgrade logic:**
 - If no SessionStart hooks → add both
