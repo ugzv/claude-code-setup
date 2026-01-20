@@ -3,11 +3,21 @@
   "currentFocus": [],
   "lastSession": {
     "date": "2026-01-20",
-    "summary": "Rewrote /ui command with principles-based prompting: parallel agents, engagement mechanics, 74 lines (from 188).",
-    "commits": ["0e7d55d"]
+    "summary": "Added /handoff --continue with parallel agent execution, fixed Windows SessionStart hooks via user-level install",
+    "commits": ["cf00236", "c1dee42", "6264740", "3021214"]
   },
   "backlog": [],
   "shipped": [
+    {
+      "date": "2026-01-20",
+      "type": "feat",
+      "summary": "Add /handoff --continue with parallel agent execution for fresh context"
+    },
+    {
+      "date": "2026-01-20",
+      "type": "fix",
+      "summary": "Install SessionStart hook to user-level for cross-project Windows support"
+    },
     {
       "date": "2026-01-20",
       "type": "refactor",
@@ -47,16 +57,6 @@
       "date": "2026-01-11",
       "type": "feat",
       "summary": "Enhance /ui to detect visual polish issues and AI-generated look patterns"
-    },
-    {
-      "date": "2026-01-07",
-      "type": "refactor",
-      "summary": "Rebalance /ui audit toward visual/component quality, reduce accessibility dominance"
-    },
-    {
-      "date": "2026-01-06",
-      "type": "feat",
-      "summary": "Auto-install terminal-notifier on macOS via Homebrew during install"
     }
   ]
 }
