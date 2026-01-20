@@ -2,14 +2,29 @@
 description: Create handoff doc for fresh session to execute
 ---
 
-Generate a structured handoff from the current session's analysis. Creates a plan that fresh sessions can execute without original context.
+Create or continue handoffs—structured plans that fresh sessions can execute without original context.
 
-## When to Use
+## Modes
+
+**Default (no flags):** Generate a new handoff from the current session's analysis.
+
+**With `--continue`:** Resume an active handoff. Load context, show current state, work through phases, update progress.
+
+**With `--continue {id}`:** Resume a specific handoff by id or partial match.
+
+## When to Create (default)
 
 After analysis sessions (`/think`, `/analyze`, `/ux`, etc.) when:
 - Context is bloated, need clean execution
 - Task spans multiple sessions
 - Want phased, validated progress
+
+## When to Continue (--continue)
+
+When resuming work on an existing handoff:
+- Fresh session picking up where another left off
+- Returning to a task after interruption
+- Executing the next phase of a multi-phase plan
 
 ## File Structure
 
@@ -166,9 +181,121 @@ Note: No progress tracking in .md — that lives in `handoffs.json`.
 3. **Add entry** to `.claude/handoffs.json` with all phases as `pending`
 4. **Confirm** with user
 
-## Resume Protocol (for executing sessions)
+## Continue Process (--continue)
 
-**Principles for resuming handoffs:**
+### 1. Load and Select
+
+```
+Read .claude/handoffs.json
+
+If no active handoffs:
+  → "No active handoffs. Use /handoff to create one."
+  → Stop
+
+If 1 active handoff:
+  → Use it automatically
+
+If multiple active handoffs AND no id specified:
+  → List them: "N active handoffs: {id1} (Phase X/Y), {id2} (Phase X/Y)..."
+  → Ask: "Which one? (Use /handoff --continue {id})"
+  → Stop
+
+If id specified:
+  → Match by id or partial match on title
+  → If no match: "No handoff matching '{id}'. Active: {list ids}"
+```
+
+### 2. Check Parallel Session Safety
+
+```
+If lastTouched < 10 minutes ago:
+  → Warn: "This handoff was touched {N} min ago. Another session may be active."
+  → Ask user to confirm before continuing
+Else:
+  → Safe to proceed
+```
+
+### 3. Load Context
+
+Read the handoff .md file. Understand:
+- Goal and philosophy
+- Scope (files in play, out of scope)
+- All phases and their structure
+
+Review handoffs.json for this handoff:
+- Current phase number
+- Prior phase learnings (critical context)
+- Any notes or blockers from previous session
+
+### 4. Present Current State
+
+```
+"Continuing: {title}
+
+Phase {N}/{total}: {phase name}
+Status: {in_progress|pending}
+[If notes exist: "Last session notes: {notes}"]
+[If blockers exist: "Blockers: {blockers}"]
+
+Tasks for this phase:
+{list from .md file}
+
+Ready to work on this phase."
+```
+
+### 5. Execute and Update
+
+**Immediately after loading:**
+- Update `lastTouched` to current ISO timestamp
+
+**As you work:**
+- Track task progress mentally (or via internal todo)
+- Don't update handoffs.json on every small step
+
+**When phase complete:**
+1. Gather validation evidence (test output, working feature, concrete proof)
+2. Capture learnings (what worked, what didn't, insights)
+3. Update handoffs.json:
+   ```json
+   {
+     "status": "complete",
+     "completedAt": "{date}",
+     "validation": {
+       "criteria": "{from .md}",
+       "evidence": "{concrete proof}",
+       "confidence": "high|medium|low"
+     },
+     "learnings": "{insights for future sessions}"
+   }
+   ```
+4. Advance `currentPhase`
+5. Update `lastTouched`
+
+**If blocked:**
+- Add to `blockers` array
+- Add `notes` explaining current state
+- Keep status as `in_progress`
+- Update `lastTouched`
+
+**If context running low:**
+- Update `notes` with detailed state for next session
+- Update `lastTouched`
+- Tell user: "Context getting heavy. Good stopping point—notes saved for next session."
+
+### 6. Report Progress
+
+After each phase or at end of session:
+```
+"Phase {N} complete. Evidence: {brief description}
+
+[If more phases remain:]
+Starting Phase {N+1}: {name}...
+
+[If all phases complete:]
+All phases complete. Run /push to archive this handoff."
+```
+
+## Resume Principles
 
 - **Context first** — read the .md file for goal/philosophy before acting; review prior learnings
 - **No rushing** — you have abundant context; thoroughness over speed
@@ -243,21 +370,40 @@ Claude: Creates .claude/handoffs/{slug}.md + updates handoffs.json
         "Handoff created: {slug}. N phases. Ready for fresh session."
 
 # Session 2: Execution (fresh context)
-User: continue
-Claude: [reads handoffs.json, reads .md for context]
-        "Resuming '{title}'. Phase 1: {name}."
+User: /handoff --continue
+Claude: [reads handoffs.json, checks lastTouched, reads .md]
+        "Continuing: {title}
+         Phase 1/3: {name}
+         Tasks: [list from .md]
+         Ready to work on this phase."
         [executes, validates, captures learnings]
-        "Phase 1 complete. Starting Phase 2..."
+        [updates handoffs.json with evidence + learnings]
+        "Phase 1 complete. Evidence: tests pass.
+         Starting Phase 2..."
 
 # Session 3: If context ran low
-User: continue
+User: /handoff --continue
 Claude: [reads state, sees notes from prior session]
-        [picks up exactly where left off]
+        "Continuing: {title}
+         Phase 2/3: {name}
+         Last session notes: {notes}
+         Picking up where we left off."
+
+# Multiple handoffs
+User: /handoff --continue auth
+Claude: [matches "auth" to "user-authentication" handoff]
+        "Continuing: User Authentication..."
 
 # When all phases done
 User: /push
 Claude: [pushes, archives handoff]
         "Archived handoff: {title}"
 ```
+
+## Arguments
+
+`--continue` — Resume an active handoff. If one active handoff exists, continues it automatically. If multiple exist, lists them and asks which one.
+
+`--continue {id}` — Resume a specific handoff by id or partial match on title. Example: `/handoff --continue auth` matches handoff with id "user-authentication".
 
 $ARGUMENTS
