@@ -38,6 +38,14 @@ Restart Claude Code, then in any project:
 
 Next session, Claude knows what you were working on.
 
+### Upgrading existing projects
+
+Run `/migrate` again — it's safe and non-destructive:
+- Creates backups before any changes
+- Preserves all existing data (state.json, backlog, shipped)
+- Only adds missing features (handoff hooks, resume protocol)
+- Custom CLAUDE.md content preserved
+
 ## The Problem
 
 Claude sessions are ephemeral. Context evaporates when a conversation ends. Next session starts from zero.
@@ -81,6 +89,11 @@ A hook loads this on session start. `/push` trims `shipped` to 10 entries—olde
 **`/think`** — Plan before complex tasks
 - `--gpt` — Get second opinion from GPT via Codex CLI
 
+**`/handoff`** — Create handoff doc for fresh session to execute
+- Captures analysis into phased plan
+- Progress persists across sessions
+- Self-validating phases
+
 **`/backlog`** — Review and manage open items
 
 **`/analyze`** — Codebase analysis
@@ -121,10 +134,47 @@ your-project/
 ├── CLAUDE.md              # Session protocol
 └── .claude/
     ├── state.json         # Tracking data
-    └── settings.json      # Hook config
+    ├── settings.json      # Hook config
+    ├── handoffs.json      # Active handoffs (if any)
+    └── handoffs/          # Plan files (if any)
 ```
 
 Global commands: `~/.claude/commands/`
+
+## Handoff System
+
+For complex tasks that span sessions or need fresh context:
+
+```
+# Session 1: Analysis
+/think [complex task]
+/handoff
+
+# Session 2: Execution (fresh context)
+Claude: "1 active handoff: {task} (Phase 1/3). What would you like to work on?"
+You: "continue"
+# Claude reads plan, executes phase by phase, validates, captures learnings
+```
+
+**How it works:**
+- `handoffs.json` tracks progress (machine-readable, updates as work happens)
+- `handoffs/*.md` contain plans (human-readable, immutable after creation)
+- Each phase has validation criteria
+- `/push` auto-archives completed handoffs once code is committed
+
+**Principles:**
+- Plans are contracts — immutable once created
+- Validate before marking complete — concrete evidence required
+- Capture learnings — memory synthesis for future sessions
+- No rushing — Claude has abundant context
+
+**Parallel sessions:**
+- Multiple handoffs = multiple sessions OK (each works independently)
+- Same handoff in multiple sessions = warned via `lastTouched` timestamp
+
+**Non-intrusive:**
+- Session start mentions handoffs but doesn't force engagement
+- Say "continue" to resume, or do something else — handoffs wait
 
 ## Notifications
 

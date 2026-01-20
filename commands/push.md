@@ -64,6 +64,27 @@ If state.json changed, commit separately before pushing.
 
 Summarize: commits pushed, what shipped, backlog status.
 
+## Handoff Cleanup
+
+If `.claude/handoffs.json` exists with active handoffs:
+
+```
+For each active handoff:
+  If ALL phases have status "complete":
+    Check if related files are committed (git status clean)
+    If yes:
+      → Move entry from active[] to archived[]
+      → Add summary + completed date
+      → Delete .claude/handoffs/{id}.md (it's in git history)
+      → Log: "Archived handoff: {title}"
+    If no:
+      → Keep as-is, warn: "Handoff complete but has uncommitted files"
+  Else:
+    → Keep as-is (in progress)
+```
+
+**Why auto-archive:** Completed handoffs clutter the active list. Once code is pushed, the .md file lives in git history. Archiving keeps the system clean while preserving history.
+
 ## CI Status Check
 
 ```bash

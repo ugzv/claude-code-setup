@@ -476,9 +476,9 @@ def install(dry_run: bool = False) -> bool:
     else:
         print("INSTALLED!")
         print()
-        print("Commands: /migrate, /think, /commit, /push, /fix, /test,")
-        print("          /health, /analyze, /ux, /backlog, /agent, /dev,")
-        print("          /commands, /prompt-guide")
+        print("Commands: /migrate, /think, /handoff, /commit, /push, /fix,")
+        print("          /test, /health, /analyze, /ux, /backlog, /agent,")
+        print("          /dev, /commands, /prompt-guide")
         print()
         print("Features: Desktop notifications on task completion")
         print("          Context usage in statusline")

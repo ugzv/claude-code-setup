@@ -6,6 +6,10 @@
           {
             "type": "command",
             "command": "cat .claude/state.json 2>/dev/null || echo '{\"note\": \"No state.json found. Run /migrate to set up tracking.\"}'"
+          },
+          {
+            "type": "command",
+            "command": "cat .claude/handoffs.json 2>/dev/null || true"
           }
         ]
       }

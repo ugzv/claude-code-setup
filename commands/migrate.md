@@ -20,8 +20,11 @@ Briefly report what will be created/modified, then proceed immediately. The user
 
 ```bash
 test -f CLAUDE.md && cp CLAUDE.md CLAUDE.md.backup
+test -f .claude/state.json && cp .claude/state.json .claude/state.json.backup
 test -f .claude/settings.json && cp .claude/settings.json .claude/settings.json.backup
 ```
+
+Backups ensure nothing is lost. User can restore if needed.
 
 ## 4. Create Structure
 
@@ -33,19 +36,21 @@ mkdir -p .claude
 
 **Session protocol goes at TOP** so Claude sees it first.
 
-- If already has "SESSION PROTOCOL" → skip
-- If exists but no protocol → prepend protocol, keep existing content below
-- If doesn't exist → create with protocol only
+- If doesn't exist → create from template (`~/.claude/templates/CLAUDE.md`)
+- If exists but no protocol → prepend protocol from template, keep ALL existing content below
+- If has protocol but missing "Resuming Handoffs" section:
+  1. Find the `# SESSION PROTOCOL` section
+  2. Find where it ends (next `---` or `#` heading at same level)
+  3. **Preserve any custom rules** the user added (look for additions after "## Rules")
+  4. Replace protocol with template version
+  5. Re-add any custom rules that were preserved
+- If fully up to date → skip
 
-The protocol should state that:
-1. State is auto-loaded via SessionStart hook
-2. Summarize context before proceeding
-3. Ask what to work on if no currentFocus
-
-Include rules: only user sets currentFocus, add discoveries during /push, never commit without being asked.
+**Key: Never lose user customizations.** If unsure, ask before modifying.
 
 ## 6. Create/Update state.json
 
+**If doesn't exist**, create:
 ```json
 {
   "project": "[detect from package.json/git/folder]",
@@ -56,26 +61,43 @@ Include rules: only user sets currentFocus, add discoveries during /push, never 
 }
 ```
 
-If exists: upgrade `currentFocus` from null/string to array if needed.
+**If exists**, preserve ALL existing data:
+- Keep `currentFocus`, `backlog`, `shipped`, `lastSession` as-is
+- Only upgrade format if needed (e.g., `currentFocus` from null/string → array)
+- Never overwrite existing entries
 
 ## 7. Configure Hooks
 
-Create/merge `.claude/settings.json` with SessionStart hook:
+Create/merge `.claude/settings.json` with SessionStart hooks:
 
+**Required hooks:**
 ```json
 {
   "hooks": {
     "SessionStart": [{
-      "hooks": [{
-        "type": "command",
-        "command": "cat .claude/state.json 2>/dev/null || echo '{\"note\": \"No state.json found. Run /migrate to set up tracking.\"}'"
-      }]
+      "hooks": [
+        {
+          "type": "command",
+          "command": "cat .claude/state.json 2>/dev/null || echo '{\"note\": \"No state.json found. Run /migrate to set up tracking.\"}'"
+        },
+        {
+          "type": "command",
+          "command": "cat .claude/handoffs.json 2>/dev/null || true"
+        }
+      ]
     }]
   }
 }
 ```
 
+**Upgrade logic:**
+- If no SessionStart hooks → add both
+- If has state.json hook but missing handoffs.json hook → **add** the handoffs hook
+- If has both → skip
+
 SessionStart fires on: startup, resume, /clear, context compaction.
+
+The second hook loads active handoffs (if any) so Claude knows what's in progress.
 
 ## 8. Migrate Old Format (if found)
 
