@@ -3,11 +3,16 @@
   "currentFocus": [],
   "lastSession": {
     "date": "2026-01-20",
-    "summary": "Added handoff system for multi-session task execution with cross-platform Python hooks.",
-    "commits": ["eef0187", "1fd3cb2", "e6761bb"]
+    "summary": "Improved handoff system: SessionStart hooks now output file path headers, push cleanup rewritten with principles.",
+    "commits": ["57ab663"]
   },
   "backlog": [],
   "shipped": [
+    {
+      "date": "2026-01-20",
+      "type": "fix",
+      "summary": "Improve handoff system: path headers in SessionStart hooks, principle-based push cleanup"
+    },
     {
       "date": "2026-01-20",
       "type": "feat",
@@ -52,16 +57,6 @@
       "date": "2026-01-06",
       "type": "feat",
       "summary": "Add desktop notifications on task completion, merge hooks repo into unified installer"
-    },
-    {
-      "date": "2026-01-06",
-      "type": "refactor",
-      "summary": "Slim all commands ~55% to reduce context usage, trust Claude's intelligence"
-    },
-    {
-      "date": "2026-01-06",
-      "type": "refactor",
-      "summary": "/think: recommend optimal approach, track large tasks in state.json for session continuity"
     }
   ]
 }
