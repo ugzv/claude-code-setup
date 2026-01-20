@@ -23,7 +23,7 @@
 
 ## Resuming Handoffs
 
-When user says "continue" or "resume" and there's an active handoff:
+When user runs `/handoff --continue` or says "continue" and there's an active handoff:
 
 **Principles:**
 - **Context first** — read the .md file for goal/philosophy; review prior learnings before acting
@@ -39,7 +39,7 @@ When user says "continue" or "resume" and there's an active handoff:
 - `/commit` - Commit changes (clean, no AI mentions)
 - `/push` - Push + update state.json + archive completed handoffs
 - `/backlog` - Review and manage backlog items
-- `/handoff` - Create phased plan for fresh session execution
+- `/handoff` - Create or continue handoffs (`--continue` to resume active handoff)
 
 ## Rules
 - Only USER sets `currentFocus` - never assume or change it

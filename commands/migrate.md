@@ -66,42 +66,18 @@ mkdir -p .claude
 - Only upgrade format if needed (e.g., `currentFocus` from null/string → array)
 - Never overwrite existing entries
 
-## 7. Configure Hooks
+## 7. Verify Hooks
 
-Create/merge `.claude/settings.json` with SessionStart hooks:
+SessionStart hooks are installed at **user level** (`~/.claude/settings.json`) by `install.py`. They load `state.json` and `handoffs.json` on session start.
 
-**Required hooks:**
-```json
-{
-  "hooks": {
-    "SessionStart": [{
-      "hooks": [
-        {
-          "type": "command",
-          "command": "python -c \"import os; f='.claude/state.json'; print('=== ' + f + ' ===' + chr(10) + (open(f).read() if os.path.exists(f) else '{\\\"note\\\": \\\"No state.json found. Run /migrate to set up tracking.\\\"}'))\"",
-          "timeout": 5
-        },
-        {
-          "type": "command",
-          "command": "python -c \"import os; f='.claude/handoffs.json'; os.path.exists(f) and print('=== ' + f + ' ===' + chr(10) + open(f).read())\"",
-          "timeout": 5
-        }
-      ]
-    }]
-  }
-}
+**Check if installed:**
+```bash
+cat ~/.claude/settings.json | grep -q "session-start.py" && echo "Hooks installed" || echo "Run install.py first"
 ```
 
-**Note:** Uses Python for cross-platform compatibility (works on Windows, macOS, Linux).
+**If not installed:** Tell user to run `install.py` from the claude-code-setup repo.
 
-**Upgrade logic:**
-- If no SessionStart hooks → add both
-- If has state.json hook but missing handoffs.json hook → **add** the handoffs hook
-- If has both → skip
-
-SessionStart fires on: startup, resume, /clear, context compaction.
-
-The second hook loads active handoffs (if any) so Claude knows what's in progress.
+**Project-level settings** (`.claude/settings.json`) are for project-specific overrides only—don't duplicate the SessionStart hooks here.
 
 ## 8. Migrate Old Format (if found)
 
