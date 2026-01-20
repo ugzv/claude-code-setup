@@ -32,7 +32,7 @@ IS_WINDOWS = platform.system() == "Windows"
 IS_MACOS = platform.system() == "Darwin"
 
 # Scripts we install as hooks - used for filtering during merge/uninstall
-OUR_SCRIPTS = ["play_sound.py", "notify_completion.py"]
+OUR_SCRIPTS = ["play_sound.py", "notify_completion.py", "session-start.py"]
 
 
 def _filter_hooks(hook_configs: list, exclude_scripts: list) -> list:
@@ -116,12 +116,21 @@ def get_settings_path() -> Path:
 
 
 def get_script_command(script_name: str) -> str:
-    """Platform-appropriate command to run a script."""
+    """Platform-appropriate command to run a script from scripts dir."""
     scripts_dir = get_claude_dir() / "scripts"
     script_path = scripts_dir / script_name
     if IS_WINDOWS:
         return f'python "{script_path}"'
     return str(script_path)
+
+
+def get_hook_command(hook_name: str) -> str:
+    """Platform-appropriate command to run a hook script."""
+    hooks_dir = get_claude_dir() / "hooks"
+    hook_path = hooks_dir / hook_name
+    if IS_WINDOWS:
+        return f'python "{hook_path}"'
+    return f'python3 "{hook_path}"'
 
 
 def load_settings() -> dict:
@@ -164,6 +173,17 @@ def get_full_config() -> dict:
             "command": "~/.claude/statusline.sh"
         },
         "hooks": {
+            "SessionStart": [
+                {
+                    "hooks": [
+                        {
+                            "type": "command",
+                            "command": get_hook_command("session-start.py"),
+                            "timeout": 5
+                        }
+                    ]
+                }
+            ],
             "Stop": [
                 {
                     "hooks": [
@@ -400,6 +420,25 @@ def copy_statusline(dry_run: bool = False) -> bool:
     return True
 
 
+def copy_hooks(dry_run: bool = False) -> int:
+    """Copy hook scripts to ~/.claude/hooks/"""
+    repo_dir = get_repo_dir()
+    source = repo_dir / "hooks"
+    dest = get_claude_dir() / "hooks"
+
+    if not source.exists():
+        return 0
+
+    return copy_files(
+        source_dir=source,
+        dest_dir=dest,
+        pattern="*.py",
+        dry_run=dry_run,
+        make_executable=True,
+        remove_obsolete=False
+    )
+
+
 def install(dry_run: bool = False) -> bool:
     """Install everything."""
     print()
@@ -439,8 +478,15 @@ def install(dry_run: bool = False) -> bool:
     copy_statusline(dry_run)
     print()
 
-    # Step 6: Load and backup settings
-    print("Step 6: Loading settings...")
+    # Step 6: Copy hooks
+    print("Step 6: Installing hooks...")
+    hook_count = copy_hooks(dry_run)
+    if not dry_run:
+        print(f"  {hook_count} hooks installed")
+    print()
+
+    # Step 7: Load and backup settings
+    print("Step 7: Loading settings...")
     settings = load_settings()
     if settings:
         print(f"  Found existing settings")
@@ -452,13 +498,13 @@ def install(dry_run: bool = False) -> bool:
         print("  No existing settings, creating new")
     print()
 
-    # Step 7: Merge settings
-    print("Step 7: Merging configuration...")
+    # Step 8: Merge settings
+    print("Step 8: Merging configuration...")
     new_config = get_full_config()
     merged = merge_settings(settings, new_config)
 
     if dry_run:
-        print("  Would configure: attribution, statusLine, Stop hooks")
+        print("  Would configure: attribution, statusLine, SessionStart/Stop hooks")
         print()
         print("  Resulting settings.json:")
         print("  " + "-" * 40)
