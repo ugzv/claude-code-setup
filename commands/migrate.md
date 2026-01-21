@@ -102,7 +102,10 @@ Detect project language, check if LSP works (`documentSymbol` on a main file). I
 
 ## 11. Update .gitignore
 
-Add `.claude/*.backup` if not present.
+**Goal:** Track `.claude/` in git (for multi-PC sync) but ignore backup files.
+
+1. If `.gitignore` contains `.claude/` or `.claude` → **remove it** (user wants tracking)
+2. Add `.claude/*.backup` if not present (backups don't need tracking)
 
 ## 12. Summary
 
