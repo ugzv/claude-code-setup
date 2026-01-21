@@ -66,28 +66,23 @@ Summarize: commits pushed, what shipped, backlog status.
 
 ## Handoff Cleanup
 
-**Goal:** Keep the active handoffs list focused on real work-in-progress. Archive completed work while preserving learnings.
+**Goal:** Keep the active handoffs list focused on real work-in-progress. Delete completed handoffs—their work is already tracked in `state.json` shipped history.
 
-**When to archive:** A handoff is ready for archiving when:
+**When to remove:** A handoff is ready for removal when:
 1. All phases have `status: "complete"`
 2. The working tree is clean (`git status` shows no uncommitted changes)
 
-The second check matters because we delete the `.md` plan file during archiving—if work is uncommitted, the plan might still be needed.
-
-**What to preserve:** When archiving, synthesize value from the work:
-- `summary`: One line describing what was accomplished
-- `totalLearnings`: Consolidate insights from all phase `learnings` fields into the key takeaway for future sessions
-- `completed`: Today's date
+The second check matters because we delete the `.md` plan file—if work is uncommitted, the plan might still be needed.
 
 **The cleanup:**
 1. Read `.claude/handoffs.json`
-2. For each active handoff meeting archive criteria: move to `archived[]`, delete `.claude/handoffs/{id}.md`
+2. For each active handoff meeting removal criteria: delete from `active[]`, delete `.claude/handoffs/{id}.md`
 3. Write updated handoffs.json
-4. Report: "Archived: {title}" for each
+4. Report: "Completed: {title}" for each
 
-**If phases complete but uncommitted changes exist:** Keep active, note: "Handoff '{title}' complete but has uncommitted changes—will archive after commit."
+**If phases complete but uncommitted changes exist:** Keep active, note: "Handoff '{title}' complete but has uncommitted changes—will remove after commit."
 
-**Why this matters:** Completed handoffs clutter the active list and create noise on session start. The `.md` plan lives in git history. Learnings persist in the archive. Clean state = clear focus.
+**Why delete, not archive:** The shipped array in `state.json` already captures what was completed. The `.md` plan lives in git history if needed. Archiving creates duplicate data that never gets used.
 
 ## CI Status Check
 
