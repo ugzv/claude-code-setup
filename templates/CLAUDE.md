@@ -25,26 +25,30 @@
 
 When user runs `/handoff --continue` or says "continue" and there's an active handoff:
 
+1. **Read the handoff file** (`.claude/handoffs/{id}.md`) for goal, phases, and learnings
+2. **Check `lastTouched`** — if recent, warn about possible session conflict
+3. **Update `handoffs.json`** as you complete phases (set `status: "complete"`, add `learnings`)
+4. **Capture insights** — what worked, what didn't, for future sessions
+
 **Principles:**
-- **Context first** — read the .md file for goal/philosophy; review prior learnings before acting
-- **Parallel session awareness** — if `lastTouched` is recent, warn about possible conflict
-- **No rushing** — you have abundant context; thoroughness over speed
-- **Validate before marking complete** — concrete evidence must exist; stay in_progress if uncertain
-- **Capture learnings** — what worked, what didn't, insights for future sessions
+- **Context first** — review prior learnings before acting
+- **No rushing** — thoroughness over speed
+- **Validate before marking complete** — concrete evidence must exist
 - **Clean handoffs** — if context runs low, update notes so next session continues seamlessly
 
 **Parallel sessions:** Multiple handoffs = multiple sessions OK. Same handoff = one session only.
 
 ## Commands Available
 - `/commit` - Commit changes (clean, no AI mentions)
-- `/push` - Push + update state.json + archive completed handoffs
+- `/push` - Push + update state.json + clean up completed handoffs
 - `/backlog` - Review and manage backlog items
-- `/handoff` - Create or continue handoffs (`--continue` to resume active handoff)
+- `/handoff` - Create handoff (`--continue` to resume active one)
 
 ## Rules
 - Only USER sets `currentFocus` - never assume or change it
 - Add discoveries to backlog during `/push`, not randomly
 - Keep backlog clean - resolve items when addressed
+- **Never commit on your own** - wait for user to run `/commit`
 - **Handoffs**: Update `handoffs.json` progress after completing phases
 
 ---
