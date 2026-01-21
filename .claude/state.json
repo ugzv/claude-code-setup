@@ -3,11 +3,16 @@
   "currentFocus": [],
   "lastSession": {
     "date": "2026-01-21",
-    "summary": "Fixed Unicode encoding in session-start hook for Windows, added migrate cleanup step",
-    "commits": ["74afe14", "ab414ee"]
+    "summary": "Changed /push to delete completed handoffs instead of archiving",
+    "commits": ["fda78e8"]
   },
   "backlog": [],
   "shipped": [
+    {
+      "date": "2026-01-21",
+      "type": "refactor",
+      "summary": "Delete completed handoffs in /push instead of archiving (shipped already tracks them)"
+    },
     {
       "date": "2026-01-21",
       "type": "fix",
@@ -52,11 +57,6 @@
       "date": "2026-01-13",
       "type": "fix",
       "summary": "Ensure Python 3.8 compatibility and clarify installation prerequisites in README"
-    },
-    {
-      "date": "2026-01-11",
-      "type": "feat",
-      "summary": "Add /reflect pre-mortem command with auto-detect for uncommitted vs recent commits"
     }
   ]
 }
