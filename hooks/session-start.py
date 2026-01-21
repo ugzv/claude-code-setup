@@ -7,6 +7,12 @@ Handles missing files gracefully without errors.
 import os
 import sys
 
+# Ensure UTF-8 stdout for Unicode characters (arrows, emoji, etc.)
+# Windows defaults to cp1252, and some Linux locales may not be UTF-8
+if hasattr(sys.stdout, 'buffer'):
+    import io
+    sys.stdout = io.TextIOWrapper(sys.stdout.buffer, encoding='utf-8', errors='replace')
+
 def read_file(path):
     """Read file if exists, return None otherwise."""
     try:
