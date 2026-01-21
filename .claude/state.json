@@ -3,11 +3,16 @@
   "currentFocus": [],
   "lastSession": {
     "date": "2026-01-21",
-    "summary": "Changed /push to delete completed handoffs instead of archiving",
-    "commits": ["fda78e8"]
+    "summary": "Updated /push to delete handoffs, /migrate to ensure .claude/ tracked in git",
+    "commits": ["fda78e8", "b8ac6ea"]
   },
   "backlog": [],
   "shipped": [
+    {
+      "date": "2026-01-21",
+      "type": "fix",
+      "summary": "Ensure .claude/ tracked in git (remove from gitignore), only ignore backups"
+    },
     {
       "date": "2026-01-21",
       "type": "refactor",
@@ -52,11 +57,6 @@
       "date": "2026-01-19",
       "type": "refactor",
       "summary": "Improve /think --gpt with structured context, focused questions, and synchronous codex execution"
-    },
-    {
-      "date": "2026-01-13",
-      "type": "fix",
-      "summary": "Ensure Python 3.8 compatibility and clarify installation prerequisites in README"
     }
   ]
 }
