@@ -2,12 +2,22 @@
   "project": "claude-code-setup",
   "currentFocus": [],
   "lastSession": {
-    "date": "2026-01-20",
-    "summary": "Added /handoff --continue with parallel agent execution, fixed Windows SessionStart hooks via user-level install",
-    "commits": ["cf00236", "c1dee42", "6264740", "3021214"]
+    "date": "2026-01-21",
+    "summary": "Fixed Unicode encoding in session-start hook for Windows, added migrate cleanup step",
+    "commits": ["74afe14", "ab414ee"]
   },
   "backlog": [],
   "shipped": [
+    {
+      "date": "2026-01-21",
+      "type": "fix",
+      "summary": "Handle Unicode characters in session-start hook output (Windows cp1252 fix)"
+    },
+    {
+      "date": "2026-01-21",
+      "type": "fix",
+      "summary": "Add migrate step to clean up old project-level SessionStart hooks"
+    },
     {
       "date": "2026-01-20",
       "type": "feat",
@@ -47,16 +57,6 @@
       "date": "2026-01-11",
       "type": "feat",
       "summary": "Add /reflect pre-mortem command with auto-detect for uncommitted vs recent commits"
-    },
-    {
-      "date": "2026-01-11",
-      "type": "feat",
-      "summary": "Add /analyze focused modes: --deps, --naming, --comments, --debt"
-    },
-    {
-      "date": "2026-01-11",
-      "type": "feat",
-      "summary": "Enhance /ui to detect visual polish issues and AI-generated look patterns"
     }
   ]
 }
