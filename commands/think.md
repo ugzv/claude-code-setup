@@ -62,31 +62,37 @@ If you must present options, recommend one and explain why.
 
 ## Phase 3.5: GPT Second Opinion (only with `--gpt` flag)
 
-Quick sanity check from a different model. Not a full review - catches obvious blind spots.
+Codex with high reasoning excels at deep code analysis. Use it to surface what you can't see from your current vantage point.
 
 **When `--gpt` is set:**
 
 1. Check if `codex` is installed: `which codex` - if not, skip gracefully
-2. Synthesize a context block (keep under 1500 chars):
+2. Construct a prompt that enables deep analysis:
    ```
-   PROBLEM: [one sentence]
-   APPROACH: [key decisions, not implementation details]
-   TOUCHES: [file list]
-   CONCERNS: [what you're unsure about]
+   You are providing a second opinion on a coding decision. Use your high reasoning capability to analyze deeply. Take your time - thoroughness matters more than speed.
+
+   CONTEXT: [Problem in one sentence]
+   APPROACH: [Key decisions, not implementation details]
+   TOUCHES: [File list]
+   MY CONCERN: [The aspect you're uncertain about]
+
+   QUESTION: [See principles below]
    ```
-3. Ask ONE focused question about your blind spots:
-   - Cross-codebase effects (code that depends on what you're changing)
-   - Existing patterns you might be duplicating
-   - Whatever you're least certain about in your proposal
-4. Run synchronously (don't background - wait for response):
-   `codex exec --full-auto "Context: [block]. Question: [your question]"`
-   Give it 90 seconds. If no response, proceed without it.
-5. Incorporate useful feedback. Ignore noise.
 
-**Expect:** A perspective you hadn't considered.
-**Don't expect:** Comprehensive review or alternative architectures.
+3. **Principles for prompting high-reasoning models:**
+   - Give context that grounds analysis (what you're doing, what you've decided)
+   - State your uncertainty explicitly (the model reasons better when it knows where to focus)
+   - Ask questions that reward depth over speed (exploration, relationship tracing, completeness checking)
+   - Be specific about the dimension needing analysis, not vague quality judgments
 
-**Setup:** `npm i -g @openai/codex`, then `codex` once to authenticate.
+4. Run synchronously: `codex exec --full-auto "[your prompt]"`
+   High reasoning explores before answering - let it finish. The depth is the value.
+
+5. Incorporate insights that shift your understanding. Ignore surface-level observations you already knew.
+
+**Why this works:** You see your approach clearly. Codex sees the codebase it can explore. Ask questions that leverage what it can discover that you can't from your planning position.
+
+**Setup:** `npm i -g @openai/codex`, then `codex` once to authenticate and select reasoning level.
 
 ## Phase 4: Confirm and Continue
 
