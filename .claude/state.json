@@ -3,11 +3,16 @@
   "currentFocus": [],
   "lastSession": {
     "date": "2026-01-21",
-    "summary": "Updated /push to delete handoffs, /migrate to ensure .claude/ tracked in git",
-    "commits": ["fda78e8", "b8ac6ea"]
+    "summary": "Improved /push, /migrate, and handoff protocol in CLAUDE.md template",
+    "commits": ["fda78e8", "b8ac6ea", "c35717d"]
   },
   "backlog": [],
   "shipped": [
+    {
+      "date": "2026-01-21",
+      "type": "docs",
+      "summary": "Improve handoff protocol with concrete steps and clearer command descriptions"
+    },
     {
       "date": "2026-01-21",
       "type": "fix",
@@ -52,11 +57,6 @@
       "date": "2026-01-20",
       "type": "feat",
       "summary": "Add handoff system for multi-session task execution with cross-platform hooks"
-    },
-    {
-      "date": "2026-01-19",
-      "type": "refactor",
-      "summary": "Improve /think --gpt with structured context, focused questions, and synchronous codex execution"
     }
   ]
 }
