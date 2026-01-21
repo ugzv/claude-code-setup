@@ -86,7 +86,7 @@ Codex with high reasoning excels at deep code analysis. Use it to surface what y
    - Be specific about the dimension needing analysis, not vague quality judgments
 
 4. Run synchronously: `codex exec --full-auto "[your prompt]"`
-   **Wait for Codex to complete on its own.** Never kill it because "enough data" - the final synthesis is often the most valuable part. Only timeout failures justify stopping early.
+   Deep analysis compounds - exploration feeds the final synthesis. Interrupting loses that integration.
 
 5. Incorporate insights that shift your understanding. Ignore surface-level observations you already knew.
 
