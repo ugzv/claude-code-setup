@@ -86,7 +86,7 @@ Codex with high reasoning excels at deep code analysis. Use it to surface what y
    - Be specific about the dimension needing analysis, not vague quality judgments
 
 4. Run synchronously: `codex exec --full-auto "[your prompt]"`
-   High reasoning explores before answering - let it finish. The depth is the value.
+   High reasoning explores before answering. **Do not kill it early** - wait for completion or explicit timeout. Premature termination wastes the analysis.
 
 5. Incorporate insights that shift your understanding. Ignore surface-level observations you already knew.
 
