@@ -79,19 +79,32 @@ cat ~/.claude/settings.json | grep -q "session-start.py" && echo "Hooks installe
 
 **Project-level settings** (`.claude/settings.json`) are for project-specific overrides only—don't duplicate the SessionStart hooks here.
 
-## 8. Migrate Old Format (if found)
+## 8. Clean Up Old Project-Level Hooks
+
+Old versions of `/migrate` installed SessionStart hooks at project level with `python -c` one-liners that break on Windows. These must be removed.
+
+**Check for old hooks:**
+```bash
+cat .claude/settings.json 2>/dev/null | grep -q "SessionStart" && echo "Found project-level SessionStart hooks"
+```
+
+**If found:** Read `.claude/settings.json`, remove the `SessionStart` key from `hooks`, and write back. If the file becomes `{"hooks": {}}` or `{}`, leave it (harmless) or remove the hooks key entirely.
+
+**Why:** User-level hooks handle this now. Project-level duplicates cause errors and run twice.
+
+## 9. Migrate Old Format (if found)
 
 Check for `.claude/progress.md`, `changelog.json`, `backlog.json`. Migrate data and remove old files.
 
-## 9. LSP Setup (Optional)
+## 10. LSP Setup (Optional)
 
 Detect project language, check if LSP works (`documentSymbol` on a main file). If not available, offer to install appropriate language server.
 
-## 10. Update .gitignore
+## 11. Update .gitignore
 
 Add `.claude/*.backup` if not present.
 
-## 11. Summary
+## 12. Summary
 
 Report what was created/modified. Done.
 
