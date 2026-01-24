@@ -27,8 +27,9 @@ Claude sessions are ephemeral. State tracking creates continuity - next session 
 ┌────────────────────────────────────────────────────────┐
 │  SPAWN ALL AT ONCE                                     │
 ├────────────────────────────────────────────────────────┤
-│  0. lockfile-checker (CRITICAL)                        │
-│     → Verify lockfile matches manifest                 │
+│  0. lockfile-checker (CRITICAL - CI's #1 failure)      │
+│     → npm ci / pnpm install --frozen-lockfile /        │
+│       yarn install --frozen-lockfile                   │
 │     → Return: pass/fail + what's out of sync           │
 │                                                        │
 │  1. format-checker                                     │
@@ -84,14 +85,36 @@ The second check matters because we delete the `.md` plan file—if work is unco
 
 **Why delete, not archive:** The shipped array in `state.json` already captures what was completed. The `.md` plan lives in git history if needed. Archiving creates duplicate data that never gets used.
 
-## CI Status Check
+## CI Status Check (Post-Push)
 
-```bash
-gh run list --branch $(git branch --show-current) --limit 1
-```
+After pushing, verify CI passes before considering push complete.
 
-- **success**: "CI passed"
-- **in_progress**: "CI running..."
-- **failure**: Investigate with `gh run view <id> --log-failed`, offer to fix
+### Why This Matters
+
+Push → CI fail → fix → push again wastes time. Catching failures immediately lets you fix while context is fresh.
+
+### Principles
+
+1. **Verify the exact commit** — Match CI runs/pipelines to the pushed SHA, not "latest on branch"
+2. **All jobs must pass** — If multiple workflows/jobs exist, wait for all of them
+3. **Graceful degradation** — Unknown provider or no CI configured = push is done, inform user
+4. **Time-bounded** — Cap at ~10 minutes, then report status and let user decide
+5. **Actionable failures** — On failure, show which job failed and how to view logs
+
+### Provider Detection
+
+Check `git remote get-url origin`:
+- `github.com` → use `gh` CLI
+- `gitlab` anywhere in URL → use `glab` CLI (covers self-hosted)
+- Neither → skip CI check gracefully
+
+### Implementation Notes
+
+Use each provider's CLI to:
+1. Find runs/pipelines matching the pushed commit SHA
+2. Poll until all complete (first check ~30s after push, then ~60s intervals)
+3. On failure, provide the command to view failed logs
+
+The specific CLI commands vary by provider version — use `gh run list --help` or `glab ci --help` to find current syntax. The principles above define what you're trying to achieve.
 
 $ARGUMENTS
