@@ -3,11 +3,16 @@
   "currentFocus": [],
   "lastSession": {
     "date": "2026-02-06",
-    "summary": "Fixed platform detection to use sys.platform, avoiding WMI deadlock on Python 3.13+",
-    "commits": ["3fa8ece", "b4b80ae"]
+    "summary": "Consolidated duplicated sound/notification code, removed legacy notify_completion.py",
+    "commits": ["a89d4a6"]
   },
   "backlog": [],
   "shipped": [
+    {
+      "date": "2026-02-06",
+      "type": "refactor",
+      "summary": "Consolidate duplicated sound/notification code, remove legacy notify_completion.py"
+    },
     {
       "date": "2026-02-06",
       "type": "perf",
@@ -52,11 +57,6 @@
       "date": "2026-01-20",
       "type": "fix",
       "summary": "Install SessionStart hook to user-level for cross-project Windows support"
-    },
-    {
-      "date": "2026-01-20",
-      "type": "refactor",
-      "summary": "Rewrite /ui with principles-based prompting, parallel agents, engagement mechanics philosophy"
     }
   ]
 }
