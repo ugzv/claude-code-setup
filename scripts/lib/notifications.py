@@ -180,3 +180,59 @@ def send_notification(title: str, message: str, subtitle: str = "", app_name: st
         send_notification_macos(title, message, subtitle, app_name)
     elif IS_WINDOWS:
         send_notification_windows(title, message, subtitle, app_name)
+
+
+def send_notification_windows_async(title: str, message: str, subtitle: str = "") -> None:
+    """Send Windows toast notification via fire-and-forget Popen (~10ms).
+    Does not wait for the PowerShell process to complete."""
+    full_title = f"{title} - {subtitle}" if subtitle else title
+
+    # Escape for PowerShell
+    full_title = full_title.replace("'", "''").replace('"', '`"')
+    message = message.replace("'", "''").replace('"', '`"')
+
+    ps_script = f'''
+    if (Get-Module -ListAvailable -Name BurntToast) {{
+        Import-Module BurntToast
+        New-BurntToastNotification -Text "{full_title}", "{message}"
+    }} else {{
+        [Windows.UI.Notifications.ToastNotificationManager, Windows.UI.Notifications, ContentType = WindowsRuntime] | Out-Null
+        [Windows.Data.Xml.Dom.XmlDocument, Windows.Data.Xml.Dom.XmlDocument, ContentType = WindowsRuntime] | Out-Null
+
+        $template = @"
+<toast>
+    <visual>
+        <binding template="ToastText02">
+            <text id="1">{full_title}</text>
+            <text id="2">{message}</text>
+        </binding>
+    </visual>
+</toast>
+"@
+        $xml = New-Object Windows.Data.Xml.Dom.XmlDocument
+        $xml.LoadXml($template)
+        $toast = [Windows.UI.Notifications.ToastNotification]::new($xml)
+        [Windows.UI.Notifications.ToastNotificationManager]::CreateToastNotifier("Claude Code").Show($toast)
+    }}
+    '''
+
+    try:
+        subprocess.Popen(
+            ["powershell.exe", "-WindowStyle", "Hidden", "-Command", ps_script],
+            stdout=subprocess.DEVNULL,
+            stderr=subprocess.DEVNULL,
+            stdin=subprocess.DEVNULL,
+            creationflags=subprocess.CREATE_NO_WINDOW,
+        )
+        log_debug(f"  -> Windows toast ASYNC launched: {full_title}")
+    except Exception as e:
+        log_debug(f"  -> Windows toast ASYNC failed: {str(e)}")
+
+
+def send_notification_async(title: str, message: str, subtitle: str = "", app_name: str = "") -> None:
+    """Send desktop notification asynchronously (fire-and-forget).
+    On macOS, falls back to sync send. On Windows, uses Popen."""
+    if IS_MACOS:
+        send_notification_macos(title, message, subtitle, app_name)
+    elif IS_WINDOWS:
+        send_notification_windows_async(title, message, subtitle)

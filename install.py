@@ -32,7 +32,7 @@ IS_WINDOWS = platform.system() == "Windows"
 IS_MACOS = platform.system() == "Darwin"
 
 # Scripts we install as hooks - used for filtering during merge/uninstall
-OUR_SCRIPTS = ["play_sound.py", "notify_completion.py", "session-start.py"]
+OUR_SCRIPTS = ["play_sound.py", "notify_completion.py", "stop_hook.py", "session-start.py"]
 
 
 def _filter_hooks(hook_configs: list, exclude_scripts: list) -> list:
@@ -189,12 +189,7 @@ def get_full_config() -> dict:
                     "hooks": [
                         {
                             "type": "command",
-                            "command": get_script_command("play_sound.py"),
-                            "timeout": 5
-                        },
-                        {
-                            "type": "command",
-                            "command": get_script_command("notify_completion.py"),
+                            "command": get_script_command("stop_hook.py"),
                             "timeout": 5
                         }
                     ]
@@ -557,7 +552,7 @@ def uninstall(dry_run: bool = False) -> bool:
     cleaned = remove_our_hooks(settings)
 
     if dry_run:
-        print("  Would remove: play_sound.py, notify_completion.py hooks")
+        print("  Would remove: stop_hook.py, play_sound.py, notify_completion.py hooks")
         print()
         print("  Resulting settings.json:")
         print(json.dumps(cleaned, indent=2))
