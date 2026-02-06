@@ -9,6 +9,39 @@ from .platform_detection import IS_MACOS, IS_WINDOWS, log_debug
 
 
 # =============================================================================
+# Windows PowerShell Helpers
+# =============================================================================
+
+def _build_windows_toast_script(full_title: str, message: str) -> str:
+    """Build PowerShell script for Windows toast notification.
+    Tries BurntToast module first, falls back to WinRT toast API."""
+    return f'''
+    if (Get-Module -ListAvailable -Name BurntToast) {{
+        Import-Module BurntToast
+        New-BurntToastNotification -Text "{full_title}", "{message}"
+    }} else {{
+        [Windows.UI.Notifications.ToastNotificationManager, Windows.UI.Notifications, ContentType = WindowsRuntime] | Out-Null
+        [Windows.Data.Xml.Dom.XmlDocument, Windows.Data.Xml.Dom.XmlDocument, ContentType = WindowsRuntime] | Out-Null
+
+        $template = @"
+<toast>
+    <visual>
+        <binding template="ToastText02">
+            <text id="1">{full_title}</text>
+            <text id="2">{message}</text>
+        </binding>
+    </visual>
+</toast>
+"@
+        $xml = New-Object Windows.Data.Xml.Dom.XmlDocument
+        $xml.LoadXml($template)
+        $toast = [Windows.UI.Notifications.ToastNotification]::new($xml)
+        [Windows.UI.Notifications.ToastNotificationManager]::CreateToastNotifier("Claude Code").Show($toast)
+    }}
+    '''
+
+
+# =============================================================================
 # macOS Notifications
 # =============================================================================
 
@@ -104,30 +137,7 @@ def send_notification_windows(title: str, message: str, subtitle: str = "", app_
 
     # Try BurntToast first (better notifications if installed)
     try:
-        ps_script = f'''
-        if (Get-Module -ListAvailable -Name BurntToast) {{
-            Import-Module BurntToast
-            New-BurntToastNotification -Text "{full_title}", "{message}"
-        }} else {{
-            [Windows.UI.Notifications.ToastNotificationManager, Windows.UI.Notifications, ContentType = WindowsRuntime] | Out-Null
-            [Windows.Data.Xml.Dom.XmlDocument, Windows.Data.Xml.Dom.XmlDocument, ContentType = WindowsRuntime] | Out-Null
-
-            $template = @"
-<toast>
-    <visual>
-        <binding template="ToastText02">
-            <text id="1">{full_title}</text>
-            <text id="2">{message}</text>
-        </binding>
-    </visual>
-</toast>
-"@
-            $xml = New-Object Windows.Data.Xml.Dom.XmlDocument
-            $xml.LoadXml($template)
-            $toast = [Windows.UI.Notifications.ToastNotification]::new($xml)
-            [Windows.UI.Notifications.ToastNotificationManager]::CreateToastNotifier("Claude Code").Show($toast)
-        }}
-        '''
+        ps_script = _build_windows_toast_script(full_title, message)
 
         result = subprocess.run(
             ["powershell.exe", "-WindowStyle", "Hidden", "-Command", ps_script],
@@ -191,30 +201,7 @@ def send_notification_windows_async(title: str, message: str, subtitle: str = ""
     full_title = full_title.replace("'", "''").replace('"', '`"')
     message = message.replace("'", "''").replace('"', '`"')
 
-    ps_script = f'''
-    if (Get-Module -ListAvailable -Name BurntToast) {{
-        Import-Module BurntToast
-        New-BurntToastNotification -Text "{full_title}", "{message}"
-    }} else {{
-        [Windows.UI.Notifications.ToastNotificationManager, Windows.UI.Notifications, ContentType = WindowsRuntime] | Out-Null
-        [Windows.Data.Xml.Dom.XmlDocument, Windows.Data.Xml.Dom.XmlDocument, ContentType = WindowsRuntime] | Out-Null
-
-        $template = @"
-<toast>
-    <visual>
-        <binding template="ToastText02">
-            <text id="1">{full_title}</text>
-            <text id="2">{message}</text>
-        </binding>
-    </visual>
-</toast>
-"@
-        $xml = New-Object Windows.Data.Xml.Dom.XmlDocument
-        $xml.LoadXml($template)
-        $toast = [Windows.UI.Notifications.ToastNotification]::new($xml)
-        [Windows.UI.Notifications.ToastNotificationManager]::CreateToastNotifier("Claude Code").Show($toast)
-    }}
-    '''
+    ps_script = _build_windows_toast_script(full_title, message)
 
     try:
         subprocess.Popen(

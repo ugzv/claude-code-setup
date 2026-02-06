@@ -380,14 +380,15 @@ def copy_scripts(dry_run: bool = False) -> int:
         print(f"  WARNING: Scripts directory not found: {source}")
         return 0
 
-    # Copy root-level Python scripts
+    # Copy root-level Python scripts (remove_obsolete cleans up legacy scripts
+    # like notify_completion.py that have been superseded by stop_hook.py)
     copied = copy_files(
         source_dir=source,
         dest_dir=dest,
         pattern="*.py",
         dry_run=dry_run,
         make_executable=True,
-        remove_obsolete=False
+        remove_obsolete=True
     )
 
     # Copy lib/ subdirectory

@@ -20,9 +20,9 @@ import os
 import sys
 import time
 
-from sound_player import play_sound
+from sound_player import get_sound, play_sound
 from lib.platform_detection import (
-    IS_MACOS, IS_WINDOWS, DEBUG_LOG_PATH,
+    DEBUG_LOG_PATH,
     get_terminal_app, is_terminal_focused, log_debug,
 )
 from lib.text_processing import get_project_name, get_task_summary
@@ -31,23 +31,6 @@ from lib.notifications import send_notification_async
 # Debounce: minimum seconds between notifications
 DEBOUNCE_SECONDS = 10
 _DEBOUNCE_FILE = os.path.join(os.path.expanduser("~"), ".claude", ".last_notification_ts")
-
-# Sound definitions (same as play_sound.py)
-SOUNDS = {
-    "completion": {
-        "Darwin": "/System/Library/Sounds/Glass.aiff",
-        "Windows": r"C:\Windows\Media\Windows Ding.wav",
-    },
-}
-
-
-def _get_completion_sound() -> str:
-    """Get platform-appropriate completion sound path."""
-    if IS_MACOS:
-        return SOUNDS["completion"]["Darwin"]
-    elif IS_WINDOWS:
-        return SOUNDS["completion"]["Windows"]
-    return None
 
 
 def _should_debounce() -> bool:
@@ -74,8 +57,7 @@ def _update_debounce():
 
 def main():
     # 1. Play sound immediately (async/non-blocking)
-    sound_file = _get_completion_sound()
-    play_sound(sound_file)
+    play_sound(get_sound("completion"))
 
     # 2. Read hook input from stdin
     try:

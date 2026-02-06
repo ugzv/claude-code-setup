@@ -9,30 +9,8 @@ Usage:
 """
 
 import sys
-from typing import Optional
 
-from sound_player import IS_MACOS, IS_WINDOWS, play_sound
-
-# Sound definitions by type and platform
-SOUNDS = {
-    "completion": {
-        "Darwin": "/System/Library/Sounds/Glass.aiff",
-        "Windows": r"C:\Windows\Media\Windows Ding.wav",
-    },
-    "attention": {
-        "Darwin": "/System/Library/Sounds/Frog.aiff",
-        "Windows": r"C:\Windows\Media\Windows Exclamation.wav",
-    },
-}
-
-
-def get_sound(sound_type: str) -> Optional[str]:
-    """Get sound file path for the given type and current platform."""
-    if IS_MACOS:
-        return SOUNDS.get(sound_type, {}).get("Darwin")
-    elif IS_WINDOWS:
-        return SOUNDS.get(sound_type, {}).get("Windows")
-    return None
+from sound_player import SOUNDS, get_sound, play_sound
 
 
 if __name__ == "__main__":
