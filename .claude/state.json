@@ -3,11 +3,16 @@
   "currentFocus": [],
   "lastSession": {
     "date": "2026-02-06",
-    "summary": "Consolidated duplicated sound/notification code, removed legacy notify_completion.py",
-    "commits": ["a89d4a6"]
+    "summary": "Optimized /push command: direct Bash calls instead of sub-agents, auto-fix before verify",
+    "commits": ["be9d3c7", "7e939c5"]
   },
   "backlog": [],
   "shipped": [
+    {
+      "date": "2026-02-06",
+      "type": "perf",
+      "summary": "Optimize /push: use direct Bash calls instead of sub-agents, auto-fix before verify"
+    },
     {
       "date": "2026-02-06",
       "type": "refactor",
@@ -52,11 +57,6 @@
       "date": "2026-01-20",
       "type": "feat",
       "summary": "Add /handoff --continue with parallel agent execution for fresh context"
-    },
-    {
-      "date": "2026-01-20",
-      "type": "fix",
-      "summary": "Install SessionStart hook to user-level for cross-project Windows support"
     }
   ]
 }
