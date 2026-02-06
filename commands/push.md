@@ -17,37 +17,21 @@ Claude sessions are ephemeral. State tracking creates continuity - next session 
 
 **Keep state.json small**: Trim shipped to 10 entries when saving. For older history, use `git log`.
 
-## Pre-Push CI Checks (Parallel)
+## Pre-Push CI Checks
 
 **Run same checks CI will run** to prevent push → fail → fix → push cycle.
 
-**Spawn all checks at once:**
+**IMPORTANT: Use direct Bash calls, NOT Task/sub-agents.** Send all checks as parallel Bash tool calls in a single message. Each check is one Bash call. This is critical for speed — sub-agents add ~8k tokens of overhead each.
 
-```
-┌────────────────────────────────────────────────────────┐
-│  SPAWN ALL AT ONCE                                     │
-├────────────────────────────────────────────────────────┤
-│  0. lockfile-checker (CRITICAL)                        │
-│     → Verify lockfile matches manifest                 │
-│     → Return: pass/fail + what's out of sync           │
-│                                                        │
-│  1. format-checker                                     │
-│     → black --check / prettier --check / pint --test   │
-│     → Return: pass/fail + files needing format         │
-│                                                        │
-│  2. lint-checker                                       │
-│     → ruff check / eslint / phpstan / phpcs            │
-│     → Return: pass/fail + error count                  │
-│                                                        │
-│  3. type-checker (if CI uses it)                       │
-│     → mypy / tsc --noEmit                              │
-│     → Return: pass/fail + error count                  │
-│                                                        │
-│  4. test-runner (if CI runs tests)                     │
-│     → pytest / npm test / phpunit                      │
-│     → Return: pass/fail + failure summary              │
-└────────────────────────────────────────────────────────┘
-```
+**Detect which checks apply** from the project's config files (package.json, pyproject.toml, composer.json, CI config), then run all applicable checks as parallel Bash calls:
+
+- **Lockfile sync** — verify lockfile matches manifest (npm ci --dry-run / pip check / composer validate)
+- **Formatting** — black --check / prettier --check / pint --test
+- **Linting** — ruff check / eslint / phpstan / phpcs
+- **Type checking** — mypy / tsc --noEmit (only if CI uses it)
+- **Tests** — pytest / npm test / phpunit (only if CI runs tests)
+
+Only run checks that exist in the project. Skip what doesn't apply.
 
 ### Gate Decision
 
