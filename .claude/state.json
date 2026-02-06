@@ -2,12 +2,22 @@
   "project": "claude-code-setup",
   "currentFocus": [],
   "lastSession": {
-    "date": "2026-01-21",
-    "summary": "Improved /push, /migrate, and handoff protocol in CLAUDE.md template",
-    "commits": ["fda78e8", "b8ac6ea", "c35717d"]
+    "date": "2026-02-06",
+    "summary": "Fixed platform detection to use sys.platform, avoiding WMI deadlock on Python 3.13+",
+    "commits": ["3fa8ece", "b4b80ae"]
   },
   "backlog": [],
   "shipped": [
+    {
+      "date": "2026-02-06",
+      "type": "perf",
+      "summary": "Unify Stop hooks into single process with ctypes"
+    },
+    {
+      "date": "2026-02-06",
+      "type": "fix",
+      "summary": "Use sys.platform instead of platform.system() to avoid WMI deadlock on Python 3.13+"
+    },
     {
       "date": "2026-01-21",
       "type": "docs",
@@ -47,16 +57,6 @@
       "date": "2026-01-20",
       "type": "refactor",
       "summary": "Rewrite /ui with principles-based prompting, parallel agents, engagement mechanics philosophy"
-    },
-    {
-      "date": "2026-01-20",
-      "type": "fix",
-      "summary": "Improve handoff system: path headers in SessionStart hooks, principle-based push cleanup"
-    },
-    {
-      "date": "2026-01-20",
-      "type": "feat",
-      "summary": "Add handoff system for multi-session task execution with cross-platform hooks"
     }
   ]
 }
