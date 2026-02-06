@@ -17,26 +17,38 @@ Claude sessions are ephemeral. State tracking creates continuity - next session 
 
 **Keep state.json small**: Trim shipped to 10 entries when saving. For older history, use `git log`.
 
-## Pre-Push CI Checks
+## Pre-Push: Auto-Fix, Then Verify
 
-**Run same checks CI will run** to prevent push → fail → fix → push cycle.
+**Goal:** Push clean code. Don't report fixable problems — fix them automatically.
 
-**IMPORTANT: Use direct Bash calls, NOT Task/sub-agents.** Send all checks as parallel Bash tool calls in a single message. Each check is one Bash call. This is critical for speed — sub-agents add ~8k tokens of overhead each.
+**IMPORTANT: Use direct Bash calls, NOT Task/sub-agents.** Send all checks as parallel Bash tool calls in a single message. Sub-agents add ~8k tokens of overhead each.
 
-**Detect which checks apply** from the project's config files (package.json, pyproject.toml, composer.json, CI config), then run all applicable checks as parallel Bash calls:
+### Step 1: Auto-Fix (parallel Bash calls)
 
-- **Lockfile sync** — verify lockfile matches manifest (npm ci --dry-run / pip check / composer validate)
-- **Formatting** — black --check / prettier --check / pint --test
-- **Linting** — ruff check / eslint / phpstan / phpcs
+**Detect which tools exist** from project config (package.json, pyproject.toml, composer.json, CI config), then run all applicable fixers in parallel:
+
+- **Formatting** — black / prettier --write / pint (auto-fix mode, not --check)
+- **Linting** — ruff check --fix / eslint --fix (auto-fix mode)
+
+Only run fixers that exist in the project. Skip what doesn't apply.
+
+### Step 2: Commit Fixes (if anything changed)
+
+If auto-fixers modified files, commit them as a separate `style:` commit before the push. This keeps the user's feature commits clean and the fixes attributable.
+
+### Step 3: Verify (parallel Bash calls)
+
+Run checks that can't be auto-fixed, plus confirm fixers worked:
+
+- **Lockfile sync** — npm ci --dry-run / pip check / composer validate
 - **Type checking** — mypy / tsc --noEmit (only if CI uses it)
 - **Tests** — pytest / npm test / phpunit (only if CI runs tests)
-
-Only run checks that exist in the project. Skip what doesn't apply.
+- **Remaining lint/format errors** — run checkers (--check mode) to catch anything fixers couldn't resolve
 
 ### Gate Decision
 
 - **All pass**: Proceed to push
-- **Any fail**: Stop, report which failed, suggest `/fix` or `--force` to skip
+- **Any fail**: Stop, report what failed and why (these are real issues that need manual attention)
 
 ## The Push
 
