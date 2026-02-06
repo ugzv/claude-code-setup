@@ -9,7 +9,6 @@ Designed for users running multiple Claude Code instances.
 import datetime
 import json
 import os
-import platform
 import sys
 
 from lib.platform_detection import DEBUG_LOG_PATH, get_terminal_app, log_debug
@@ -28,7 +27,7 @@ def main():
 
     # Debug: Log what we received
     timestamp = datetime.datetime.now().isoformat()
-    log_debug(f"{timestamp} | Hook input keys: {list(input_data.keys())} | Platform: {platform.system()}")
+    log_debug(f"{timestamp} | Hook input keys: {list(input_data.keys())} | Platform: {sys.platform}")
     if "transcript_path" in input_data:
         tp = input_data["transcript_path"]
         exists = os.path.exists(tp) if tp else False

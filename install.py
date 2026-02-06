@@ -20,7 +20,6 @@ import json
 import shutil
 import subprocess
 import sys
-import platform
 import stat
 import argparse
 from pathlib import Path
@@ -28,8 +27,10 @@ from datetime import datetime
 from typing import Optional
 
 # Note: Duplicated from scripts/lib/platform_detection.py for standalone installer use
-IS_WINDOWS = platform.system() == "Windows"
-IS_MACOS = platform.system() == "Darwin"
+# Use sys.platform instead of platform.system() to avoid WMI deadlock on Python 3.13+
+IS_WINDOWS = sys.platform == "win32"
+IS_MACOS = sys.platform == "darwin"
+PLATFORM_NAME = "Windows" if IS_WINDOWS else "macOS" if IS_MACOS else sys.platform
 
 # Scripts we install as hooks - used for filtering during merge/uninstall
 OUR_SCRIPTS = ["play_sound.py", "notify_completion.py", "stop_hook.py", "session-start.py"]
@@ -437,7 +438,7 @@ def copy_hooks(dry_run: bool = False) -> int:
 def install(dry_run: bool = False) -> bool:
     """Install everything."""
     print()
-    print(f"Claude Code Setup Installer ({platform.system()})")
+    print(f"Claude Code Setup Installer ({PLATFORM_NAME})")
     print("=" * 50)
     print()
 
@@ -533,7 +534,7 @@ def install(dry_run: bool = False) -> bool:
 def uninstall(dry_run: bool = False) -> bool:
     """Remove notification hooks (keeps commands and scripts)."""
     print()
-    print(f"Uninstalling notification hooks ({platform.system()})")
+    print(f"Uninstalling notification hooks ({PLATFORM_NAME})")
     print("=" * 50)
     print()
 

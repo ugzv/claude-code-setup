@@ -5,8 +5,8 @@ Cross-platform: macOS and Windows.
 """
 
 import os
-import platform
 import subprocess
+import sys
 from pathlib import Path
 from typing import Optional
 
@@ -14,8 +14,10 @@ from typing import Optional
 # Platform Constants
 # =============================================================================
 
-IS_WINDOWS = platform.system() == "Windows"
-IS_MACOS = platform.system() == "Darwin"
+# Use sys.platform instead of platform.system() — the platform module calls
+# uname() which makes WMI calls on Windows that can deadlock (Python 3.13+).
+IS_WINDOWS = sys.platform == "win32"
+IS_MACOS = sys.platform == "darwin"
 
 if IS_WINDOWS:
     import ctypes
