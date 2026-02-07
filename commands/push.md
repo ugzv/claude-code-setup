@@ -17,43 +17,38 @@ Claude sessions are ephemeral. State tracking creates continuity - next session 
 
 **Keep state.json small**: Trim shipped to 10 entries when saving. For older history, use `git log`.
 
-## Pre-Push CI Checks (Parallel)
+## Pre-Push: Auto-Fix, Then Verify
 
-**Run same checks CI will run** to prevent push → fail → fix → push cycle.
+**Goal:** Push clean code. Don't report fixable problems — fix them automatically.
 
-**Spawn all checks at once:**
+**IMPORTANT: Use direct Bash calls, NOT Task/sub-agents.** Send all checks as parallel Bash tool calls in a single message. Sub-agents add ~8k tokens of overhead each.
 
-```
-┌────────────────────────────────────────────────────────┐
-│  SPAWN ALL AT ONCE                                     │
-├────────────────────────────────────────────────────────┤
-│  0. lockfile-checker (CRITICAL - CI's #1 failure)      │
-│     → npm ci / pnpm install --frozen-lockfile /        │
-│       yarn install --frozen-lockfile                   │
-│     → Return: pass/fail + what's out of sync           │
-│                                                        │
-│  1. format-checker                                     │
-│     → black --check / prettier --check / pint --test   │
-│     → Return: pass/fail + files needing format         │
-│                                                        │
-│  2. lint-checker                                       │
-│     → ruff check / eslint / phpstan / phpcs            │
-│     → Return: pass/fail + error count                  │
-│                                                        │
-│  3. type-checker (if CI uses it)                       │
-│     → mypy / tsc --noEmit                              │
-│     → Return: pass/fail + error count                  │
-│                                                        │
-│  4. test-runner (if CI runs tests)                     │
-│     → pytest / npm test / phpunit                      │
-│     → Return: pass/fail + failure summary              │
-└────────────────────────────────────────────────────────┘
-```
+### Step 1: Auto-Fix (parallel Bash calls)
+
+**Detect which tools exist** from project config (package.json, pyproject.toml, composer.json, CI config), then run all applicable fixers in parallel:
+
+- **Formatting** — black / prettier --write / pint (auto-fix mode, not --check)
+- **Linting** — ruff check --fix / eslint --fix (auto-fix mode)
+
+Only run fixers that exist in the project. Skip what doesn't apply.
+
+### Step 2: Commit Fixes (if anything changed)
+
+If auto-fixers modified files, commit them as a separate `style:` commit before the push. This keeps the user's feature commits clean and the fixes attributable.
+
+### Step 3: Verify (parallel Bash calls)
+
+Run checks that can't be auto-fixed, plus confirm fixers worked:
+
+- **Lockfile sync** — npm ci --dry-run / pip check / composer validate
+- **Type checking** — mypy / tsc --noEmit (only if CI uses it)
+- **Tests** — pytest / npm test / phpunit (only if CI runs tests)
+- **Remaining lint/format errors** — run checkers (--check mode) to catch anything fixers couldn't resolve
 
 ### Gate Decision
 
 - **All pass**: Proceed to push
-- **Any fail**: Stop, report which failed, suggest `/fix` or `--force` to skip
+- **Any fail**: Stop, report what failed and why (these are real issues that need manual attention)
 
 ## The Push
 

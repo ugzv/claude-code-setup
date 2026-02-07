@@ -5,8 +5,8 @@ Cross-platform: macOS and Windows.
 """
 
 import os
-import platform
 import subprocess
+import sys
 from pathlib import Path
 from typing import Optional
 
@@ -14,8 +14,14 @@ from typing import Optional
 # Platform Constants
 # =============================================================================
 
-IS_WINDOWS = platform.system() == "Windows"
-IS_MACOS = platform.system() == "Darwin"
+# Use sys.platform instead of platform.system() — the platform module calls
+# uname() which makes WMI calls on Windows that can deadlock (Python 3.13+).
+IS_WINDOWS = sys.platform == "win32"
+IS_MACOS = sys.platform == "darwin"
+
+if IS_WINDOWS:
+    import ctypes
+    import ctypes.wintypes
 
 # Debug logging (off by default, enable with CLAUDE_HOOKS_DEBUG=1)
 DEBUG_LOG_PATH = Path.home() / ".claude" / "notification_debug.log"
@@ -63,36 +69,62 @@ def is_terminal_focused_macos() -> bool:
     return False
 
 
-def is_terminal_focused_windows() -> bool:
-    """Check if terminal or editor is currently focused (Windows)."""
+def _get_foreground_process_name_windows() -> str:
+    """Get the process name of the foreground window using ctypes (~1ms).
+    Returns lowercase process name without extension, or empty string on failure."""
     try:
-        # Use PowerShell to get foreground window title
-        result = subprocess.run(
-            [
-                "powershell.exe", "-WindowStyle", "Hidden", "-Command",
-                "(Get-Process | Where-Object {$_.MainWindowHandle -eq "
-                "(Add-Type -MemberDefinition '[DllImport(\"user32.dll\")] "
-                "public static extern IntPtr GetForegroundWindow();' "
-                "-Name Win32 -PassThru)::GetForegroundWindow()}).ProcessName"
-            ],
-            capture_output=True,
-            text=True,
-            timeout=1.0,
-            stdin=subprocess.DEVNULL,
-            creationflags=subprocess.CREATE_NO_WINDOW
-        )
+        user32 = ctypes.windll.user32
+        kernel32 = ctypes.windll.kernel32
 
-        if result.returncode == 0:
-            process_name = result.stdout.strip().lower()
-            terminal_apps = [
-                "windowsterminal", "cmd", "powershell", "pwsh",
-                "code", "cursor", "windsurf", "antigravity",
-                "conhost", "alacritty", "wezterm", "hyper"
-            ]
-            return any(app in process_name for app in terminal_apps)
+        hwnd = user32.GetForegroundWindow()
+        if not hwnd:
+            return ""
+
+        # Get the process ID from the window handle
+        pid = ctypes.wintypes.DWORD()
+        user32.GetWindowThreadProcessId(hwnd, ctypes.byref(pid))
+        if not pid.value:
+            return ""
+
+        # Open the process and query its image name
+        PROCESS_QUERY_LIMITED_INFORMATION = 0x1000
+        handle = kernel32.OpenProcess(PROCESS_QUERY_LIMITED_INFORMATION, False, pid.value)
+        if not handle:
+            return ""
+
+        try:
+            buf = ctypes.create_unicode_buffer(260)
+            buf_size = ctypes.wintypes.DWORD(260)
+            success = kernel32.QueryFullProcessImageNameW(handle, 0, buf, ctypes.byref(buf_size))
+            if success:
+                # Extract filename without extension
+                path = buf.value
+                name = path.rsplit("\\", 1)[-1]
+                if "." in name:
+                    name = name.rsplit(".", 1)[0]
+                return name.lower()
+        finally:
+            kernel32.CloseHandle(handle)
     except Exception:
         pass
-    return False
+    return ""
+
+
+# Process names that indicate a terminal/editor is focused
+WINDOWS_TERMINAL_PROCESSES = {
+    "windowsterminal", "cmd", "powershell", "pwsh",
+    "code", "cursor", "windsurf", "antigravity",
+    "conhost", "alacritty", "wezterm", "hyper",
+}
+
+
+def is_terminal_focused_windows() -> bool:
+    """Check if terminal or editor is currently focused (Windows).
+    Uses ctypes for ~1ms performance instead of PowerShell ~500ms."""
+    process_name = _get_foreground_process_name_windows()
+    if not process_name:
+        return False
+    return process_name in WINDOWS_TERMINAL_PROCESSES
 
 
 def is_terminal_focused() -> bool:
@@ -174,58 +206,108 @@ def get_terminal_app_macos() -> tuple:
     return ("Terminal", "🖥️", "Terminal")
 
 
+def _get_parent_process_names_windows() -> list:
+    """Walk the process tree upward using ctypes (~5ms).
+    Returns list of lowercase process names from current PID to root."""
+    names = []
+    try:
+        kernel32 = ctypes.windll.kernel32
+
+        # Snapshot all processes
+        TH32CS_SNAPPROCESS = 0x00000002
+        snap = kernel32.CreateToolhelp32Snapshot(TH32CS_SNAPPROCESS, 0)
+        if snap == ctypes.wintypes.HANDLE(-1).value:
+            return names
+
+        class PROCESSENTRY32W(ctypes.Structure):
+            _fields_ = [
+                ("dwSize", ctypes.wintypes.DWORD),
+                ("cntUsage", ctypes.wintypes.DWORD),
+                ("th32ProcessID", ctypes.wintypes.DWORD),
+                ("th32DefaultHeapID", ctypes.POINTER(ctypes.c_ulong)),
+                ("th32ModuleID", ctypes.wintypes.DWORD),
+                ("cntThreads", ctypes.wintypes.DWORD),
+                ("th32ParentProcessID", ctypes.wintypes.DWORD),
+                ("pcPriClassBase", ctypes.c_long),
+                ("dwFlags", ctypes.wintypes.DWORD),
+                ("szExeFile", ctypes.c_wchar * 260),
+            ]
+
+        try:
+            # Build pid -> (parent_pid, exe_name) map
+            pid_map = {}
+            entry = PROCESSENTRY32W()
+            entry.dwSize = ctypes.sizeof(PROCESSENTRY32W)
+
+            if kernel32.Process32FirstW(snap, ctypes.byref(entry)):
+                while True:
+                    exe = entry.szExeFile
+                    if "." in exe:
+                        exe = exe.rsplit(".", 1)[0]
+                    pid_map[entry.th32ProcessID] = (entry.th32ParentProcessID, exe.lower())
+                    if not kernel32.Process32NextW(snap, ctypes.byref(entry)):
+                        break
+        finally:
+            kernel32.CloseHandle(snap)
+
+        # Walk up from our PID
+        current_pid = os.getpid()
+        visited = set()
+        while current_pid and current_pid not in visited:
+            visited.add(current_pid)
+            if current_pid not in pid_map:
+                break
+            parent_pid, exe_name = pid_map[current_pid]
+            names.append(exe_name)
+            current_pid = parent_pid
+
+    except Exception:
+        pass
+    return names
+
+
 def get_terminal_app_windows() -> tuple:
     """Detect which terminal/editor app Claude Code is running in (Windows).
-    Returns (app_display_name, emoji, app_name) tuple."""
+    Returns (app_display_name, emoji, app_name) tuple.
+    Uses env vars first (0ms), then ctypes process tree (~5ms)."""
 
-    # Check environment variables first (most reliable)
+    # 1. Environment variable heuristics (instant, most reliable)
     term_program = os.environ.get("TERM_PROGRAM", "").lower()
-    wt_session = os.environ.get("WT_SESSION", "")  # Windows Terminal
+    wt_session = os.environ.get("WT_SESSION", "")
 
-    # Check TERM_PROGRAM
+    # Editor-specific env vars
+    if os.environ.get("CURSOR_TRACE_DIR"):
+        return ("Cursor", "💠", "Cursor")
+    if any(os.environ.get(v) for v in ("VSCODE_PID", "VSCODE_IPC_HOOK_CLI")):
+        # Could be VSCode or Cursor — TERM_PROGRAM disambiguates
+        if "cursor" in term_program:
+            return ("Cursor", "💠", "Cursor")
+        return ("VSCode", "📟", "Code")
+
     for key, info in WINDOWS_APP_INFO.items():
         if key in term_program:
             return info
 
-    # Windows Terminal detected
     if wt_session:
         return ("Windows Terminal", "💻", "WindowsTerminal")
 
-    # Try to detect via process tree using PowerShell
-    try:
-        result = subprocess.run(
-            [
-                "powershell.exe", "-WindowStyle", "Hidden", "-Command",
-                "$p = Get-Process -Id $PID; "
-                "while ($p.Parent) { $p = $p.Parent; $p.ProcessName }"
-            ],
-            capture_output=True,
-            text=True,
-            timeout=1.0,
-            stdin=subprocess.DEVNULL,
-            creationflags=subprocess.CREATE_NO_WINDOW
-        )
-
-        if result.returncode == 0:
-            process_names = result.stdout.lower()
-
-            if "cursor" in process_names:
-                return ("Cursor", "💠", "Cursor")
-            elif "code" in process_names:
-                return ("VSCode", "📟", "Code")
-            elif "windsurf" in process_names:
-                return ("Windsurf", "🌊", "Windsurf")
-            elif "antigravity" in process_names:
-                return ("Antigravity", "🚀", "Antigravity")
-            elif "windowsterminal" in process_names:
-                return ("Windows Terminal", "💻", "WindowsTerminal")
-            elif "powershell" in process_names or "pwsh" in process_names:
-                return ("PowerShell", "🔷", "PowerShell")
-            elif "cmd" in process_names:
-                return ("CMD", "🖥️", "cmd")
-
-    except Exception:
-        pass
+    # 2. ctypes process tree walk (~5ms, no subprocess)
+    parent_names = _get_parent_process_names_windows()
+    for name in parent_names:
+        if "cursor" in name:
+            return ("Cursor", "💠", "Cursor")
+        if name == "code" or "visual studio code" in name:
+            return ("VSCode", "📟", "Code")
+        if "windsurf" in name:
+            return ("Windsurf", "🌊", "Windsurf")
+        if "antigravity" in name:
+            return ("Antigravity", "🚀", "Antigravity")
+        if "windowsterminal" in name:
+            return ("Windows Terminal", "💻", "WindowsTerminal")
+        if name in ("powershell", "pwsh"):
+            return ("PowerShell", "🔷", "PowerShell")
+        if name == "cmd":
+            return ("CMD", "🖥️", "cmd")
 
     return ("Terminal", "🖥️", "cmd")
 

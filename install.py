@@ -20,7 +20,6 @@ import json
 import shutil
 import subprocess
 import sys
-import platform
 import stat
 import argparse
 from pathlib import Path
@@ -28,11 +27,13 @@ from datetime import datetime
 from typing import Optional
 
 # Note: Duplicated from scripts/lib/platform_detection.py for standalone installer use
-IS_WINDOWS = platform.system() == "Windows"
-IS_MACOS = platform.system() == "Darwin"
+# Use sys.platform instead of platform.system() to avoid WMI deadlock on Python 3.13+
+IS_WINDOWS = sys.platform == "win32"
+IS_MACOS = sys.platform == "darwin"
+PLATFORM_NAME = "Windows" if IS_WINDOWS else "macOS" if IS_MACOS else sys.platform
 
 # Scripts we install as hooks - used for filtering during merge/uninstall
-OUR_SCRIPTS = ["play_sound.py", "notify_completion.py", "session-start.py"]
+OUR_SCRIPTS = ["play_sound.py", "notify_completion.py", "stop_hook.py", "session-start.py"]
 
 
 def _filter_hooks(hook_configs: list, exclude_scripts: list) -> list:
@@ -189,12 +190,7 @@ def get_full_config() -> dict:
                     "hooks": [
                         {
                             "type": "command",
-                            "command": get_script_command("play_sound.py"),
-                            "timeout": 5
-                        },
-                        {
-                            "type": "command",
-                            "command": get_script_command("notify_completion.py"),
+                            "command": get_script_command("stop_hook.py"),
                             "timeout": 5
                         }
                     ]
@@ -384,14 +380,15 @@ def copy_scripts(dry_run: bool = False) -> int:
         print(f"  WARNING: Scripts directory not found: {source}")
         return 0
 
-    # Copy root-level Python scripts
+    # Copy root-level Python scripts (remove_obsolete cleans up legacy scripts
+    # like notify_completion.py that have been superseded by stop_hook.py)
     copied = copy_files(
         source_dir=source,
         dest_dir=dest,
         pattern="*.py",
         dry_run=dry_run,
         make_executable=True,
-        remove_obsolete=False
+        remove_obsolete=True
     )
 
     # Copy lib/ subdirectory
@@ -442,7 +439,7 @@ def copy_hooks(dry_run: bool = False) -> int:
 def install(dry_run: bool = False) -> bool:
     """Install everything."""
     print()
-    print(f"Claude Code Setup Installer ({platform.system()})")
+    print(f"Claude Code Setup Installer ({PLATFORM_NAME})")
     print("=" * 50)
     print()
 
@@ -538,7 +535,7 @@ def install(dry_run: bool = False) -> bool:
 def uninstall(dry_run: bool = False) -> bool:
     """Remove notification hooks (keeps commands and scripts)."""
     print()
-    print(f"Uninstalling notification hooks ({platform.system()})")
+    print(f"Uninstalling notification hooks ({PLATFORM_NAME})")
     print("=" * 50)
     print()
 
@@ -557,7 +554,7 @@ def uninstall(dry_run: bool = False) -> bool:
     cleaned = remove_our_hooks(settings)
 
     if dry_run:
-        print("  Would remove: play_sound.py, notify_completion.py hooks")
+        print("  Would remove: stop_hook.py, play_sound.py, notify_completion.py hooks")
         print()
         print("  Resulting settings.json:")
         print(json.dumps(cleaned, indent=2))

@@ -191,7 +191,7 @@ On macOS, the installer automatically installs `terminal-notifier` via Homebrew 
 Shows context usage at a glance:
 
 ```
-opus 4.5 │ main │ ●●●○○○○○○○  30%
+opus 4.6 │ main │ ●●●○○○○○○○  30%
 ```
 
 ## References

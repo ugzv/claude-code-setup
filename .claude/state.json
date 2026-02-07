@@ -2,12 +2,32 @@
   "project": "claude-code-setup",
   "currentFocus": [],
   "lastSession": {
-    "date": "2026-01-21",
-    "summary": "Improved /push, /migrate, and handoff protocol in CLAUDE.md template",
-    "commits": ["fda78e8", "b8ac6ea", "c35717d"]
+    "date": "2026-02-06",
+    "summary": "Optimized /push command: direct Bash calls instead of sub-agents, auto-fix before verify",
+    "commits": ["be9d3c7", "7e939c5"]
   },
   "backlog": [],
   "shipped": [
+    {
+      "date": "2026-02-06",
+      "type": "perf",
+      "summary": "Optimize /push: use direct Bash calls instead of sub-agents, auto-fix before verify"
+    },
+    {
+      "date": "2026-02-06",
+      "type": "refactor",
+      "summary": "Consolidate duplicated sound/notification code, remove legacy notify_completion.py"
+    },
+    {
+      "date": "2026-02-06",
+      "type": "perf",
+      "summary": "Unify Stop hooks into single process with ctypes"
+    },
+    {
+      "date": "2026-02-06",
+      "type": "fix",
+      "summary": "Use sys.platform instead of platform.system() to avoid WMI deadlock on Python 3.13+"
+    },
     {
       "date": "2026-01-21",
       "type": "docs",
@@ -37,26 +57,6 @@
       "date": "2026-01-20",
       "type": "feat",
       "summary": "Add /handoff --continue with parallel agent execution for fresh context"
-    },
-    {
-      "date": "2026-01-20",
-      "type": "fix",
-      "summary": "Install SessionStart hook to user-level for cross-project Windows support"
-    },
-    {
-      "date": "2026-01-20",
-      "type": "refactor",
-      "summary": "Rewrite /ui with principles-based prompting, parallel agents, engagement mechanics philosophy"
-    },
-    {
-      "date": "2026-01-20",
-      "type": "fix",
-      "summary": "Improve handoff system: path headers in SessionStart hooks, principle-based push cleanup"
-    },
-    {
-      "date": "2026-01-20",
-      "type": "feat",
-      "summary": "Add handoff system for multi-session task execution with cross-platform hooks"
     }
   ]
 }
