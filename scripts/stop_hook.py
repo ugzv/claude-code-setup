@@ -3,15 +3,14 @@
 Unified Stop hook for Claude Code.
 Replaces the sequential play_sound.py + notify_completion.py with a single process.
 
-Performance: ~15ms when terminal focused (common case), ~50-100ms when not.
+Performance: ~50-100ms total.
 Previously: 2-4 seconds (two Python processes, each spawning PowerShell).
 
 Flow:
-1. Play completion sound immediately (winsound async = instant)
+1. Play completion sound immediately (afplay/winsound async = instant)
 2. Read stdin for hook data
-3. Check terminal focus via ctypes — skip notification if focused
-4. Debounce: skip if last notification was <10s ago
-5. Fire-and-forget the toast notification (Popen, don't wait)
+3. Debounce: skip if last notification was <10s ago
+4. Fire-and-forget the toast notification (Popen, don't wait)
 """
 
 import datetime
@@ -23,7 +22,7 @@ import time
 from sound_player import get_sound, play_sound
 from lib.platform_detection import (
     DEBUG_LOG_PATH,
-    get_terminal_app, is_terminal_focused, log_debug,
+    get_terminal_app, log_debug,
 )
 from lib.text_processing import get_project_name, get_task_summary
 from lib.notifications import send_notification_async
@@ -68,17 +67,12 @@ def main():
     timestamp = datetime.datetime.now().isoformat()
     log_debug(f"{timestamp} | stop_hook | keys: {list(input_data.keys())}")
 
-    # 3. Check terminal focus — skip notification if focused
-    if is_terminal_focused():
-        log_debug(f"  -> Terminal focused, skipping notification")
-        return
-
-    # 4. Debounce — skip if recent notification
+    # 3. Debounce — skip if recent notification
     if _should_debounce():
         log_debug(f"  -> Debounced, skipping notification")
         return
 
-    # 5. Build notification content
+    # 4. Build notification content
     cwd = input_data.get("cwd", os.getcwd())
     project_name, color = get_project_name(cwd)
     terminal_name, terminal_emoji, terminal_app_name = get_terminal_app()
@@ -91,7 +85,7 @@ def main():
 
     log_debug(f"  -> Sending async notification | Project: {project_name} | Terminal: {terminal_name}")
 
-    # 6. Fire-and-forget notification
+    # 5. Fire-and-forget notification
     send_notification_async(
         title=f"{terminal_name} {color}",
         subtitle=project_name,
