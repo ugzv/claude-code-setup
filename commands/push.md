@@ -4,131 +4,56 @@ description: "Push changes and update state [--force to skip checks]"
 
 Push to remote and update `.claude/state.json`. Fully automatic.
 
-## Why State Tracking
+## Guiding Principles
 
-Claude sessions are ephemeral. State tracking creates continuity - next session picks up where work left off.
+**Momentum over investigation.** This is a push command, not a debugging session. When something unexpected happens — unfamiliar errors, files in odd states, tools misbehaving — note it for the summary and keep moving. Two tool calls to understand an anomaly is fine; eight is a rabbit hole.
 
-## What State Captures
+**Fix, don't report.** If a problem is auto-fixable (formatting, simple lint), fix it. Only block the push on issues that genuinely need human attention.
 
+**Direct Bash calls, not sub-agents.** Sub-agents add ~8k tokens of overhead each. Run all checks as parallel Bash calls in a single message.
+
+## Pre-Push: Detect → Fix → Verify → Gate
+
+### Detect
+
+Read config files (package.json, pyproject.toml, CI workflows, etc.) to learn what tools and checks exist. Only run tools you've confirmed are available — never guess at paths or CLI flags.
+
+### Fix and Commit
+
+Run formatters and linters in auto-fix mode (parallel). If anything changed, stage only the files fixers modified — not unrelated changes — and commit as a separate `style:` commit to keep feature commits clean.
+
+### Verify
+
+Run checks that can't be auto-fixed — type checking, tests, remaining lint errors — in parallel. These confirm the code is push-ready.
+
+### Gate
+
+All pass → push. Any failure → stop and report what needs manual attention.
+
+## Push and Summarize
+
+Check what commits the current branch has ahead of its upstream. If nothing to push, say so and stop. Commit state.json separately if it changed, then push.
+
+Summarize: commits pushed, what shipped, backlog changes.
+
+## State Tracking
+
+Sessions are ephemeral. `state.json` creates continuity so the next session picks up where this one left off.
+
+**What to update:**
 - **lastSession**: Date, summary, commits pushed
-- **shipped**: Last 10 completions only (older history in git commits)
-- **currentFocus**: Remove this session's focus when pushing; others stay
-- **backlog**: Auto-resolve items that match what was pushed
+- **shipped**: Add entry for what's being pushed (keep max 10, drop oldest). Write state.json in a single atomic update, not incremental edits
+- **currentFocus**: Clear this session's focus; leave others
+- **backlog**: Resolve items addressed by what was pushed
 
-**Keep state.json small**: Trim shipped to 10 entries when saving. For older history, use `git log`.
-
-## Pre-Push: Auto-Fix, Then Verify
-
-**Goal:** Push clean code. Don't report fixable problems — fix them automatically.
-
-**IMPORTANT: Use direct Bash calls, NOT Task/sub-agents.** Send all checks as parallel Bash tool calls in a single message. Sub-agents add ~8k tokens of overhead each.
-
-### Step 0: Detect (direct Read calls)
-
-Before running anything, read the project's config files to understand what tools and structure exist:
-
-- Read `package.json`, `pyproject.toml`, `composer.json`, `go.mod`, `Cargo.toml` (whichever exist)
-- Read CI config (`.github/workflows/*.yml`, `.gitlab-ci.yml`) to see what CI actually checks
-- Note the project's directory structure — don't assume paths like `web/` or `tests/` exist
-
-**Only run tools you confirmed exist.** Never guess CLI flags — if unsure, check `--help` or skip.
-
-### Step 1: Auto-Fix (parallel Bash calls)
-
-Run all detected fixers in parallel:
-
-- **Formatting** — black / prettier --write / pint (auto-fix mode, not --check)
-- **Linting** — ruff check --fix / eslint --fix (auto-fix mode)
-
-Only run fixers that exist in the project. Skip what doesn't apply.
-
-### Step 2: Commit Fixes (if anything changed)
-
-If auto-fixers modified files:
-1. Run `git diff --name-only` to see exactly what changed
-2. Stage **only the files the fixers modified** — not unrelated changes
-3. Commit as a separate `style:` commit before the push
-
-This keeps the user's feature commits clean and the fixes attributable.
-
-### Step 3: Verify (parallel Bash calls)
-
-Run checks that can't be auto-fixed, plus confirm fixers worked:
-
-- **Lockfile sync** — npm ci --dry-run / pip check / composer validate
-- **Type checking** — mypy / tsc --noEmit (only if CI uses it)
-- **Tests** — pytest / npm test / phpunit (only if CI runs tests)
-- **Remaining lint/format errors** — run checkers (--check mode) to catch anything fixers couldn't resolve
-
-### Gate Decision
-
-- **All pass**: Proceed to push
-- **Any fail**: Stop, report what failed and why (these are real issues that need manual attention)
-
-### Recovery Principle
-
-If something unexpected happens during fix/verify (missing files, strange git state, tool errors), **note the issue and move on**. This is a push command, not a debugging session. Report anomalies to the user at the end — don't spend 10+ tool calls investigating side issues.
-
-## The Push
-
-Check what's being pushed first. If nothing, say so and stop.
-
-If state.json changed, commit separately before pushing.
-
-## After Pushing
-
-Summarize: commits pushed, what shipped, backlog status.
+If `state.json` isn't a committed file or doesn't exist on disk, skip state tracking and tell the user.
 
 ## Handoff Cleanup
 
-**Goal:** Keep the active handoffs list focused on real work-in-progress. Delete completed handoffs—their work is already tracked in `state.json` shipped history.
+Delete completed handoffs — their work is already tracked in `shipped`. A handoff is done when all phases are complete AND the working tree is clean (the `.md` plan file gets deleted, so uncommitted work should keep it around). Report what you cleaned up.
 
-**When to remove:** A handoff is ready for removal when:
-1. All phases have `status: "complete"`
-2. The working tree is clean (`git status` shows no uncommitted changes)
+## CI Status Check
 
-The second check matters because we delete the `.md` plan file—if work is uncommitted, the plan might still be needed.
-
-**The cleanup:**
-1. Read `.claude/handoffs.json`
-2. For each active handoff meeting removal criteria: delete from `active[]`, delete `.claude/handoffs/{id}.md`
-3. Write updated handoffs.json
-4. Report: "Completed: {title}" for each
-
-**If phases complete but uncommitted changes exist:** Keep active, note: "Handoff '{title}' complete but has uncommitted changes—will remove after commit."
-
-**Why delete, not archive:** The shipped array in `state.json` already captures what was completed. The `.md` plan lives in git history if needed. Archiving creates duplicate data that never gets used.
-
-## CI Status Check (Post-Push)
-
-After pushing, verify CI passes before considering push complete.
-
-### Why This Matters
-
-Push → CI fail → fix → push again wastes time. Catching failures immediately lets you fix while context is fresh.
-
-### Principles
-
-1. **Verify the exact commit** — Match CI runs/pipelines to the pushed SHA, not "latest on branch"
-2. **All jobs must pass** — If multiple workflows/jobs exist, wait for all of them
-3. **Graceful degradation** — Unknown provider or no CI configured = push is done, inform user
-4. **Time-bounded** — Cap at ~10 minutes, then report status and let user decide
-5. **Actionable failures** — On failure, show which job failed and how to view logs
-
-### Provider Detection
-
-Check `git remote get-url origin`:
-- `github.com` → use `gh` CLI
-- `gitlab` anywhere in URL → use `glab` CLI (covers self-hosted)
-- Neither → skip CI check gracefully
-
-### Implementation Notes
-
-Use each provider's CLI to:
-1. Find runs/pipelines matching the pushed commit SHA
-2. Poll until all complete (first check ~30s after push, then ~60s intervals)
-3. On failure, provide the command to view failed logs
-
-The specific CLI commands vary by provider version — use `gh run list --help` or `glab ci --help` to find current syntax. The principles above define what you're trying to achieve.
+After pushing, poll CI until all jobs pass or ~10 minutes elapse — if still running, report status and let the user decide whether to wait. Match runs to the exact pushed SHA. On failure, show which job failed and how to view logs. Detect the provider from `git remote get-url origin` (GitHub → `gh`, GitLab → `glab`). No CI or unknown provider → push is done, inform user.
 
 $ARGUMENTS
