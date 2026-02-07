@@ -98,6 +98,7 @@ A hook loads this on session start. `/push` trims `shipped` to 10 entries—olde
 
 **`/analyze`** — Codebase analysis
 - `--audit` — Architecture review
+- `--clarity` — Code clarity review
 - `--deps` — Dependency analysis
 - `--naming` — Naming consistency
 - `--comments` — Comment quality
