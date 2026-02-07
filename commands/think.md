@@ -60,16 +60,16 @@ Ready to proceed, or want me to explain the reasoning?
 
 If you must present options, recommend one and explain why.
 
-## Phase 3.5: GPT Second Opinion (only with `--gpt` flag)
+## Phase 3.5: Second Opinion (only with `--gpt` flag)
 
-Codex with high reasoning excels at deep code analysis. Use it to surface what you can't see from your current vantage point.
+Get a second perspective from another AI model. Useful when you're uncertain about an architectural decision and want a fresh set of eyes on the codebase.
 
 **When `--gpt` is set:**
 
-1. Check if `codex` is installed: `which codex` - if not, skip gracefully
+1. Check if `codex` is installed: `which codex` — if not, skip gracefully and tell the user
 2. Construct a prompt that enables deep analysis:
    ```
-   You are providing a second opinion on a coding decision. Use your high reasoning capability to analyze deeply. Take your time - thoroughness matters more than speed.
+   You are providing a second opinion on a coding decision. Take your time — thoroughness matters more than speed.
 
    CONTEXT: [Problem in one sentence]
    APPROACH: [Key decisions, not implementation details]
@@ -79,20 +79,20 @@ Codex with high reasoning excels at deep code analysis. Use it to surface what y
    QUESTION: [See principles below]
    ```
 
-3. **Principles for prompting high-reasoning models:**
+3. **Principles for the prompt:**
    - Give context that grounds analysis (what you're doing, what you've decided)
    - State your uncertainty explicitly (the model reasons better when it knows where to focus)
    - Ask questions that reward depth over speed (exploration, relationship tracing, completeness checking)
    - Be specific about the dimension needing analysis, not vague quality judgments
 
 4. Run synchronously: `codex exec --full-auto "[your prompt]"`
-   Deep analysis compounds - exploration feeds the final synthesis. Interrupting loses that integration.
+   Let it complete fully — deep analysis compounds as exploration feeds synthesis.
 
 5. Incorporate insights that shift your understanding. Ignore surface-level observations you already knew.
 
-**Why this works:** You see your approach clearly. Codex sees the codebase it can explore. Ask questions that leverage what it can discover that you can't from your planning position.
+**Why this works:** You see your planned approach clearly. The second model can explore the codebase independently. Ask questions that leverage what it can discover from a fresh vantage point.
 
-**Setup:** `npm i -g @openai/codex`, then `codex` once to authenticate and select reasoning level.
+**Setup:** `npm i -g @openai/codex`, then run `codex` once to authenticate.
 
 ## Phase 4: Confirm and Continue
 

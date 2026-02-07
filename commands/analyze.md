@@ -98,11 +98,12 @@ Quick scan before spawning analyzers:
 Dependency health check. No parallel agents needed—sequential analysis:
 
 1. **Scan dependency files** (package.json, requirements.txt, go.mod, Cargo.toml, composer.json, etc.)
-2. **Check for issues:**
+2. **Detect available audit tools** — check what's installed (e.g., run `which npm` / `which pip-audit` / `which cargo-audit`), then use whatever exists. Don't assume specific tools are present.
+3. **Check for issues:**
    - Outdated packages (major versions behind)
    - Unused dependencies (declared but not imported)
    - Duplicate dependencies (same thing, different packages)
-   - Known vulnerabilities (if audit tools available: `npm audit`, `pip-audit`, etc.)
+   - Known vulnerabilities (using whatever audit tool the project has)
    - Pinning issues (loose versions that could break)
 
 **Output focus:** Actionable list with upgrade commands or removal candidates.

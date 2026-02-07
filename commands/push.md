@@ -23,9 +23,19 @@ Claude sessions are ephemeral. State tracking creates continuity - next session 
 
 **IMPORTANT: Use direct Bash calls, NOT Task/sub-agents.** Send all checks as parallel Bash tool calls in a single message. Sub-agents add ~8k tokens of overhead each.
 
+### Step 0: Detect (direct Read calls)
+
+Before running anything, read the project's config files to understand what tools and structure exist:
+
+- Read `package.json`, `pyproject.toml`, `composer.json`, `go.mod`, `Cargo.toml` (whichever exist)
+- Read CI config (`.github/workflows/*.yml`, `.gitlab-ci.yml`) to see what CI actually checks
+- Note the project's directory structure — don't assume paths like `web/` or `tests/` exist
+
+**Only run tools you confirmed exist.** Never guess CLI flags — if unsure, check `--help` or skip.
+
 ### Step 1: Auto-Fix (parallel Bash calls)
 
-**Detect which tools exist** from project config (package.json, pyproject.toml, composer.json, CI config), then run all applicable fixers in parallel:
+Run all detected fixers in parallel:
 
 - **Formatting** — black / prettier --write / pint (auto-fix mode, not --check)
 - **Linting** — ruff check --fix / eslint --fix (auto-fix mode)
@@ -34,7 +44,12 @@ Only run fixers that exist in the project. Skip what doesn't apply.
 
 ### Step 2: Commit Fixes (if anything changed)
 
-If auto-fixers modified files, commit them as a separate `style:` commit before the push. This keeps the user's feature commits clean and the fixes attributable.
+If auto-fixers modified files:
+1. Run `git diff --name-only` to see exactly what changed
+2. Stage **only the files the fixers modified** — not unrelated changes
+3. Commit as a separate `style:` commit before the push
+
+This keeps the user's feature commits clean and the fixes attributable.
 
 ### Step 3: Verify (parallel Bash calls)
 
@@ -49,6 +64,10 @@ Run checks that can't be auto-fixed, plus confirm fixers worked:
 
 - **All pass**: Proceed to push
 - **Any fail**: Stop, report what failed and why (these are real issues that need manual attention)
+
+### Recovery Principle
+
+If something unexpected happens during fix/verify (missing files, strange git state, tool errors), **note the issue and move on**. This is a push command, not a debugging session. Report anomalies to the user at the end — don't spend 10+ tool calls investigating side issues.
 
 ## The Push
 

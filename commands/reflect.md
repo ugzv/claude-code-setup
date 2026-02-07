@@ -84,7 +84,7 @@ State: "These changes [do X] by [approach Y], assuming [Z]."
 | state-analyzer | Stateful code, caching | Race conditions, stale state |
 | type-boundary-checker | Cross-system data | Serialization, type coercion |
 
-**For Quick analysis**: Just think through the relevant concerns yourself.
+**For Quick analysis**: Walk through the relevant lenses above yourself — no agents, but still systematic. Check each lens that applies to this change type.
 
 **For Standard/Deep**: Spawn critics in parallel. Each critic should be adversarial—job is to find problems, not confirm quality.
 
