@@ -47,6 +47,12 @@ Some files should never be committed regardless of context: secrets (`.env`, `*.
 
 If you encounter these, skip them silently and mention in the summary. Don't ask, don't commit, don't stop—just note what was skipped and why.
 
+## Inspecting Changes
+
+Use `git status --short` and `git diff --stat` to survey changes. For detailed inspection, use `git diff HEAD -- <path>` for tracked files. Never run bare `git diff <path>` on new files — they have no prior version. For new or untracked files, stage first (`git add`), then inspect with `git diff --cached -- <path>`.
+
+If a per-file inspection fails, skip and continue — don't let one bad diff block the rest.
+
 ## Capturing Discoveries
 
 While working, you likely noticed things: tech debt, potential bugs, improvement opportunities. This is the moment to capture them—your context is fresh.
