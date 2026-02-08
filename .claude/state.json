@@ -2,12 +2,17 @@
   "project": "claude-code-setup",
   "currentFocus": [],
   "lastSession": {
-    "date": "2026-02-07",
-    "summary": "Fixed commit command git diff errors on new files, fixed toast notifications suppressed by terminal focus check, added --clarity to README",
-    "commits": ["11c54f1", "9fa3315", "435819b"]
+    "date": "2026-02-08",
+    "summary": "Added reasoning effort selection to /think --gpt for Codex 5.3, matching thinking depth to question complexity",
+    "commits": ["999c68b"]
   },
   "backlog": [],
   "shipped": [
+    {
+      "date": "2026-02-08",
+      "type": "feat",
+      "summary": "Add reasoning effort selection (low/medium/high) to /think --gpt for Codex 5.3"
+    },
     {
       "date": "2026-02-07",
       "type": "fix",
@@ -52,11 +57,6 @@
       "date": "2026-01-21",
       "type": "docs",
       "summary": "Improve handoff protocol with concrete steps and clearer command descriptions"
-    },
-    {
-      "date": "2026-01-21",
-      "type": "fix",
-      "summary": "Ensure .claude/ tracked in git (remove from gitignore), only ignore backups"
     }
   ]
 }
