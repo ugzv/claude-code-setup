@@ -62,14 +62,27 @@ If you must present options, recommend one and explain why.
 
 ## Phase 3.5: Second Opinion (only with `--gpt` flag)
 
-Get a second perspective from another AI model. Useful when you're uncertain about an architectural decision and want a fresh set of eyes on the codebase.
+Get a second perspective from GPT via Codex CLI. Useful when you're uncertain about an architectural decision and want fresh eyes on the codebase.
 
 **When `--gpt` is set:**
 
 1. Check if `codex` is installed: `which codex` — if not, skip gracefully and tell the user
-2. Construct a prompt that enables deep analysis:
+
+2. **Pick reasoning effort based on what you're asking:**
+
+   | Effort | When to use | Example question |
+   |--------|-------------|------------------|
+   | `low` | Sanity-checking a straightforward decision | "Does this file structure follow the existing pattern?" |
+   | `medium` | Reviewing an approach with a few tradeoffs | "Which of these two patterns fits better here?" |
+   | `high` | Deep analysis across multiple files/concerns | "Trace all callers of X and check if this refactor is safe" |
+
+   **Default to `medium`** — it's the best speed/depth tradeoff for most second opinions. Only escalate to `high` when the question genuinely requires multi-file exploration or relationship tracing. `low` is for quick validation where you mostly know the answer.
+
+   > Do NOT use `xhigh` — it's benchmark-grade and too slow for interactive work. If the question needs that level of depth, break it into smaller focused questions at `high`.
+
+3. Construct a prompt that enables focused analysis:
    ```
-   You are providing a second opinion on a coding decision. Take your time — thoroughness matters more than speed.
+   You are providing a second opinion on a coding decision.
 
    CONTEXT: [Problem in one sentence]
    APPROACH: [Key decisions, not implementation details]
@@ -79,18 +92,22 @@ Get a second perspective from another AI model. Useful when you're uncertain abo
    QUESTION: [See principles below]
    ```
 
-3. **Principles for the prompt:**
+4. **Principles for the prompt:**
    - Give context that grounds analysis (what you're doing, what you've decided)
    - State your uncertainty explicitly (the model reasons better when it knows where to focus)
    - Ask questions that reward depth over speed (exploration, relationship tracing, completeness checking)
    - Be specific about the dimension needing analysis, not vague quality judgments
+   - Do NOT ask it to "think step by step" — reasoning models do this internally already
 
-4. Run synchronously: `codex exec --full-auto "[your prompt]"`
-   Let it complete fully — deep analysis compounds as exploration feeds synthesis.
+5. Run with effort-aware invocation:
+   ```
+   codex exec --full-auto -m gpt-5.3-codex -c model_reasoning_effort="EFFORT" "[your prompt]"
+   ```
+   Replace `EFFORT` with your chosen level from step 2.
 
-5. Incorporate insights that shift your understanding. Ignore surface-level observations you already knew.
+6. Incorporate insights that shift your understanding. Ignore surface-level observations you already knew.
 
-**Why this works:** You see your planned approach clearly. The second model can explore the codebase independently. Ask questions that leverage what it can discover from a fresh vantage point.
+**Why this works:** You see your planned approach clearly. The second model explores the codebase independently. Matching effort to question complexity means fast answers when you need validation and deep analysis only when it matters.
 
 **Setup:** `npm i -g @openai/codex`, then run `codex` once to authenticate.
 
