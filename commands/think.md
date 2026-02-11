@@ -64,6 +64,8 @@ If you must present options, recommend one and explain why.
 
 Get a second perspective from GPT via Codex CLI. Useful when you're uncertain about an architectural decision and want fresh eyes on the codebase.
 
+**CRITICAL: The model is `gpt-5.3-codex`. Do NOT use o4-mini, gpt-4.1, or any other model. Always pass `-m gpt-5.3-codex`.**
+
 **When `--gpt` is set:**
 
 1. Check if `codex` is installed: `which codex` — if not, skip gracefully and tell the user
@@ -99,11 +101,12 @@ Get a second perspective from GPT via Codex CLI. Useful when you're uncertain ab
    - Be specific about the dimension needing analysis, not vague quality judgments
    - Do NOT ask it to "think step by step" — reasoning models do this internally already
 
-5. Run with effort-aware invocation:
+5. Run this **exact** command (only replace EFFORT and the prompt):
    ```
    codex exec --full-auto -m gpt-5.3-codex -c model_reasoning_effort="EFFORT" "[your prompt]"
    ```
-   Replace `EFFORT` with your chosen level from step 2.
+   - **Model must be `gpt-5.3-codex`** — do not change or omit the `-m` flag
+   - Replace `EFFORT` with your chosen level from step 2
 
 6. Incorporate insights that shift your understanding. Ignore surface-level observations you already knew.
 
