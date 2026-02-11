@@ -105,6 +105,9 @@ A hook loads this on session start. `/push` trims `shipped` to 10 entries—olde
 - `--debt` — Tech debt scan
 - `--history` — Git history analysis
 
+**`/dedup`** — Find duplicate code and plan consolidation
+- `--aggressive` — Offer to implement top merge after report
+
 **`/prompt-guide`** — Prompting philosophy for agent work
 
 ### Setup & Utilities
