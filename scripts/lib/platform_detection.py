@@ -1,7 +1,7 @@
 """
 Platform detection utilities for Claude Code and Codex CLI hooks.
 Handles terminal focus detection and terminal app identification.
-Cross-platform: macOS and Windows.
+Cross-platform: macOS, Windows, and WSL.
 """
 
 import os
@@ -18,6 +18,17 @@ from typing import Optional
 # uname() which makes WMI calls on Windows that can deadlock (Python 3.13+).
 IS_WINDOWS = sys.platform == "win32"
 IS_MACOS = sys.platform == "darwin"
+
+# WSL detection: /proc/version contains "microsoft" on both WSL1 and WSL2
+IS_WSL = False
+if sys.platform == "linux":
+    try:
+        IS_WSL = "microsoft" in Path("/proc/version").read_text().lower()
+    except Exception:
+        pass
+
+# Gate for routing to Windows GUI code (toast notifications, sounds via powershell.exe)
+USES_WINDOWS_GUI = IS_WINDOWS or IS_WSL
 
 if IS_WINDOWS:
     import ctypes
@@ -44,6 +55,15 @@ def log_debug(message: str, *, path: Optional[str] = None) -> None:
             f.write(f"{message}\n")
     except Exception:
         pass
+
+
+def get_windows_subprocess_kwargs() -> dict:
+    """Return subprocess kwargs for hiding the console window.
+    On native Windows: {creationflags: CREATE_NO_WINDOW}.
+    On WSL: {} (Linux subprocess doesn't support creationflags)."""
+    if IS_WINDOWS:
+        return {"creationflags": subprocess.CREATE_NO_WINDOW}
+    return {}
 
 
 # =============================================================================
@@ -272,12 +292,9 @@ def _get_parent_process_names_windows() -> list:
     return names
 
 
-def get_terminal_app_windows() -> tuple:
-    """Detect which terminal/editor app Claude Code is running in (Windows).
-    Returns (app_display_name, emoji, app_name) tuple.
-    Uses env vars first (0ms), then ctypes process tree (~5ms)."""
-
-    # 1. Environment variable heuristics (instant, most reliable)
+def _detect_terminal_from_env() -> Optional[tuple]:
+    """Detect terminal app from environment variables (0ms, works on Windows and WSL).
+    Returns (app_display_name, emoji, app_name) or None if not detected."""
     term_program = os.environ.get("TERM_PROGRAM", "").lower()
     wt_session = os.environ.get("WT_SESSION", "")
 
@@ -296,6 +313,19 @@ def get_terminal_app_windows() -> tuple:
 
     if wt_session:
         return ("Windows Terminal", "💻", "WindowsTerminal")
+
+    return None
+
+
+def get_terminal_app_windows() -> tuple:
+    """Detect which terminal/editor app Claude Code is running in (Windows).
+    Returns (app_display_name, emoji, app_name) tuple.
+    Uses env vars first (0ms), then ctypes process tree (~5ms)."""
+
+    # 1. Environment variable heuristics (instant, most reliable)
+    env_result = _detect_terminal_from_env()
+    if env_result:
+        return env_result
 
     # 2. ctypes process tree walk (~5ms, no subprocess)
     parent_names = _get_parent_process_names_windows()
@@ -318,11 +348,23 @@ def get_terminal_app_windows() -> tuple:
     return ("Terminal", "🖥️", "cmd")
 
 
+def get_terminal_app_wsl() -> tuple:
+    """Detect which terminal/editor app Claude Code is running in (WSL).
+    Returns (app_display_name, emoji, app_name) tuple.
+    Uses env vars (inherited from host Windows terminal)."""
+    env_result = _detect_terminal_from_env()
+    if env_result:
+        return env_result
+    return ("Terminal", "🖥️", "")
+
+
 def get_terminal_app() -> tuple:
     """Detect which terminal/editor app Claude Code is running in.
     Returns (app_display_name, emoji, app_name) tuple."""
     if IS_MACOS:
         return get_terminal_app_macos()
+    elif IS_WSL:
+        return get_terminal_app_wsl()
     elif IS_WINDOWS:
         return get_terminal_app_windows()
     return ("Terminal", "🖥️", "")

@@ -32,7 +32,13 @@ from typing import Optional
 # Use sys.platform instead of platform.system() to avoid WMI deadlock on Python 3.13+
 IS_WINDOWS = sys.platform == "win32"
 IS_MACOS = sys.platform == "darwin"
-PLATFORM_NAME = "Windows" if IS_WINDOWS else "macOS" if IS_MACOS else sys.platform
+IS_WSL = False
+if sys.platform == "linux":
+    try:
+        IS_WSL = "microsoft" in Path("/proc/version").read_text().lower()
+    except Exception:
+        pass
+PLATFORM_NAME = "WSL" if IS_WSL else "Windows" if IS_WINDOWS else "macOS" if IS_MACOS else sys.platform
 
 # Scripts we install as hooks - used for filtering during merge/uninstall
 OUR_SCRIPTS = ["play_sound.py", "notify_completion.py", "stop_hook.py", "session-start.py"]
@@ -433,6 +439,10 @@ def copy_files(
                     existing.unlink()
                     print(f"  Removed obsolete: {prefix}{existing.name}")
 
+    # On Linux/WSL, source files may come from a Windows mount (/mnt/c/...)
+    # with CRLF line endings that break shebangs. Convert to LF for text files.
+    fix_endings = not IS_WINDOWS and pattern in ("*.py", "*.sh", "*.md")
+
     # Copy files
     copied = 0
     for src_file in source_dir.glob(pattern):
@@ -440,7 +450,11 @@ def copy_files(
         if dry_run:
             print(f"  Would copy: {prefix}{src_file.name}")
         else:
-            shutil.copy2(src_file, target)
+            if fix_endings:
+                content = src_file.read_bytes().replace(b"\r\n", b"\n")
+                target.write_bytes(content)
+            else:
+                shutil.copy2(src_file, target)
             if make_executable and not IS_WINDOWS:
                 target.chmod(target.stat().st_mode | stat.S_IXUSR | stat.S_IXGRP | stat.S_IXOTH)
         copied += 1
@@ -553,7 +567,11 @@ def copy_statusline(dry_run: bool = False) -> bool:
     if dry_run:
         print(f"  Would copy: statusline.sh")
     else:
-        shutil.copy2(source, dest)
+        if not IS_WINDOWS:
+            # Fix CRLF from Windows mounts
+            dest.write_bytes(source.read_bytes().replace(b"\r\n", b"\n"))
+        else:
+            shutil.copy2(source, dest)
         if not IS_WINDOWS:
             dest.chmod(dest.stat().st_mode | stat.S_IXUSR | stat.S_IXGRP | stat.S_IXOTH)
 

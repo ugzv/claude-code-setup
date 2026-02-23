@@ -1,13 +1,15 @@
 #!/usr/bin/env python3
 """
 Shared sound player module for Claude Code hooks.
-Cross-platform: macOS (afplay) and Windows (winsound).
+Cross-platform: macOS (afplay), Windows (winsound), and WSL (powershell.exe).
 """
 
 import subprocess
 from typing import Optional
 
-from lib.platform_detection import IS_MACOS, IS_WINDOWS
+from lib.platform_detection import (
+    IS_MACOS, IS_WINDOWS, USES_WINDOWS_GUI, get_windows_subprocess_kwargs,
+)
 
 
 # Sound definitions by type and platform
@@ -27,7 +29,8 @@ def get_sound(sound_type: str) -> Optional[str]:
     """Get sound file path for the given type and current platform."""
     if IS_MACOS:
         return SOUNDS.get(sound_type, {}).get("Darwin")
-    elif IS_WINDOWS:
+    elif USES_WINDOWS_GUI:
+        # WSL uses Windows sound paths since powershell.exe plays them
         return SOUNDS.get(sound_type, {}).get("Windows")
     return None
 
@@ -45,24 +48,29 @@ def play_sound_macos(sound_file: str) -> None:
 
 
 def play_sound_windows(sound_file: str) -> None:
-    """Play a sound file using Windows winsound or PowerShell."""
-    try:
-        import winsound
-        winsound.PlaySound(sound_file, winsound.SND_FILENAME | winsound.SND_ASYNC)
-    except Exception:
+    """Play a sound file using Windows winsound or PowerShell.
+    On WSL, winsound is unavailable so we go straight to PowerShell."""
+    if IS_WINDOWS:
         try:
-            subprocess.Popen(
-                [
-                    "powershell.exe", "-WindowStyle", "Hidden", "-Command",
-                    f'(New-Object Media.SoundPlayer "{sound_file}").PlaySync()'
-                ],
-                stdout=subprocess.DEVNULL,
-                stderr=subprocess.DEVNULL,
-                stdin=subprocess.DEVNULL,
-                creationflags=subprocess.CREATE_NO_WINDOW
-            )
+            import winsound
+            winsound.PlaySound(sound_file, winsound.SND_FILENAME | winsound.SND_ASYNC)
+            return
         except Exception:
             pass
+    # PowerShell fallback (also the primary path on WSL)
+    try:
+        subprocess.Popen(
+            [
+                "powershell.exe", "-WindowStyle", "Hidden", "-Command",
+                f'(New-Object Media.SoundPlayer "{sound_file}").PlaySync()'
+            ],
+            stdout=subprocess.DEVNULL,
+            stderr=subprocess.DEVNULL,
+            stdin=subprocess.DEVNULL,
+            **get_windows_subprocess_kwargs()
+        )
+    except Exception:
+        pass
 
 
 def play_sound(sound_file: str) -> None:
@@ -73,7 +81,7 @@ def play_sound(sound_file: str) -> None:
     try:
         if IS_MACOS:
             play_sound_macos(sound_file)
-        elif IS_WINDOWS:
+        elif USES_WINDOWS_GUI:
             play_sound_windows(sound_file)
     except Exception:
         pass

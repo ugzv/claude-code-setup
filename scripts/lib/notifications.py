@@ -1,11 +1,14 @@
 """
 Notification delivery utilities for Claude Code and Codex CLI hooks.
-Cross-platform: macOS (terminal-notifier/osascript) and Windows (toast notifications).
+Cross-platform: macOS (terminal-notifier/osascript), Windows (toast), and WSL (toast via powershell.exe).
 """
 
 import subprocess
 
-from .platform_detection import CLI_NAME, IS_MACOS, IS_WINDOWS, log_debug
+from .platform_detection import (
+    CLI_NAME, IS_MACOS, USES_WINDOWS_GUI,
+    get_windows_subprocess_kwargs, log_debug,
+)
 
 
 # =============================================================================
@@ -146,7 +149,7 @@ def send_notification_windows(title: str, message: str, subtitle: str = "", app_
             text=True,
             timeout=5,
             stdin=subprocess.DEVNULL,
-            creationflags=subprocess.CREATE_NO_WINDOW
+            **get_windows_subprocess_kwargs()
         )
 
         if result.returncode == 0:
@@ -173,7 +176,7 @@ def send_notification_windows(title: str, message: str, subtitle: str = "", app_
                 capture_output=True,
                 timeout=3,
                 stdin=subprocess.DEVNULL,
-                creationflags=subprocess.CREATE_NO_WINDOW
+                **get_windows_subprocess_kwargs()
             )
         except Exception:
             pass
@@ -189,7 +192,7 @@ def send_notification(title: str, message: str, subtitle: str = "", app_name: st
     """Send desktop notification using platform-appropriate method."""
     if IS_MACOS:
         send_notification_macos(title, message, subtitle, app_name)
-    elif IS_WINDOWS:
+    elif USES_WINDOWS_GUI:
         send_notification_windows(title, message, subtitle, app_name)
 
 
@@ -210,7 +213,7 @@ def send_notification_windows_async(title: str, message: str, subtitle: str = ""
             stdout=subprocess.DEVNULL,
             stderr=subprocess.DEVNULL,
             stdin=subprocess.DEVNULL,
-            creationflags=subprocess.CREATE_NO_WINDOW,
+            **get_windows_subprocess_kwargs(),
         )
         log_debug(f"  -> Windows toast ASYNC launched: {full_title}")
     except Exception as e:
@@ -222,5 +225,5 @@ def send_notification_async(title: str, message: str, subtitle: str = "", app_na
     On macOS, falls back to sync send. On Windows, uses Popen."""
     if IS_MACOS:
         send_notification_macos(title, message, subtitle, app_name)
-    elif IS_WINDOWS:
+    elif USES_WINDOWS_GUI:
         send_notification_windows_async(title, message, subtitle)
