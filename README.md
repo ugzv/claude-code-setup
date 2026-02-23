@@ -2,7 +2,7 @@
 
 Session tracking, commands, and notifications for [Claude Code](https://docs.anthropic.com/en/docs/claude-code) and [Codex CLI](https://github.com/openai/codex).
 
-**Platforms:** macOS and Windows.
+**Platforms:** macOS, Windows, and WSL.
 
 ## Quick Start
 
@@ -31,6 +31,7 @@ By default this installs for Claude Code. To install for Codex CLI or both:
 ```bash
 python install.py --cli codex   # Codex CLI only
 python install.py --cli all     # Both CLIs
+python install.py --wsl         # Install into WSL from Windows
 ```
 
 | | Claude Code | Codex CLI |

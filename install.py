@@ -817,6 +817,29 @@ def uninstall_codex(dry_run: bool = False) -> bool:
     return True
 
 
+def _run_in_wsl(args: argparse.Namespace) -> int:
+    """Re-execute this installer inside WSL so Path.home() resolves to the WSL home."""
+    script_win = Path(__file__).resolve()
+    # Convert Windows path to WSL /mnt/ path
+    drive = script_win.drive.rstrip(":").lower()
+    posix_rest = script_win.as_posix().split(":", 1)[1]
+    wsl_script = f"/mnt/{drive}{posix_rest}"
+
+    cmd = ["wsl", "-e", "python3", wsl_script]
+    if args.cli != "claude":
+        cmd += ["--cli", args.cli]
+    if args.dry_run:
+        cmd.append("--dry-run")
+    if args.uninstall:
+        cmd.append("--uninstall")
+
+    print(f"Re-launching installer inside WSL...")
+    print(f"  wsl -e python3 {wsl_script}")
+    print()
+    result = subprocess.run(cmd)
+    return result.returncode
+
+
 def main():
     parser = argparse.ArgumentParser(
         description="Install commands and notification hooks for Claude Code and/or Codex CLI"
@@ -837,8 +860,22 @@ def main():
         action="store_true",
         help="Remove notification hooks (keeps commands/scripts)"
     )
+    parser.add_argument(
+        "--wsl",
+        action="store_true",
+        help="Install into WSL (re-runs installer inside WSL so paths resolve correctly)"
+    )
 
     args = parser.parse_args()
+
+    # WSL mode: re-execute inside WSL and exit
+    if args.wsl:
+        if not IS_WINDOWS:
+            print("ERROR: --wsl flag is only needed when running from Windows.")
+            print("       You're already in a Linux/WSL environment — run without --wsl.")
+            sys.exit(1)
+        sys.exit(_run_in_wsl(args))
+
     clis = ["claude", "codex"] if args.cli == "all" else [args.cli]
     success = True
 
