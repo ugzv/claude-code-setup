@@ -1,5 +1,5 @@
 """
-Platform detection utilities for Claude Code hooks.
+Platform detection utilities for Claude Code and Codex CLI hooks.
 Handles terminal focus detection and terminal app identification.
 Cross-platform: macOS and Windows.
 """
@@ -23,8 +23,14 @@ if IS_WINDOWS:
     import ctypes
     import ctypes.wintypes
 
+# Derive CLI home from script location: lib/ -> scripts/ -> ~/.claude/ or ~/.codex/
+_LIB_DIR = Path(__file__).resolve().parent          # .../scripts/lib/
+_SCRIPTS_DIR = _LIB_DIR.parent                       # .../scripts/
+CLI_HOME = _SCRIPTS_DIR.parent                        # ~/.claude/ or ~/.codex/
+CLI_NAME = "Codex CLI" if CLI_HOME.name == ".codex" else "Claude Code"
+
 # Debug logging (off by default, enable with CLAUDE_HOOKS_DEBUG=1)
-DEBUG_LOG_PATH = Path.home() / ".claude" / "notification_debug.log"
+DEBUG_LOG_PATH = CLI_HOME / "notification_debug.log"
 DEBUG_ENABLED = os.environ.get("CLAUDE_HOOKS_DEBUG", "").lower() in ("1", "true", "yes")
 
 

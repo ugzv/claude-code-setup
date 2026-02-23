@@ -2,12 +2,22 @@
   "project": "claude-code-setup",
   "currentFocus": [],
   "lastSession": {
-    "date": "2026-02-08",
-    "summary": "Added reasoning effort selection to /think --gpt for Codex 5.3, matching thinking depth to question complexity",
-    "commits": ["999c68b"]
+    "date": "2026-02-16",
+    "summary": "Added Codex CLI support: --cli flag for installer, isolated runtime per CLI (debounce, logs, toast identity), AGENTS.md template, TOML config handling",
+    "commits": ["0de4854", "b996dfa"]
   },
   "backlog": [],
   "shipped": [
+    {
+      "date": "2026-02-16",
+      "type": "feat",
+      "summary": "Add Codex CLI support to installer with --cli flag (claude|codex|all)"
+    },
+    {
+      "date": "2026-02-16",
+      "type": "docs",
+      "summary": "Update README for dual CLI support with comparison table"
+    },
     {
       "date": "2026-02-08",
       "type": "feat",
@@ -47,16 +57,6 @@
       "date": "2026-02-06",
       "type": "perf",
       "summary": "Unify Stop hooks into single process with ctypes"
-    },
-    {
-      "date": "2026-02-06",
-      "type": "fix",
-      "summary": "Use sys.platform instead of platform.system() to avoid WMI deadlock on Python 3.13+"
-    },
-    {
-      "date": "2026-01-21",
-      "type": "docs",
-      "summary": "Improve handoff protocol with concrete steps and clearer command descriptions"
     }
   ]
 }

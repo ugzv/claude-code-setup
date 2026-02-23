@@ -1,6 +1,6 @@
 # Claude Code Setup
 
-Session tracking, commands, and notifications for [Claude Code](https://docs.anthropic.com/en/docs/claude-code).
+Session tracking, commands, and notifications for [Claude Code](https://docs.anthropic.com/en/docs/claude-code) and [Codex CLI](https://github.com/openai/codex).
 
 **Platforms:** macOS and Windows.
 
@@ -26,17 +26,33 @@ cd claude-code-setup
 ./install.sh   # or install.bat on Windows
 ```
 
-This copies commands to `~/.claude/commands/` and configures hooks in `~/.claude/settings.json`.
+By default this installs for Claude Code. To install for Codex CLI or both:
+
+```bash
+python install.py --cli codex   # Codex CLI only
+python install.py --cli all     # Both CLIs
+```
+
+| | Claude Code | Codex CLI |
+|---|---|---|
+| Commands | `~/.claude/commands/` | `~/.codex/prompts/` |
+| Settings | `~/.claude/settings.json` | `~/.codex/config.toml` |
+| Project instructions | `CLAUDE.md` | `AGENTS.md` |
+| SessionStart hook | Yes | Not yet supported |
+| Statusline | Yes | Not yet supported |
+| Notifications | Yes (Stop hook) | Yes (notify hook) |
+
+Each CLI gets its own copy of scripts and independent runtime state (debounce, logs, toast identity).
 
 ### Setup a project
 
-Restart Claude Code, then in any project:
+Restart your CLI, then in any project:
 
 ```
 /migrate
 ```
 
-Next session, Claude knows what you were working on.
+Next session, the agent knows what you were working on.
 
 ### Upgrading existing projects
 
@@ -44,11 +60,11 @@ Run `/migrate` again — it's safe and non-destructive:
 - Creates backups before any changes
 - Preserves all existing data (state.json, backlog, shipped)
 - Only adds missing features (handoff hooks, resume protocol)
-- Custom CLAUDE.md content preserved
+- Custom CLAUDE.md/AGENTS.md content preserved
 
 ## The Problem
 
-Claude sessions are ephemeral. Context evaporates when a conversation ends. Next session starts from zero.
+AI coding sessions are ephemeral. Context evaporates when a conversation ends. Next session starts from zero.
 
 ## The Solution
 
@@ -135,7 +151,8 @@ After `/migrate`:
 
 ```
 your-project/
-├── CLAUDE.md              # Session protocol
+├── CLAUDE.md              # Session protocol (Claude Code)
+├── AGENTS.md              # Session protocol (Codex CLI)
 └── .claude/
     ├── state.json         # Tracking data
     ├── settings.json      # Hook config
@@ -143,7 +160,9 @@ your-project/
     └── handoffs/          # Plan files (if any)
 ```
 
-Global commands: `~/.claude/commands/`
+Global commands:
+- Claude Code: `~/.claude/commands/`
+- Codex CLI: `~/.codex/prompts/`
 
 ## Handoff System
 
@@ -155,9 +174,9 @@ For complex tasks that span sessions or need fresh context:
 /handoff
 
 # Session 2: Execution (fresh context)
-Claude: "1 active handoff: {task} (Phase 1/3). What would you like to work on?"
+Agent: "1 active handoff: {task} (Phase 1/3). What would you like to work on?"
 You: "continue"
-# Claude reads plan, executes phase by phase, validates, captures learnings
+# Agent reads plan, executes phase by phase, validates, captures learnings
 ```
 
 **How it works:**
@@ -170,7 +189,7 @@ You: "continue"
 - Plans are contracts — immutable once created
 - Validate before marking complete — concrete evidence required
 - Capture learnings — memory synthesis for future sessions
-- No rushing — Claude has abundant context
+- No rushing — the agent has abundant context
 
 **Parallel sessions:**
 - Multiple handoffs = multiple sessions OK (each works independently)
@@ -182,17 +201,17 @@ You: "continue"
 
 ## Notifications
 
-Desktop notifications when Claude finishes a task. Works with multiple instances—each notification shows which terminal/editor and project.
+Desktop notifications when the agent finishes a task. Works with multiple instances—each notification shows which terminal/editor and project.
 
 On macOS, the installer automatically installs `terminal-notifier` via Homebrew if available.
 
 **Supported apps:** Cursor, VSCode, Windsurf, iTerm, Warp, Terminal, Windows Terminal, and more.
 
-**Disable notifications:** Run `python install.py --uninstall` to remove notification hooks while keeping commands.
+**Disable notifications:** Run `python install.py --uninstall` (or `--cli codex --uninstall` for Codex) to remove notification hooks while keeping commands.
 
 ## Statusline
 
-Shows context usage at a glance:
+Shows context usage at a glance (Claude Code only):
 
 ```
 opus 4.6 │ main │ ●●●○○○○○○○  30%
@@ -201,4 +220,5 @@ opus 4.6 │ main │ ●●●○○○○○○○  30%
 ## References
 
 - [Claude Code docs](https://docs.anthropic.com/en/docs/claude-code)
+- [Codex CLI docs](https://github.com/openai/codex)
 - [Effective harnesses for long-running agents](https://www.anthropic.com/engineering/effective-harnesses-for-long-running-agents)

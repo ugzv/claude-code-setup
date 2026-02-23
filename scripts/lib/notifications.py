@@ -1,11 +1,11 @@
 """
-Notification delivery utilities for Claude Code hooks.
+Notification delivery utilities for Claude Code and Codex CLI hooks.
 Cross-platform: macOS (terminal-notifier/osascript) and Windows (toast notifications).
 """
 
 import subprocess
 
-from .platform_detection import IS_MACOS, IS_WINDOWS, log_debug
+from .platform_detection import CLI_NAME, IS_MACOS, IS_WINDOWS, log_debug
 
 
 # =============================================================================
@@ -14,7 +14,8 @@ from .platform_detection import IS_MACOS, IS_WINDOWS, log_debug
 
 def _build_windows_toast_script(full_title: str, message: str) -> str:
     """Build PowerShell script for Windows toast notification.
-    Tries BurntToast module first, falls back to WinRT toast API."""
+    Tries BurntToast module first, falls back to WinRT toast API.
+    Uses CLI_NAME for the notifier identity so Claude/Codex notifications are distinct."""
     return f'''
     if (Get-Module -ListAvailable -Name BurntToast) {{
         Import-Module BurntToast
@@ -36,7 +37,7 @@ def _build_windows_toast_script(full_title: str, message: str) -> str:
         $xml = New-Object Windows.Data.Xml.Dom.XmlDocument
         $xml.LoadXml($template)
         $toast = [Windows.UI.Notifications.ToastNotification]::new($xml)
-        [Windows.UI.Notifications.ToastNotificationManager]::CreateToastNotifier("Claude Code").Show($toast)
+        [Windows.UI.Notifications.ToastNotificationManager]::CreateToastNotifier("{CLI_NAME}").Show($toast)
     }}
     '''
 

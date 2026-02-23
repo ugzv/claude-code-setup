@@ -1,10 +1,14 @@
 #!/usr/bin/env python3
 """
-Unified Stop hook for Claude Code.
+Unified Stop/Notification hook for Claude Code and Codex CLI.
 Replaces the sequential play_sound.py + notify_completion.py with a single process.
 
 Performance: ~50-100ms total.
 Previously: 2-4 seconds (two Python processes, each spawning PowerShell).
+
+Supports both:
+- Claude Code: Stop hook (reads transcript_path from stdin JSON)
+- Codex CLI: notify hook (reads last-assistant-message from stdin JSON)
 
 Flow:
 1. Play completion sound immediately (afplay/winsound async = instant)
@@ -21,15 +25,16 @@ import time
 
 from sound_player import get_sound, play_sound
 from lib.platform_detection import (
-    DEBUG_LOG_PATH,
+    CLI_HOME, DEBUG_LOG_PATH,
     get_terminal_app, log_debug,
 )
 from lib.text_processing import get_project_name, get_task_summary
 from lib.notifications import send_notification_async
 
 # Debounce: minimum seconds between notifications
+# Each CLI gets its own debounce file (derived from script location)
 DEBOUNCE_SECONDS = 10
-_DEBOUNCE_FILE = os.path.join(os.path.expanduser("~"), ".claude", ".last_notification_ts")
+_DEBOUNCE_FILE = os.path.join(str(CLI_HOME), ".last_notification_ts")
 
 
 def _should_debounce() -> bool:
@@ -79,7 +84,13 @@ def main():
 
     transcript_path = input_data.get("transcript_path")
     if transcript_path and os.path.exists(transcript_path):
+        # Claude Code: extract summary from transcript file
         message = get_task_summary(transcript_path, DEBUG_LOG_PATH)
+    elif input_data.get("last-assistant-message"):
+        # Codex CLI: extract summary from last assistant message
+        msg = str(input_data["last-assistant-message"])
+        lines = [l.strip() for l in msg.split("\n") if l.strip()]
+        message = lines[0][:120] if lines else "Task completed"
     else:
         message = "Task completed"
 
