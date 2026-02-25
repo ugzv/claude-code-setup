@@ -2,12 +2,39 @@
   "project": "claude-code-setup",
   "currentFocus": [],
   "lastSession": {
-    "date": "2026-02-23",
-    "summary": "Added WSL runtime support: IS_WSL detection, USES_WINDOWS_GUI gate, creationflags helper, terminal app detection for WSL, notifications and sound routing through existing Windows code paths",
-    "commits": ["800e3b3"]
+    "date": "2026-02-25",
+    "summary": "Major refactoring: split install.py into installer/ package, unified notification pipeline with run_powershell/run_quiet helpers, pathlib migration, YAML quoting, removed orphaned PS1 scripts",
+    "commits": ["c106bc9", "7f4ce8d", "c586adc", "df1b058", "0155bd2"]
   },
-  "backlog": [],
+  "backlog": [
+    {
+      "id": "lib-subdir-pruning",
+      "description": "installer/file_ops.py _copy_lib_subdir() does not prune obsolete files from ~/.claude/scripts/lib/ — could leave orphaned modules after future refactors",
+      "priority": "low",
+      "added": "2026-02-25"
+    }
+  ],
   "shipped": [
+    {
+      "date": "2026-02-25",
+      "type": "refactor",
+      "summary": "Split install.py (944 lines) into installer/ package with 7 focused modules"
+    },
+    {
+      "date": "2026-02-25",
+      "type": "refactor",
+      "summary": "Unify notification pipeline, add run_powershell/run_quiet subprocess helpers"
+    },
+    {
+      "date": "2026-02-25",
+      "type": "fix",
+      "summary": "Pathlib migration, encoding fixes, arrow char standardization, YAML quoting"
+    },
+    {
+      "date": "2026-02-25",
+      "type": "chore",
+      "summary": "Remove orphaned PowerShell launcher scripts and clean up stale temp files"
+    },
     {
       "date": "2026-02-23",
       "type": "feat",
