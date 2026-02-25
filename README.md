@@ -204,7 +204,10 @@ You: "continue"
 
 Desktop notifications when the agent finishes a task. Works with multiple instances—each notification shows which terminal/editor and project.
 
-On macOS, the installer automatically installs `terminal-notifier` via Homebrew if available.
+The installer automatically handles platform dependencies:
+- **macOS:** `terminal-notifier` and `jq` via Homebrew
+- **WSL:** `jq` via apt-get; notifications use Windows balloon toasts via `powershell.exe`
+- **Windows:** Uses native WinRT toast notifications
 
 **Supported apps:** Cursor, VSCode, Windsurf, iTerm, Warp, Terminal, Windows Terminal, and more.
 
@@ -212,10 +215,10 @@ On macOS, the installer automatically installs `terminal-notifier` via Homebrew 
 
 ## Statusline
 
-Shows context usage at a glance (Claude Code only):
+Shows context usage at a glance (Claude Code only, requires `jq`):
 
 ```
-opus 4.6 │ main │ ●●●○○○○○○○  30%
+opus │ main │ ●●●○○○○○○○  30%
 ```
 
 ## References
