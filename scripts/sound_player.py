@@ -8,20 +8,20 @@ import subprocess
 from typing import Optional
 
 from lib.platform_detection import (
-    IS_MACOS, IS_WINDOWS, POWERSHELL_EXE, USES_WINDOWS_GUI,
-    get_windows_subprocess_kwargs,
+    IS_MACOS, IS_WINDOWS, USES_WINDOWS_GUI,
+    run_powershell,
 )
 
 
 # Sound definitions by type and platform
 SOUNDS = {
     "completion": {
-        "Darwin": "/System/Library/Sounds/Glass.aiff",
-        "Windows": r"C:\Windows\Media\Windows Ding.wav",
+        "macos": "/System/Library/Sounds/Glass.aiff",
+        "windows": r"C:\Windows\Media\Windows Ding.wav",
     },
     "attention": {
-        "Darwin": "/System/Library/Sounds/Frog.aiff",
-        "Windows": r"C:\Windows\Media\Windows Exclamation.wav",
+        "macos": "/System/Library/Sounds/Frog.aiff",
+        "windows": r"C:\Windows\Media\Windows Exclamation.wav",
     },
 }
 
@@ -29,10 +29,10 @@ SOUNDS = {
 def get_sound(sound_type: str) -> Optional[str]:
     """Get sound file path for the given type and current platform."""
     if IS_MACOS:
-        return SOUNDS.get(sound_type, {}).get("Darwin")
+        return SOUNDS.get(sound_type, {}).get("macos")
     elif USES_WINDOWS_GUI:
         # WSL uses Windows sound paths since powershell.exe plays them
-        return SOUNDS.get(sound_type, {}).get("Windows")
+        return SOUNDS.get(sound_type, {}).get("windows")
     return None
 
 
@@ -60,16 +60,8 @@ def play_sound_windows(sound_file: str) -> None:
             pass
     # PowerShell fallback (also the primary path on WSL)
     try:
-        subprocess.Popen(
-            [
-                POWERSHELL_EXE, "-WindowStyle", "Hidden", "-Command",
-                f'(New-Object Media.SoundPlayer "{sound_file}").PlaySync()'
-            ],
-            stdout=subprocess.DEVNULL,
-            stderr=subprocess.DEVNULL,
-            stdin=subprocess.DEVNULL,
-            **get_windows_subprocess_kwargs()
-        )
+        ps_script = f'(New-Object Media.SoundPlayer "{sound_file}").PlaySync()'
+        run_powershell(ps_script, fire_and_forget=True)
     except Exception:
         pass
 

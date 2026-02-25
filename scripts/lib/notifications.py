@@ -3,12 +3,22 @@ Notification delivery utilities for Claude Code and Codex CLI hooks.
 Cross-platform: macOS (terminal-notifier/osascript), Windows (toast), and WSL (toast via powershell.exe).
 """
 
-import subprocess
-
 from .platform_detection import (
-    CLI_NAME, IS_MACOS, IS_WSL, POWERSHELL_EXE, USES_WINDOWS_GUI,
-    get_windows_subprocess_kwargs, log_debug,
+    CLI_NAME, IS_MACOS, IS_WSL, USES_WINDOWS_GUI,
+    log_debug, run_powershell, run_quiet,
 )
+
+
+# =============================================================================
+# Shared Helpers
+# =============================================================================
+
+def _prepare_notification_args(title: str, message: str, subtitle: str = "") -> tuple[str, str]:
+    """Build full title and escape both strings for PowerShell."""
+    full_title = f"{title} - {subtitle}" if subtitle else title
+    full_title = full_title.replace("'", "''").replace('"', '`"')
+    message = message.replace("'", "''").replace('"', '`"')
+    return full_title, message
 
 
 # =============================================================================
@@ -73,33 +83,16 @@ def escape_for_applescript(text: str) -> str:
 
 def get_bundle_id_for_app(app_name: str) -> str:
     """Dynamically get bundle ID for an app (macOS)."""
-    try:
-        result = subprocess.run(
-            ["osascript", "-e", f'id of app "{app_name}"'],
-            capture_output=True,
-            text=True,
-            timeout=0.5,
-            stdin=subprocess.DEVNULL
-        )
-        if result.returncode == 0:
-            return result.stdout.strip()
-    except Exception:
-        pass
-    return ""
+    ok, stdout = run_quiet(["osascript", "-e", f'id of app "{app_name}"'])
+    return stdout if ok else ""
 
 
 def send_notification_macos(title: str, message: str, subtitle: str = "", app_name: str = "") -> None:
     """Send macOS notification using terminal-notifier (preferred) or osascript."""
     # Try terminal-notifier first
-    terminal_notifier_path = None
-    try:
-        result = subprocess.run(["which", "terminal-notifier"], capture_output=True, text=True)
-        if result.returncode == 0:
-            terminal_notifier_path = result.stdout.strip()
-    except Exception:
-        pass
+    found, terminal_notifier_path = run_quiet(["which", "terminal-notifier"])
 
-    if terminal_notifier_path:
+    if found and terminal_notifier_path:
         try:
             cmd = [terminal_notifier_path, "-title", title, "-message", message]
             if subtitle:
@@ -110,9 +103,12 @@ def send_notification_macos(title: str, message: str, subtitle: str = "", app_na
                 if bundle_id:
                     cmd.extend(["-activate", bundle_id])
 
-            subprocess.run(cmd, check=True, timeout=2, capture_output=True)
-            log_debug(f"  → terminal-notifier SUCCESS: {title}")
-            return
+            ok, _ = run_quiet(cmd, timeout=2)
+            if ok:
+                log_debug(f"  → terminal-notifier SUCCESS: {title}")
+                return
+            else:
+                log_debug("  → terminal-notifier FAILED, falling back to osascript")
 
         except Exception as e:
             log_debug(f"  → terminal-notifier FAILED: {str(e)}, falling back to osascript")
@@ -127,17 +123,11 @@ def send_notification_macos(title: str, message: str, subtitle: str = "", app_na
         if safe_subtitle:
             script += f' subtitle "{safe_subtitle}"'
 
-        result = subprocess.run(
-            ["osascript", "-e", script],
-            capture_output=True,
-            text=True,
-            timeout=2
-        )
-
-        if result.returncode == 0:
+        ok, _ = run_quiet(["osascript", "-e", script], timeout=2)
+        if ok:
             log_debug(f"  → osascript SUCCESS: {title} | {subtitle} | {message[:50]}")
         else:
-            log_debug(f"  → osascript FAILED: {result.stderr}")
+            log_debug("  → osascript FAILED")
 
     except Exception as e:
         log_debug(f"  → NOTIFICATION FAILED: {str(e)}")
@@ -147,95 +137,57 @@ def send_notification_macos(title: str, message: str, subtitle: str = "", app_na
 # Windows Notifications
 # =============================================================================
 
-def send_notification_windows(title: str, message: str, subtitle: str = "", app_name: str = "") -> None:
+def _send_notification_windows(
+    title: str, message: str, subtitle: str = "", app_name: str = "", *, blocking: bool = True,
+) -> None:
     """Send Windows notification using PowerShell.
     On native Windows: WinRT toast (BurntToast → WinRT fallback).
-    On WSL: balloon notification (WinRT toasts are silently dropped)."""
-    full_title = f"{title} - {subtitle}" if subtitle else title
+    On WSL: balloon notification (WinRT toasts are silently dropped).
+    When blocking=False, uses fire-and-forget Popen (~10ms)."""
+    full_title, message = _prepare_notification_args(title, message, subtitle)
 
-    # Escape for PowerShell
-    full_title = full_title.replace("'", "''").replace('"', '`"')
-    message = message.replace("'", "''").replace('"', '`"')
-
-    # WSL: use balloon notification (WinRT toasts lack AppUserModelID)
     if IS_WSL:
-        try:
-            ps_script = _build_balloon_script(full_title, message)
-            result = subprocess.run(
-                [POWERSHELL_EXE, "-WindowStyle", "Hidden", "-Command", ps_script],
-                capture_output=True,
-                text=True,
-                timeout=8,
-                stdin=subprocess.DEVNULL,
-            )
-            if result.returncode == 0:
-                log_debug(f"  → WSL balloon SUCCESS: {full_title}")
-            else:
-                log_debug(f"  → WSL balloon issue: {result.stderr[:100] if result.stderr else 'no error'}")
-        except Exception as e:
-            log_debug(f"  → WSL balloon FAILED: {str(e)}")
-        return
-
-    # Native Windows: try toast notification
-    try:
+        ps_script = _build_balloon_script(full_title, message)
+        timeout = 8
+    else:
         ps_script = _build_windows_toast_script(full_title, message)
-        result = subprocess.run(
-            [POWERSHELL_EXE, "-WindowStyle", "Hidden", "-Command", ps_script],
-            capture_output=True,
-            text=True,
-            timeout=5,
-            stdin=subprocess.DEVNULL,
-            **get_windows_subprocess_kwargs()
-        )
-        if result.returncode == 0:
-            log_debug(f"  → Windows toast SUCCESS: {full_title}")
-        else:
-            log_debug(f"  → Windows toast issue: {result.stderr[:100] if result.stderr else 'no error'}")
-    except Exception as e:
-        log_debug(f"  → Windows toast FAILED: {str(e)}")
+        timeout = 5
+
+    label = "WSL balloon" if IS_WSL else "Windows toast"
+
+    if blocking:
+        try:
+            result = run_powershell(ps_script, timeout=timeout)
+            if result and result.returncode == 0:
+                log_debug(f"  → {label} SUCCESS: {full_title}")
+            else:
+                stderr = (result.stderr[:100] if result and result.stderr else "no error")
+                log_debug(f"  → {label} issue: {stderr}")
+        except Exception as e:
+            log_debug(f"  → {label} FAILED: {str(e)}")
+    else:
+        try:
+            run_powershell(ps_script, fire_and_forget=True)
+            log_debug(f"  → {label} ASYNC launched: {full_title}")
+        except Exception as e:
+            log_debug(f"  → {label} ASYNC failed: {str(e)}")
 
 
 # =============================================================================
 # Cross-Platform Interface
 # =============================================================================
 
-def send_notification(title: str, message: str, subtitle: str = "", app_name: str = "") -> None:
-    """Send desktop notification using platform-appropriate method."""
+def send_notification(
+    title: str, message: str, subtitle: str = "", app_name: str = "", *, blocking: bool = True,
+) -> None:
+    """Send desktop notification using platform-appropriate method.
+    When blocking=False, uses fire-and-forget on Windows (macOS is already fast)."""
     if IS_MACOS:
         send_notification_macos(title, message, subtitle, app_name)
     elif USES_WINDOWS_GUI:
-        send_notification_windows(title, message, subtitle, app_name)
-
-
-def send_notification_windows_async(title: str, message: str, subtitle: str = "") -> None:
-    """Send Windows notification via fire-and-forget Popen (~10ms).
-    Does not wait for the PowerShell process to complete."""
-    full_title = f"{title} - {subtitle}" if subtitle else title
-
-    # Escape for PowerShell
-    full_title = full_title.replace("'", "''").replace('"', '`"')
-    message = message.replace("'", "''").replace('"', '`"')
-
-    ps_script = (_build_balloon_script(full_title, message) if IS_WSL
-                 else _build_windows_toast_script(full_title, message))
-
-    try:
-        subprocess.Popen(
-            [POWERSHELL_EXE, "-WindowStyle", "Hidden", "-Command", ps_script],
-            stdout=subprocess.DEVNULL,
-            stderr=subprocess.DEVNULL,
-            stdin=subprocess.DEVNULL,
-            **get_windows_subprocess_kwargs(),
-        )
-        log_debug(f"  -> Windows notification ASYNC launched: {full_title}")
-    except Exception as e:
-        log_debug(f"  -> Windows notification ASYNC failed: {str(e)}")
+        _send_notification_windows(title, message, subtitle, app_name, blocking=blocking)
 
 
 def send_notification_async(title: str, message: str, subtitle: str = "", app_name: str = "") -> None:
-    """Send desktop notification asynchronously (fire-and-forget).
-    On macOS, falls back to sync send. On Windows, uses Popen."""
-    if IS_MACOS:
-        send_notification_macos(title, message, subtitle, app_name)
-    elif USES_WINDOWS_GUI:
-        send_notification_windows_async(title, message, subtitle)
+    """Backward-compatible alias."""
+    send_notification(title, message, subtitle, app_name, blocking=False)

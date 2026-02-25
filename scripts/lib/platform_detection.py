@@ -4,6 +4,8 @@ Handles terminal focus detection and terminal app identification.
 Cross-platform: macOS, Windows, and WSL.
 """
 
+from __future__ import annotations
+
 import os
 import subprocess
 import sys
@@ -63,7 +65,7 @@ def log_debug(message: str, *, path: Optional[str] = None) -> None:
         return
     try:
         target = path or DEBUG_LOG_PATH
-        with open(target, "a") as f:
+        with open(target, "a", encoding="utf-8") as f:
             f.write(f"{message}\n")
     except Exception:
         pass
@@ -76,6 +78,57 @@ def get_windows_subprocess_kwargs() -> dict:
     if IS_WINDOWS:
         return {"creationflags": subprocess.CREATE_NO_WINDOW}
     return {}
+
+
+def run_powershell(
+    script: str,
+    *,
+    timeout: int = 5,
+    fire_and_forget: bool = False,
+) -> subprocess.CompletedProcess[str] | None:
+    """Run a PowerShell script hidden, with proper subprocess kwargs.
+
+    When fire_and_forget=True, uses Popen and returns None.
+    When fire_and_forget=False, uses subprocess.run and returns the result.
+    """
+    cmd = [POWERSHELL_EXE, "-WindowStyle", "Hidden", "-Command", script]
+    kwargs = get_windows_subprocess_kwargs()
+    if fire_and_forget:
+        subprocess.Popen(
+            cmd,
+            stdout=subprocess.DEVNULL,
+            stderr=subprocess.DEVNULL,
+            stdin=subprocess.DEVNULL,
+            **kwargs,
+        )
+        return None
+    return subprocess.run(
+        cmd,
+        capture_output=True,
+        text=True,
+        timeout=timeout,
+        stdin=subprocess.DEVNULL,
+        **kwargs,
+    )
+
+
+def run_quiet(
+    cmd: list[str],
+    *,
+    timeout: int | None = None,
+) -> tuple[bool, str]:
+    """Run a command quietly, return (success, stdout_stripped)."""
+    try:
+        result = subprocess.run(
+            cmd,
+            capture_output=True,
+            text=True,
+            timeout=timeout,
+            stdin=subprocess.DEVNULL,
+        )
+        return result.returncode == 0, result.stdout.strip()
+    except Exception:
+        return False, ""
 
 
 # =============================================================================
