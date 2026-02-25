@@ -4,8 +4,8 @@
 Outputs state.json and handoffs.json contents on session start.
 Handles missing files gracefully without errors.
 """
-import os
 import sys
+from pathlib import Path
 
 # Ensure UTF-8 stdout for Unicode characters (arrows, emoji, etc.)
 # Windows defaults to cp1252, and some Linux locales may not be UTF-8
@@ -13,17 +13,17 @@ if hasattr(sys.stdout, 'buffer'):
     import io
     sys.stdout = io.TextIOWrapper(sys.stdout.buffer, encoding='utf-8', errors='replace')
 
-def read_file(path):
+def read_file(path: str) -> str | None:
     """Read file if exists, return None otherwise."""
     try:
-        if os.path.exists(path):
-            with open(path, 'r', encoding='utf-8') as f:
-                return f.read()
+        p = Path(path)
+        if p.exists():
+            return p.read_text(encoding='utf-8')
     except Exception:
         pass
     return None
 
-def main():
+def main() -> None:
     # State file
     state_path = '.claude/state.json'
     state_content = read_file(state_path)

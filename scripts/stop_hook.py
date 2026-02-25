@@ -22,6 +22,7 @@ import json
 import os
 import sys
 import time
+from pathlib import Path
 
 from sound_player import get_sound, play_sound
 from lib.platform_detection import (
@@ -34,14 +35,14 @@ from lib.notifications import send_notification_async
 # Debounce: minimum seconds between notifications
 # Each CLI gets its own debounce file (derived from script location)
 DEBOUNCE_SECONDS = 10
-_DEBOUNCE_FILE = os.path.join(str(CLI_HOME), ".last_notification_ts")
+_DEBOUNCE_FILE = CLI_HOME / ".last_notification_ts"
 
 
 def _should_debounce() -> bool:
     """Check if we should skip notification due to debounce window."""
     try:
-        if os.path.exists(_DEBOUNCE_FILE):
-            with open(_DEBOUNCE_FILE, "r") as f:
+        if _DEBOUNCE_FILE.exists():
+            with open(_DEBOUNCE_FILE, "r", encoding="utf-8") as f:
                 last_ts = float(f.read().strip())
             if time.time() - last_ts < DEBOUNCE_SECONDS:
                 return True
@@ -50,16 +51,16 @@ def _should_debounce() -> bool:
     return False
 
 
-def _update_debounce():
+def _update_debounce() -> None:
     """Record current timestamp for debounce tracking."""
     try:
-        with open(_DEBOUNCE_FILE, "w") as f:
+        with open(_DEBOUNCE_FILE, "w", encoding="utf-8") as f:
             f.write(str(time.time()))
     except Exception:
         pass
 
 
-def main():
+def main() -> None:
     # 1. Play sound immediately (async/non-blocking)
     play_sound(get_sound("completion"))
 
@@ -74,7 +75,7 @@ def main():
 
     # 3. Debounce — skip if recent notification
     if _should_debounce():
-        log_debug(f"  -> Debounced, skipping notification")
+        log_debug(f"  → Debounced, skipping notification")
         return
 
     # 4. Build notification content
@@ -83,7 +84,7 @@ def main():
     terminal_name, terminal_emoji, terminal_app_name = get_terminal_app()
 
     transcript_path = input_data.get("transcript_path")
-    if transcript_path and os.path.exists(transcript_path):
+    if transcript_path and Path(transcript_path).exists():
         # Claude Code: extract summary from transcript file
         message = get_task_summary(transcript_path, DEBUG_LOG_PATH)
     elif input_data.get("last-assistant-message"):
@@ -94,7 +95,7 @@ def main():
     else:
         message = "Task completed"
 
-    log_debug(f"  -> Sending async notification | Project: {project_name} | Terminal: {terminal_name}")
+    log_debug(f"  → Sending async notification | Project: {project_name} | Terminal: {terminal_name}")
 
     # 5. Fire-and-forget notification
     send_notification_async(
