@@ -30,6 +30,18 @@ if sys.platform == "linux":
 # Gate for routing to Windows GUI code (toast notifications, sounds via powershell.exe)
 USES_WINDOWS_GUI = IS_WINDOWS or IS_WSL
 
+# Resolve powershell.exe — on WSL with appendWindowsPath=false it won't be on PATH
+POWERSHELL_EXE = "powershell.exe"
+if IS_WSL:
+    _ps_candidates = [
+        "/mnt/c/Windows/System32/WindowsPowerShell/v1.0/powershell.exe",
+        "/mnt/c/WINDOWS/System32/WindowsPowerShell/v1.0/powershell.exe",
+    ]
+    for _p in _ps_candidates:
+        if Path(_p).exists():
+            POWERSHELL_EXE = _p
+            break
+
 if IS_WINDOWS:
     import ctypes
     import ctypes.wintypes

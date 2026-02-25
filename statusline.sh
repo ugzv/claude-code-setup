@@ -14,21 +14,11 @@ RED='\033[31m'
 # Read JSON from stdin
 input=$(cat)
 
-# Parse values
-model=$(echo "$input" | jq -r '.model.display_name // "claude"' | tr '[:upper:]' '[:lower:]')
-context_size=$(echo "$input" | jq -r '.context_window.context_window_size // 200000')
-usage=$(echo "$input" | jq -r '.context_window.current_usage // empty')
-
-# Calculate context percentage
-if [ -n "$usage" ] && [ "$usage" != "null" ]; then
-    input_tokens=$(echo "$usage" | jq -r '.input_tokens // 0')
-    cache_create=$(echo "$usage" | jq -r '.cache_creation_input_tokens // 0')
-    cache_read=$(echo "$usage" | jq -r '.cache_read_input_tokens // 0')
-    total_tokens=$((input_tokens + cache_create + cache_read))
-    percent=$((total_tokens * 100 / context_size))
-else
-    percent=0
-fi
+# Parse values (single jq call for efficiency)
+eval "$(echo "$input" | jq -r '
+    @sh "model=\(.model // "claude" | ascii_downcase | sub("^claude-";"") | sub("-\\d.*$";""))",
+    @sh "percent=\(.context_window.used_percentage // 0)"
+')"
 
 # Get git branch
 branch=""

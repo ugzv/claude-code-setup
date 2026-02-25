@@ -6,7 +6,7 @@ Cross-platform: macOS (terminal-notifier/osascript), Windows (toast), and WSL (t
 import subprocess
 
 from .platform_detection import (
-    CLI_NAME, IS_MACOS, USES_WINDOWS_GUI,
+    CLI_NAME, IS_MACOS, IS_WSL, POWERSHELL_EXE, USES_WINDOWS_GUI,
     get_windows_subprocess_kwargs, log_debug,
 )
 
@@ -42,6 +42,23 @@ def _build_windows_toast_script(full_title: str, message: str) -> str:
         $toast = [Windows.UI.Notifications.ToastNotification]::new($xml)
         [Windows.UI.Notifications.ToastNotificationManager]::CreateToastNotifier("{CLI_NAME}").Show($toast)
     }}
+    '''
+
+
+def _build_balloon_script(full_title: str, message: str) -> str:
+    """Build PowerShell script for a balloon (NotifyIcon) notification.
+    Works reliably from WSL where WinRT toasts are silently dropped
+    due to the PowerShell process lacking a registered AppUserModelID."""
+    return f'''
+    Add-Type -AssemblyName System.Windows.Forms
+    $n = New-Object System.Windows.Forms.NotifyIcon
+    $n.Icon = [System.Drawing.SystemIcons]::Information
+    $n.BalloonTipTitle = "{full_title}"
+    $n.BalloonTipText = "{message}"
+    $n.Visible = $true
+    $n.ShowBalloonTip(5000)
+    Start-Sleep -Seconds 3
+    $n.Dispose()
     '''
 
 
@@ -131,57 +148,51 @@ def send_notification_macos(title: str, message: str, subtitle: str = "", app_na
 # =============================================================================
 
 def send_notification_windows(title: str, message: str, subtitle: str = "", app_name: str = "") -> None:
-    """Send Windows toast notification using PowerShell."""
-    # Combine title and subtitle for Windows
+    """Send Windows notification using PowerShell.
+    On native Windows: WinRT toast (BurntToast → WinRT fallback).
+    On WSL: balloon notification (WinRT toasts are silently dropped)."""
     full_title = f"{title} - {subtitle}" if subtitle else title
 
     # Escape for PowerShell
     full_title = full_title.replace("'", "''").replace('"', '`"')
     message = message.replace("'", "''").replace('"', '`"')
 
-    # Try BurntToast first (better notifications if installed)
+    # WSL: use balloon notification (WinRT toasts lack AppUserModelID)
+    if IS_WSL:
+        try:
+            ps_script = _build_balloon_script(full_title, message)
+            result = subprocess.run(
+                [POWERSHELL_EXE, "-WindowStyle", "Hidden", "-Command", ps_script],
+                capture_output=True,
+                text=True,
+                timeout=8,
+                stdin=subprocess.DEVNULL,
+            )
+            if result.returncode == 0:
+                log_debug(f"  → WSL balloon SUCCESS: {full_title}")
+            else:
+                log_debug(f"  → WSL balloon issue: {result.stderr[:100] if result.stderr else 'no error'}")
+        except Exception as e:
+            log_debug(f"  → WSL balloon FAILED: {str(e)}")
+        return
+
+    # Native Windows: try toast notification
     try:
         ps_script = _build_windows_toast_script(full_title, message)
-
         result = subprocess.run(
-            ["powershell.exe", "-WindowStyle", "Hidden", "-Command", ps_script],
+            [POWERSHELL_EXE, "-WindowStyle", "Hidden", "-Command", ps_script],
             capture_output=True,
             text=True,
             timeout=5,
             stdin=subprocess.DEVNULL,
             **get_windows_subprocess_kwargs()
         )
-
         if result.returncode == 0:
             log_debug(f"  → Windows toast SUCCESS: {full_title}")
         else:
             log_debug(f"  → Windows toast issue: {result.stderr[:100] if result.stderr else 'no error'}")
-
     except Exception as e:
-        # Fallback to basic balloon notification
-        try:
-            fallback_script = f'''
-            Add-Type -AssemblyName System.Windows.Forms
-            $notification = New-Object System.Windows.Forms.NotifyIcon
-            $notification.Icon = [System.Drawing.SystemIcons]::Information
-            $notification.BalloonTipTitle = "{full_title}"
-            $notification.BalloonTipText = "{message}"
-            $notification.Visible = $true
-            $notification.ShowBalloonTip(5000)
-            Start-Sleep -Milliseconds 100
-            '''
-
-            subprocess.run(
-                ["powershell.exe", "-WindowStyle", "Hidden", "-Command", fallback_script],
-                capture_output=True,
-                timeout=3,
-                stdin=subprocess.DEVNULL,
-                **get_windows_subprocess_kwargs()
-            )
-        except Exception:
-            pass
-
-        log_debug(f"  → Windows notification fallback used: {str(e)}")
+        log_debug(f"  → Windows toast FAILED: {str(e)}")
 
 
 # =============================================================================
@@ -197,7 +208,7 @@ def send_notification(title: str, message: str, subtitle: str = "", app_name: st
 
 
 def send_notification_windows_async(title: str, message: str, subtitle: str = "") -> None:
-    """Send Windows toast notification via fire-and-forget Popen (~10ms).
+    """Send Windows notification via fire-and-forget Popen (~10ms).
     Does not wait for the PowerShell process to complete."""
     full_title = f"{title} - {subtitle}" if subtitle else title
 
@@ -205,19 +216,20 @@ def send_notification_windows_async(title: str, message: str, subtitle: str = ""
     full_title = full_title.replace("'", "''").replace('"', '`"')
     message = message.replace("'", "''").replace('"', '`"')
 
-    ps_script = _build_windows_toast_script(full_title, message)
+    ps_script = (_build_balloon_script(full_title, message) if IS_WSL
+                 else _build_windows_toast_script(full_title, message))
 
     try:
         subprocess.Popen(
-            ["powershell.exe", "-WindowStyle", "Hidden", "-Command", ps_script],
+            [POWERSHELL_EXE, "-WindowStyle", "Hidden", "-Command", ps_script],
             stdout=subprocess.DEVNULL,
             stderr=subprocess.DEVNULL,
             stdin=subprocess.DEVNULL,
             **get_windows_subprocess_kwargs(),
         )
-        log_debug(f"  -> Windows toast ASYNC launched: {full_title}")
+        log_debug(f"  -> Windows notification ASYNC launched: {full_title}")
     except Exception as e:
-        log_debug(f"  -> Windows toast ASYNC failed: {str(e)}")
+        log_debug(f"  -> Windows notification ASYNC failed: {str(e)}")
 
 
 def send_notification_async(title: str, message: str, subtitle: str = "", app_name: str = "") -> None:

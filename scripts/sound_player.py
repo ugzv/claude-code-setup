@@ -8,7 +8,8 @@ import subprocess
 from typing import Optional
 
 from lib.platform_detection import (
-    IS_MACOS, IS_WINDOWS, USES_WINDOWS_GUI, get_windows_subprocess_kwargs,
+    IS_MACOS, IS_WINDOWS, POWERSHELL_EXE, USES_WINDOWS_GUI,
+    get_windows_subprocess_kwargs,
 )
 
 
@@ -61,7 +62,7 @@ def play_sound_windows(sound_file: str) -> None:
     try:
         subprocess.Popen(
             [
-                "powershell.exe", "-WindowStyle", "Hidden", "-Command",
+                POWERSHELL_EXE, "-WindowStyle", "Hidden", "-Command",
                 f'(New-Object Media.SoundPlayer "{sound_file}").PlaySync()'
             ],
             stdout=subprocess.DEVNULL,
