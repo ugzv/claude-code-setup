@@ -1,5 +1,5 @@
 ---
-description: Check overall project health
+description: "Check overall project health"
 ---
 
 Assess whether this team can ship with confidence.

@@ -1,5 +1,5 @@
 ---
-description: Set up Claude tracking system (new or existing projects)
+description: "Set up Claude tracking system (new or existing projects)"
 ---
 
 Set up the Claude tracking system. Non-destructive and idempotent.

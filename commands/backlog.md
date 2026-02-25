@@ -1,5 +1,5 @@
 ---
-description: Review and manage backlog items
+description: "Review and manage backlog items"
 ---
 
 ## The Problem You're Solving

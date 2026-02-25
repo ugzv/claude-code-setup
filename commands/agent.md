@@ -1,5 +1,5 @@
 ---
-description: Audit Claude Agent SDK projects for architecture issues
+description: "Audit Claude Agent SDK projects for architecture issues"
 ---
 
 Audit agent projects for structural problems before production failures.

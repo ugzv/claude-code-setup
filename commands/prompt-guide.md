@@ -1,5 +1,5 @@
 ---
-description: Load prompting philosophy and apply to any prompt work
+description: "Load prompting philosophy and apply to any prompt work"
 ---
 
 Philosophy for building AI agent prompts. Internalize before any prompt work.

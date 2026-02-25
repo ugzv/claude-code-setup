@@ -1,5 +1,5 @@
 ---
-description: Auto-fix all linting, formatting, and code quality issues
+description: "Auto-fix all linting, formatting, and code quality issues"
 ---
 
 Clean up the codebase — fix everything that can be auto-fixed.

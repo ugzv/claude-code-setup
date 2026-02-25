@@ -1,5 +1,5 @@
 ---
-description: Spec out complex tasks before implementing
+description: "Spec out complex tasks before implementing"
 ---
 
 Create a spec before writing code. Prevents wasted work on wrong approaches.

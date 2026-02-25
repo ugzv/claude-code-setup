@@ -1,5 +1,5 @@
 ---
-description: Audit visual consistency, component patterns, and implementation quality
+description: "Audit visual consistency, component patterns, and implementation quality"
 ---
 
 Deep visual interface audit using parallel specialized agents.

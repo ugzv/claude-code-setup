@@ -1,5 +1,5 @@
 ---
-description: List project commands
+description: "List project commands"
 ---
 
 List the custom commands available.

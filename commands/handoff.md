@@ -1,5 +1,5 @@
 ---
-description: Create handoff doc for fresh session to execute
+description: "Create handoff doc for fresh session to execute"
 ---
 
 Create or continue handoffs—structured plans that fresh sessions can execute without original context.

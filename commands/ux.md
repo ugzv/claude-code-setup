@@ -1,5 +1,5 @@
 ---
-description: Simulate real users exploring your app to discover dead paths, inconsistencies, and opportunities
+description: "Simulate real users exploring your app to discover dead paths, inconsistencies, and opportunities"
 ---
 
 Product discovery through user empathy simulation.
