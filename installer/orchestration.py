@@ -35,7 +35,6 @@ from .file_ops import (
     copy_files,
     copy_hooks,
     copy_scripts,
-    copy_statusline,
     copy_templates,
     _copy_lib_subdir,
 )
@@ -143,20 +142,15 @@ def install(dry_run: bool = False) -> bool:
         install_wsl_deps(dry_run)
         print()
 
-    # Step 5: Statusline
-    print("Step 5: Installing statusline...")
-    copy_statusline(dry_run)
-    print()
-
-    # Step 6: Hooks
-    print("Step 6: Installing hooks...")
+    # Step 5: Hooks
+    print("Step 5: Installing hooks...")
     hook_count = copy_hooks(dry_run)
     if not dry_run:
         print(f"  {hook_count} hooks installed")
     print()
 
-    # Step 7: Load and backup settings
-    print("Step 7: Loading settings...")
+    # Step 6: Load and backup settings
+    print("Step 6: Loading settings...")
     settings = load_settings()
     if settings:
         print(f"  Found existing settings")
@@ -168,8 +162,8 @@ def install(dry_run: bool = False) -> bool:
         print("  No existing settings, creating new")
     print()
 
-    # Step 8: Merge settings
-    print("Step 8: Merging configuration...")
+    # Step 7: Merge settings
+    print("Step 7: Merging configuration...")
     new_config = get_full_config()
     merged = merge_settings(settings, new_config)
 

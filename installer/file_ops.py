@@ -1,7 +1,7 @@
 """File copy operations for the installer.
 
 Provides a generic copy_files() function and domain-specific wrappers for
-commands, templates, scripts, hooks, and the statusline.
+commands, templates, scripts, and hooks.
 """
 
 import shutil
@@ -165,29 +165,6 @@ def copy_scripts(dry_run: bool = False) -> int:
 
     return copied
 
-
-def copy_statusline(dry_run: bool = False) -> bool:
-    """Copy statusline.sh to ~/.claude/"""
-    repo_dir = get_repo_dir()
-    source = repo_dir / "statusline.sh"
-    dest = get_claude_dir() / "statusline.sh"
-
-    if not source.exists():
-        print(f"  WARNING: statusline.sh not found")
-        return False
-
-    if dry_run:
-        print(f"  Would copy: statusline.sh")
-    else:
-        if not IS_WINDOWS:
-            # Fix CRLF from Windows mounts
-            dest.write_bytes(source.read_bytes().replace(b"\r\n", b"\n"))
-        else:
-            shutil.copy2(source, dest)
-        if not IS_WINDOWS:
-            dest.chmod(dest.stat().st_mode | stat.S_IXUSR | stat.S_IXGRP | stat.S_IXOTH)
-
-    return True
 
 
 def copy_hooks(dry_run: bool = False) -> int:

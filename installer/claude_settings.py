@@ -116,7 +116,7 @@ def get_full_config() -> dict:
         },
         "statusLine": {
             "type": "command",
-            "command": "~/.claude/statusline.sh"
+            "command": get_script_command("statusline.py")
         },
         "hooks": {
             "SessionStart": [
