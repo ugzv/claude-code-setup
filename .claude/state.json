@@ -2,9 +2,9 @@
   "project": "claude-code-setup",
   "currentFocus": [],
   "lastSession": {
-    "date": "2026-02-25",
-    "summary": "Major refactoring: split install.py into installer/ package, unified notification pipeline with run_powershell/run_quiet helpers, pathlib migration, YAML quoting, removed orphaned PS1 scripts",
-    "commits": ["c106bc9", "7f4ce8d", "c586adc", "df1b058", "0155bd2"]
+    "date": "2026-02-28",
+    "summary": "Rewrote statusline from bash+jq to pure Python for cross-platform support, fixed JSON field parsing, removed jq dependency, fixed installer path resolution",
+    "commits": ["00372c4", "112536b", "da8480f"]
   },
   "backlog": [
     {
@@ -15,6 +15,11 @@
     }
   ],
   "shipped": [
+    {
+      "date": "2026-02-28",
+      "type": "refactor",
+      "summary": "Rewrite statusline in Python, remove jq dependency, fix cross-platform support"
+    },
     {
       "date": "2026-02-25",
       "type": "refactor",
@@ -74,16 +79,6 @@
       "date": "2026-02-07",
       "type": "chore",
       "summary": "Merge divergent local and remote branches, resolve push.md conflict"
-    },
-    {
-      "date": "2026-02-06",
-      "type": "perf",
-      "summary": "Optimize /push: use direct Bash calls instead of sub-agents, auto-fix before verify"
-    },
-    {
-      "date": "2026-02-06",
-      "type": "refactor",
-      "summary": "Consolidate duplicated sound/notification code, remove legacy notify_completion.py"
     }
   ]
 }
