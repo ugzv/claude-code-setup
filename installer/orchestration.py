@@ -32,10 +32,10 @@ from .file_ops import (
     run_install_steps,
 )
 
-
 # ---------------------------------------------------------------------------
 # Install
 # ---------------------------------------------------------------------------
+
 
 def install(dry_run: bool = False) -> bool:
     """Install everything for Claude Code."""
@@ -56,13 +56,13 @@ def install(dry_run: bool = False) -> bool:
         install_wsl_deps(dry_run)
         print()
 
-    run_install_steps("claude", dry_run=dry_run, only_steps=(5, 6))
+    run_install_steps("claude", dry_run=dry_run, only_steps=(5,))
 
-    # Step 7: Load and backup settings
-    print("Step 7: Loading settings...")
+    # Step 6: Load and backup settings
+    print("Step 6: Loading settings...")
     settings = load_settings()
     if settings:
-        print(f"  Found existing settings")
+        print("  Found existing settings")
         if not dry_run:
             backup = backup_settings()
             if backup:
@@ -71,8 +71,8 @@ def install(dry_run: bool = False) -> bool:
         print("  No existing settings, creating new")
     print()
 
-    # Step 8: Merge settings
-    print("Step 8: Merging configuration...")
+    # Step 7: Merge settings
+    print("Step 7: Merging configuration...")
     new_config = get_full_config()
     merged = merge_settings(settings, new_config)
 
@@ -153,6 +153,7 @@ def install_codex(dry_run: bool = False) -> bool:
 # Uninstall
 # ---------------------------------------------------------------------------
 
+
 def uninstall(dry_run: bool = False) -> bool:
     """Remove notification hooks from Claude Code (keeps commands and scripts)."""
     print()
@@ -222,6 +223,7 @@ def uninstall_codex(dry_run: bool = False) -> bool:
 # WSL re-launch helper
 # ---------------------------------------------------------------------------
 
+
 def _run_in_wsl(args: argparse.Namespace) -> int:
     """Re-execute this installer inside WSL so Path.home() resolves to the WSL home."""
     script_win = Path(__file__).resolve()
@@ -241,7 +243,7 @@ def _run_in_wsl(args: argparse.Namespace) -> int:
     if args.uninstall:
         cmd.append("--uninstall")
 
-    print(f"Re-launching installer inside WSL...")
+    print("Re-launching installer inside WSL...")
     print(f"  wsl -e python3 {wsl_script}")
     print()
     result = subprocess.run(cmd)
@@ -252,6 +254,7 @@ def _run_in_wsl(args: argparse.Namespace) -> int:
 # CLI entry point
 # ---------------------------------------------------------------------------
 
+
 def main():
     parser = argparse.ArgumentParser(
         description="Install commands and notification hooks for Claude Code and/or Codex CLI"
@@ -260,22 +263,20 @@ def main():
         "--cli",
         choices=["claude", "codex", "all"],
         default="claude",
-        help="Which CLI to install for (default: claude)"
+        help="Which CLI to install for (default: claude)",
     )
     parser.add_argument(
-        "--dry-run",
-        action="store_true",
-        help="Preview changes without making them"
+        "--dry-run", action="store_true", help="Preview changes without making them"
     )
     parser.add_argument(
         "--uninstall",
         action="store_true",
-        help="Remove notification hooks (keeps commands/scripts)"
+        help="Remove notification hooks (keeps commands/scripts)",
     )
     parser.add_argument(
         "--wsl",
         action="store_true",
-        help="Install into WSL (re-runs installer inside WSL so paths resolve correctly)"
+        help="Install into WSL (re-runs installer inside WSL so paths resolve correctly)",
     )
 
     args = parser.parse_args()
@@ -284,7 +285,9 @@ def main():
     if args.wsl:
         if not IS_WINDOWS:
             print("ERROR: --wsl flag is only needed when running from Windows.")
-            print("       You're already in a Linux/WSL environment -- run without --wsl.")
+            print(
+                "       You're already in a Linux/WSL environment -- run without --wsl."
+            )
             sys.exit(1)
         sys.exit(_run_in_wsl(args))
 

@@ -4,48 +4,53 @@
 Outputs state.json and handoffs.json contents on session start.
 Handles missing files gracefully without errors.
 """
+
 import sys
 from pathlib import Path
 
 # Ensure UTF-8 stdout for Unicode characters (arrows, emoji, etc.)
 # Windows defaults to cp1252, and some Linux locales may not be UTF-8
-if hasattr(sys.stdout, 'buffer'):
+if hasattr(sys.stdout, "buffer"):
     import io
-    sys.stdout = io.TextIOWrapper(sys.stdout.buffer, encoding='utf-8', errors='replace')
+
+    sys.stdout = io.TextIOWrapper(sys.stdout.buffer, encoding="utf-8", errors="replace")
+
 
 def read_file(path: str) -> str | None:
     """Read file if exists, return None otherwise."""
     try:
         p = Path(path)
         if p.exists():
-            return p.read_text(encoding='utf-8')
+            return p.read_text(encoding="utf-8")
     except Exception:
         pass
     return None
 
+
 def main() -> None:
     # State file
-    state_path = '.claude/state.json'
+    state_path = ".claude/state.json"
     state_content = read_file(state_path)
     if state_content:
-        print(f'=== {state_path} ===')
+        print(f"=== {state_path} ===")
         print(state_content)
     else:
-        print(f'=== {state_path} ===')
+        print(f"=== {state_path} ===")
         print('{"note": "No state.json found. Run /migrate to set up tracking."}')
 
     # Handoffs file
-    handoffs_path = '.claude/handoffs.json'
+    handoffs_path = ".claude/handoffs.json"
     handoffs_content = read_file(handoffs_path)
     if handoffs_content:
-        print(f'=== {handoffs_path} ===')
+        print(f"=== {handoffs_path} ===")
         print(handoffs_content)
 
-if __name__ == '__main__':
+
+if __name__ == "__main__":
     try:
         main()
-    except Exception as e:
+    except Exception:
         # Fail silently - don't break session start
-        print(f'=== .claude/state.json ===')
+        print("=== .claude/state.json ===")
         print('{"note": "Hook error"}')
         sys.exit(0)  # Exit cleanly even on error

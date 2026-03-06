@@ -4,16 +4,23 @@ Cross-platform: macOS, Windows, WSL, and Linux desktops with notify-send.
 """
 
 from .platform_runtime import (
-    CLI_NAME, IS_MACOS, IS_WSL, USES_WINDOWS_GUI,
-    log_debug, run_powershell, run_quiet,
+    CLI_NAME,
+    IS_MACOS,
+    IS_WSL,
+    USES_WINDOWS_GUI,
+    log_debug,
+    run_powershell,
+    run_quiet,
 )
-
 
 # =============================================================================
 # Shared Helpers
 # =============================================================================
 
-def _prepare_notification_args(title: str, message: str, subtitle: str = "") -> tuple[str, str]:
+
+def _prepare_notification_args(
+    title: str, message: str, subtitle: str = ""
+) -> tuple[str, str]:
     """Build full title and escape both strings for PowerShell."""
     full_title = f"{title} - {subtitle}" if subtitle else title
     full_title = full_title.replace("'", "''").replace('"', '`"')
@@ -25,11 +32,13 @@ def _prepare_notification_args(title: str, message: str, subtitle: str = "") -> 
 # Windows PowerShell Helpers
 # =============================================================================
 
+
 def _build_windows_toast_script(full_title: str, message: str) -> str:
     """Build PowerShell script for Windows toast notification.
     Tries BurntToast module first, falls back to WinRT toast API.
-    Uses CLI_NAME for the notifier identity so Claude/Codex notifications are distinct."""
-    return f'''
+    Uses CLI_NAME for the notifier identity so Claude/Codex notifications are distinct.
+    """
+    return f"""
     if (Get-Module -ListAvailable -Name BurntToast) {{
         Import-Module BurntToast
         New-BurntToastNotification -Text "{full_title}", "{message}"
@@ -52,14 +61,14 @@ def _build_windows_toast_script(full_title: str, message: str) -> str:
         $toast = [Windows.UI.Notifications.ToastNotification]::new($xml)
         [Windows.UI.Notifications.ToastNotificationManager]::CreateToastNotifier("{CLI_NAME}").Show($toast)
     }}
-    '''
+    """
 
 
 def _build_balloon_script(full_title: str, message: str) -> str:
     """Build PowerShell script for a balloon (NotifyIcon) notification.
     Works reliably from WSL where WinRT toasts are silently dropped
     due to the PowerShell process lacking a registered AppUserModelID."""
-    return f'''
+    return f"""
     Add-Type -AssemblyName System.Windows.Forms
     $n = New-Object System.Windows.Forms.NotifyIcon
     $n.Icon = [System.Drawing.SystemIcons]::Information
@@ -69,16 +78,17 @@ def _build_balloon_script(full_title: str, message: str) -> str:
     $n.ShowBalloonTip(5000)
     Start-Sleep -Seconds 3
     $n.Dispose()
-    '''
+    """
 
 
 # =============================================================================
 # macOS Notifications
 # =============================================================================
 
+
 def escape_for_applescript(text: str) -> str:
     """Escape text for use in AppleScript string literals."""
-    return text.replace('\\', '\\\\').replace('"', '\\"')
+    return text.replace("\\", "\\\\").replace('"', '\\"')
 
 
 def get_bundle_id_for_app(app_name: str) -> str:
@@ -87,7 +97,9 @@ def get_bundle_id_for_app(app_name: str) -> str:
     return stdout if ok else ""
 
 
-def send_notification_macos(title: str, message: str, subtitle: str = "", app_name: str = "") -> None:
+def send_notification_macos(
+    title: str, message: str, subtitle: str = "", app_name: str = ""
+) -> None:
     """Send macOS notification using terminal-notifier (preferred) or osascript."""
     # Try terminal-notifier first
     found, terminal_notifier_path = run_quiet(["which", "terminal-notifier"])
@@ -111,7 +123,9 @@ def send_notification_macos(title: str, message: str, subtitle: str = "", app_na
                 log_debug("  → terminal-notifier FAILED, falling back to osascript")
 
         except Exception as e:
-            log_debug(f"  → terminal-notifier FAILED: {str(e)}, falling back to osascript")
+            log_debug(
+                f"  → terminal-notifier FAILED: {str(e)}, falling back to osascript"
+            )
 
     # Fallback to osascript
     try:
@@ -137,8 +151,14 @@ def send_notification_macos(title: str, message: str, subtitle: str = "", app_na
 # Windows Notifications
 # =============================================================================
 
+
 def _send_notification_windows(
-    title: str, message: str, subtitle: str = "", app_name: str = "", *, blocking: bool = True,
+    title: str,
+    message: str,
+    subtitle: str = "",
+    app_name: str = "",
+    *,
+    blocking: bool = True,
 ) -> None:
     """Send Windows notification using PowerShell.
     On native Windows: WinRT toast (BurntToast → WinRT fallback).
@@ -161,7 +181,7 @@ def _send_notification_windows(
             if result and result.returncode == 0:
                 log_debug(f"  → {label} SUCCESS: {full_title}")
             else:
-                stderr = (result.stderr[:100] if result and result.stderr else "no error")
+                stderr = result.stderr[:100] if result and result.stderr else "no error"
                 log_debug(f"  → {label} issue: {stderr}")
         except Exception as e:
             log_debug(f"  → {label} FAILED: {str(e)}")
@@ -177,7 +197,10 @@ def _send_notification_windows(
 # Linux Notifications
 # =============================================================================
 
-def send_notification_linux(title: str, message: str, subtitle: str = "", app_name: str = "") -> None:
+
+def send_notification_linux(
+    title: str, message: str, subtitle: str = "", app_name: str = ""
+) -> None:
     """Send Linux desktop notifications via notify-send when available."""
     found, notify_send_path = run_quiet(["which", "notify-send"])
     if not found or not notify_send_path:
@@ -203,19 +226,29 @@ def send_notification_linux(title: str, message: str, subtitle: str = "", app_na
 # Cross-Platform Interface
 # =============================================================================
 
+
 def send_notification(
-    title: str, message: str, subtitle: str = "", app_name: str = "", *, blocking: bool = True,
+    title: str,
+    message: str,
+    subtitle: str = "",
+    app_name: str = "",
+    *,
+    blocking: bool = True,
 ) -> None:
     """Send desktop notification using platform-appropriate method.
     When blocking=False, uses fire-and-forget on Windows (macOS is already fast)."""
     if IS_MACOS:
         send_notification_macos(title, message, subtitle, app_name)
     elif USES_WINDOWS_GUI:
-        _send_notification_windows(title, message, subtitle, app_name, blocking=blocking)
+        _send_notification_windows(
+            title, message, subtitle, app_name, blocking=blocking
+        )
     else:
         send_notification_linux(title, message, subtitle, app_name or CLI_NAME)
 
 
-def send_notification_async(title: str, message: str, subtitle: str = "", app_name: str = "") -> None:
+def send_notification_async(
+    title: str, message: str, subtitle: str = "", app_name: str = ""
+) -> None:
     """Backward-compatible alias."""
     send_notification(title, message, subtitle, app_name, blocking=False)

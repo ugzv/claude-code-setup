@@ -110,7 +110,10 @@ def _get_parent_process_names_windows() -> list[str]:
                     exe = entry.szExeFile
                     if "." in exe:
                         exe = exe.rsplit(".", 1)[0]
-                    pid_map[entry.th32ProcessID] = (entry.th32ParentProcessID, exe.lower())
+                    pid_map[entry.th32ProcessID] = (
+                        entry.th32ParentProcessID,
+                        exe.lower(),
+                    )
                     if not kernel32.Process32NextW(snap, ctypes.byref(entry)):
                         break
         finally:

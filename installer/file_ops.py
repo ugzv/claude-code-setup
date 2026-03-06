@@ -88,35 +88,20 @@ def _build_install_steps(cli: str) -> tuple[InstallStep, ...]:
     ]
 
     if cli == "claude":
-        steps.extend(
-            [
-                InstallStep(
-                    number=5,
-                    title="Installing statusline...",
-                    summary_label=None,
-                    operations=(
-                        CopySpec(
-                            source_rel=("statusline.sh",),
-                            dest_parts=("statusline.sh",),
-                            make_executable=True,
-                            missing_warning="statusline.sh not found",
-                        ),
+        steps.append(
+            InstallStep(
+                number=5,
+                title="Installing hooks...",
+                summary_label="hooks installed",
+                operations=(
+                    CopySpec(
+                        source_rel=("hooks",),
+                        dest_parts=("hooks",),
+                        pattern="*.py",
+                        make_executable=True,
                     ),
                 ),
-                InstallStep(
-                    number=6,
-                    title="Installing hooks...",
-                    summary_label="hooks installed",
-                    operations=(
-                        CopySpec(
-                            source_rel=("hooks",),
-                            dest_parts=("hooks",),
-                            pattern="*.py",
-                            make_executable=True,
-                        ),
-                    ),
-                ),
-            ]
+            )
         )
 
     return tuple(steps)
@@ -129,7 +114,7 @@ def copy_files(
     dry_run: bool = False,
     make_executable: bool = False,
     remove_obsolete: bool = False,
-    prefix: str = ""
+    prefix: str = "",
 ) -> int:
     """
     Generic file copy function.
@@ -179,7 +164,9 @@ def copy_files(
             else:
                 shutil.copy2(src_file, target)
             if make_executable and not IS_WINDOWS:
-                target.chmod(target.stat().st_mode | stat.S_IXUSR | stat.S_IXGRP | stat.S_IXOTH)
+                target.chmod(
+                    target.stat().st_mode | stat.S_IXUSR | stat.S_IXGRP | stat.S_IXOTH
+                )
         copied += 1
 
     return copied
@@ -208,7 +195,9 @@ def copy_file(
         shutil.copy2(source_file, dest_file)
 
     if make_executable and not IS_WINDOWS:
-        dest_file.chmod(dest_file.stat().st_mode | stat.S_IXUSR | stat.S_IXGRP | stat.S_IXOTH)
+        dest_file.chmod(
+            dest_file.stat().st_mode | stat.S_IXUSR | stat.S_IXGRP | stat.S_IXOTH
+        )
 
     return True
 
@@ -295,7 +284,7 @@ def _copy_lib_subdir(source: Path, dest: Path, dry_run: bool = False) -> int:
         dry_run=dry_run,
         make_executable=False,
         remove_obsolete=False,
-        prefix="lib/"
+        prefix="lib/",
     )
 
 
@@ -315,7 +304,7 @@ def copy_commands(dry_run: bool = False) -> int:
         pattern="*.md",
         dry_run=dry_run,
         make_executable=False,
-        remove_obsolete=True
+        remove_obsolete=True,
     )
 
 
@@ -331,7 +320,7 @@ def copy_templates(dry_run: bool = False) -> int:
         pattern="*.md",
         dry_run=dry_run,
         make_executable=False,
-        remove_obsolete=False
+        remove_obsolete=False,
     )
 
 
@@ -353,7 +342,7 @@ def copy_scripts(dry_run: bool = False) -> int:
         pattern="*.py",
         dry_run=dry_run,
         make_executable=True,
-        remove_obsolete=True
+        remove_obsolete=True,
     )
 
     # Copy lib/ subdirectory
@@ -363,17 +352,17 @@ def copy_scripts(dry_run: bool = False) -> int:
 
 
 def copy_statusline(dry_run: bool = False) -> bool:
-    """Copy statusline.sh to ~/.claude/"""
+    """Legacy helper retained for compatibility; statusline now ships as scripts/statusline.py."""
     repo_dir = get_repo_dir()
     source = repo_dir / "statusline.sh"
     dest = get_claude_dir() / "statusline.sh"
 
     if not source.exists():
-        print(f"  WARNING: statusline.sh not found")
+        print("  WARNING: statusline.sh not found")
         return False
 
     if dry_run:
-        print(f"  Would copy: statusline.sh")
+        print("  Would copy: statusline.sh")
     else:
         if not IS_WINDOWS:
             # Fix CRLF from Windows mounts
@@ -401,5 +390,5 @@ def copy_hooks(dry_run: bool = False) -> int:
         pattern="*.py",
         dry_run=dry_run,
         make_executable=True,
-        remove_obsolete=False
+        remove_obsolete=False,
     )

@@ -8,10 +8,11 @@ import subprocess
 from typing import Optional
 
 from lib.platform_runtime import (
-    IS_MACOS, IS_WINDOWS, USES_WINDOWS_GUI,
+    IS_MACOS,
+    IS_WINDOWS,
+    USES_WINDOWS_GUI,
     run_powershell,
 )
-
 
 # Sound definitions by type and platform
 SOUNDS = {
@@ -44,7 +45,7 @@ def play_sound_macos(sound_file: str) -> None:
         stderr=subprocess.DEVNULL,
         stdin=subprocess.DEVNULL,
         start_new_session=True,
-        close_fds=True
+        close_fds=True,
     )
 
 
@@ -54,6 +55,7 @@ def play_sound_windows(sound_file: str) -> None:
     if IS_WINDOWS:
         try:
             import winsound
+
             winsound.PlaySound(sound_file, winsound.SND_FILENAME | winsound.SND_ASYNC)
             return
         except Exception:

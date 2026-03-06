@@ -17,10 +17,10 @@ from .platform import (
     get_settings_path,
 )
 
-
 # ---------------------------------------------------------------------------
 # Script / hook command helpers
 # ---------------------------------------------------------------------------
+
 
 def get_script_command(script_name: str) -> str:
     """Platform-appropriate command to run a script from scripts dir.
@@ -46,12 +46,13 @@ def get_hook_command(hook_name: str) -> str:
 # Settings I/O
 # ---------------------------------------------------------------------------
 
+
 def load_settings() -> dict:
     settings_path = get_settings_path()
     if not settings_path.exists():
         return {}
     try:
-        with open(settings_path, 'r', encoding='utf-8') as f:
+        with open(settings_path, "r", encoding="utf-8") as f:
             return json.load(f)
     except (json.JSONDecodeError, Exception) as e:
         print(f"WARNING: Could not parse settings.json: {e}")
@@ -61,7 +62,7 @@ def load_settings() -> dict:
 def save_settings(settings: dict) -> None:
     settings_path = get_settings_path()
     settings_path.parent.mkdir(parents=True, exist_ok=True)
-    with open(settings_path, 'w', encoding='utf-8') as f:
+    with open(settings_path, "w", encoding="utf-8") as f:
         json.dump(settings, f, indent=2)
 
 
@@ -79,6 +80,7 @@ def backup_settings() -> Optional[Path]:
 # Hook filtering
 # ---------------------------------------------------------------------------
 
+
 def _filter_hooks(hook_configs: list, exclude_scripts: list) -> list:
     """Filter out hooks whose commands contain any of the exclude_scripts.
 
@@ -93,7 +95,8 @@ def _filter_hooks(hook_configs: list, exclude_scripts: list) -> list:
     for config in hook_configs:
         if "hooks" in config:
             filtered = [
-                h for h in config["hooks"]
+                h
+                for h in config["hooks"]
                 if not any(s in h.get("command", "") for s in exclude_scripts)
             ]
             if filtered:
@@ -108,16 +111,12 @@ def _filter_hooks(hook_configs: list, exclude_scripts: list) -> list:
 # Config generation and merging
 # ---------------------------------------------------------------------------
 
+
 def get_full_config() -> dict:
     """Get the complete configuration to merge."""
     return {
-        "attribution": {
-            "commit": ""
-        },
-        "statusLine": {
-            "type": "command",
-            "command": get_script_command("statusline.py")
-        },
+        "attribution": {"commit": ""},
+        "statusLine": {"type": "command", "command": get_script_command("statusline.py")},
         "hooks": {
             "SessionStart": [
                 {
@@ -125,7 +124,7 @@ def get_full_config() -> dict:
                         {
                             "type": "command",
                             "command": get_hook_command("session-start.py"),
-                            "timeout": 5
+                            "timeout": 5,
                         }
                     ]
                 }
@@ -136,12 +135,12 @@ def get_full_config() -> dict:
                         {
                             "type": "command",
                             "command": get_script_command("stop_hook.py"),
-                            "timeout": 5
+                            "timeout": 5,
                         }
                     ]
                 }
-            ]
-        }
+            ],
+        },
     }
 
 

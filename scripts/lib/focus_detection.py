@@ -63,14 +63,18 @@ def _get_foreground_process_name_windows() -> str:
             return ""
 
         process_query_limited_information = 0x1000
-        handle = kernel32.OpenProcess(process_query_limited_information, False, pid.value)
+        handle = kernel32.OpenProcess(
+            process_query_limited_information, False, pid.value
+        )
         if not handle:
             return ""
 
         try:
             buf = ctypes.create_unicode_buffer(260)
             buf_size = ctypes.wintypes.DWORD(260)
-            success = kernel32.QueryFullProcessImageNameW(handle, 0, buf, ctypes.byref(buf_size))
+            success = kernel32.QueryFullProcessImageNameW(
+                handle, 0, buf, ctypes.byref(buf_size)
+            )
             if success:
                 name = buf.value.rsplit("\\", 1)[-1]
                 if "." in name:

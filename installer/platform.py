@@ -20,16 +20,20 @@ if sys.platform == "linux":
     except Exception:
         pass
 PLATFORM_NAME = (
-    "WSL" if IS_WSL
-    else "Windows" if IS_WINDOWS
-    else "macOS" if IS_MACOS
-    else sys.platform
+    "WSL"
+    if IS_WSL
+    else "Windows" if IS_WINDOWS else "macOS" if IS_MACOS else sys.platform
 )
 
 # ---------------------------------------------------------------------------
 # Scripts we install as hooks — used for filtering during merge/uninstall
 # ---------------------------------------------------------------------------
-OUR_SCRIPTS = ["play_sound.py", "notify_completion.py", "stop_hook.py", "session-start.py"]
+OUR_SCRIPTS = [
+    "play_sound.py",
+    "notify_completion.py",
+    "stop_hook.py",
+    "session-start.py",
+]
 
 # ---------------------------------------------------------------------------
 # CLI configuration for multi-CLI support

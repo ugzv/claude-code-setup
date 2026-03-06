@@ -12,7 +12,6 @@ import sys
 
 from sound_player import SOUNDS, get_sound, play_sound
 
-
 if __name__ == "__main__":
     arg = sys.argv[1] if len(sys.argv) > 1 else "completion"
 

@@ -46,7 +46,9 @@ def get_task_summary(transcript_path: str, debug_log_path=None) -> str:
                 if not text:
                     continue
 
-                text_lines = [entry.strip() for entry in text.split("\n") if entry.strip()]
+                text_lines = [
+                    entry.strip() for entry in text.split("\n") if entry.strip()
+                ]
                 if not text_lines:
                     continue
 

@@ -46,7 +46,7 @@ def merge_codex_config(codex_dir: Path, dry_run: bool = False) -> None:
     header belongs to that section. We insert before the first section header.
     """
     notify_cmd = get_codex_notify_command()
-    notify_line = f'notify = {json.dumps(notify_cmd)}'
+    notify_line = f"notify = {json.dumps(notify_cmd)}"
 
     content = load_codex_config(codex_dir)
 
@@ -100,7 +100,7 @@ def merge_codex_config(codex_dir: Path, dry_run: bool = False) -> None:
         )
 
     if dry_run:
-        print(f"  Would configure: notify hook in config.toml")
+        print("  Would configure: notify hook in config.toml")
     else:
         save_codex_config(codex_dir, new_content)
         print("  Saved config.toml")

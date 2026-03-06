@@ -101,14 +101,18 @@ def main() -> None:
 
     # 3. Debounce — skip if recent notification
     if _should_debounce():
-        log_debug(f"  → Debounced, skipping notification")
+        log_debug("  → Debounced, skipping notification")
         return
 
     # 4. Build notification content
-    project_name, color, terminal_name, terminal_app_name = _build_notification_context(input_data)
+    project_name, color, terminal_name, terminal_app_name = _build_notification_context(
+        input_data
+    )
     message = _get_completion_message(input_data)
 
-    log_debug(f"  → Sending async notification | Project: {project_name} | Terminal: {terminal_name}")
+    log_debug(
+        f"  → Sending async notification | Project: {project_name} | Terminal: {terminal_name}"
+    )
 
     # 5. Fire-and-forget notification
     send_notification_async(
