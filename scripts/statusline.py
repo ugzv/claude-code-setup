@@ -8,7 +8,6 @@ import json
 import subprocess
 import sys
 
-
 # ANSI codes
 RESET = "\033[0m"
 BOLD = "\033[1m"
@@ -20,7 +19,9 @@ def get_git_branch() -> str:
     try:
         result = subprocess.run(
             ["git", "branch", "--show-current"],
-            capture_output=True, text=True, timeout=2,
+            capture_output=True,
+            text=True,
+            timeout=2,
         )
         if result.returncode == 0:
             return result.stdout.strip()
@@ -37,7 +38,11 @@ def main() -> None:
 
     # Parse model and context usage
     model_info = data.get("model") or {}
-    model = model_info.get("display_name", "claude") if isinstance(model_info, dict) else "claude"
+    model = (
+        model_info.get("display_name", "claude")
+        if isinstance(model_info, dict)
+        else "claude"
+    )
     ctx = data.get("context_window") or {}
     percent = int(ctx.get("used_percentage") or 0)
 

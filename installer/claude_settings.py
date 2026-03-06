@@ -116,7 +116,10 @@ def get_full_config() -> dict:
     """Get the complete configuration to merge."""
     return {
         "attribution": {"commit": ""},
-        "statusLine": {"type": "command", "command": get_script_command("statusline.py")},
+        "statusLine": {
+            "type": "command",
+            "command": get_script_command("statusline.py"),
+        },
         "hooks": {
             "SessionStart": [
                 {
