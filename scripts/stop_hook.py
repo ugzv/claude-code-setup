@@ -25,10 +25,8 @@ import time
 from pathlib import Path
 
 from sound_player import get_sound, play_sound
-from lib.platform_detection import (
-    CLI_HOME, DEBUG_LOG_PATH,
-    get_terminal_app, log_debug,
-)
+from lib.platform_runtime import CLI_HOME, DEBUG_LOG_PATH, log_debug
+from lib.terminal_app_detection import get_terminal_app
 from lib.text_processing import get_project_name, get_task_summary
 from lib.notifications import send_notification_async
 
@@ -60,15 +58,43 @@ def _update_debounce() -> None:
         pass
 
 
+def _load_input_data() -> dict:
+    """Read hook input from stdin, defaulting to an empty payload on failure."""
+    try:
+        return json.load(sys.stdin)
+    except Exception:
+        return {}
+
+
+def _get_completion_message(input_data: dict) -> str:
+    """Build the notification message for either Claude Code or Codex CLI."""
+    transcript_path = input_data.get("transcript_path")
+    if transcript_path and Path(transcript_path).exists():
+        return get_task_summary(transcript_path, DEBUG_LOG_PATH)
+
+    assistant_message = input_data.get("last-assistant-message")
+    if assistant_message:
+        message = str(assistant_message)
+        lines = [line.strip() for line in message.split("\n") if line.strip()]
+        return lines[0][:120] if lines else "Task completed"
+
+    return "Task completed"
+
+
+def _build_notification_context(input_data: dict) -> tuple[str, str, str, str]:
+    """Resolve project and terminal metadata for the notification."""
+    cwd = input_data.get("cwd", os.getcwd())
+    project_name, color = get_project_name(cwd)
+    terminal_name, _terminal_emoji, terminal_app_name = get_terminal_app()
+    return project_name, color, terminal_name, terminal_app_name
+
+
 def main() -> None:
     # 1. Play sound immediately (async/non-blocking)
     play_sound(get_sound("completion"))
 
     # 2. Read hook input from stdin
-    try:
-        input_data = json.load(sys.stdin)
-    except Exception:
-        input_data = {}
+    input_data = _load_input_data()
 
     timestamp = datetime.datetime.now().isoformat()
     log_debug(f"{timestamp} | stop_hook | keys: {list(input_data.keys())}")
@@ -79,21 +105,8 @@ def main() -> None:
         return
 
     # 4. Build notification content
-    cwd = input_data.get("cwd", os.getcwd())
-    project_name, color = get_project_name(cwd)
-    terminal_name, terminal_emoji, terminal_app_name = get_terminal_app()
-
-    transcript_path = input_data.get("transcript_path")
-    if transcript_path and Path(transcript_path).exists():
-        # Claude Code: extract summary from transcript file
-        message = get_task_summary(transcript_path, DEBUG_LOG_PATH)
-    elif input_data.get("last-assistant-message"):
-        # Codex CLI: extract summary from last assistant message
-        msg = str(input_data["last-assistant-message"])
-        lines = [l.strip() for l in msg.split("\n") if l.strip()]
-        message = lines[0][:120] if lines else "Task completed"
-    else:
-        message = "Task completed"
+    project_name, color, terminal_name, terminal_app_name = _build_notification_context(input_data)
+    message = _get_completion_message(input_data)
 
     log_debug(f"  → Sending async notification | Project: {project_name} | Terminal: {terminal_name}")
 

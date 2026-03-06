@@ -10,7 +10,6 @@ import json
 import subprocess
 import sys
 from pathlib import Path
-from typing import Tuple
 
 from .platform import (
     IS_MACOS,
@@ -18,7 +17,6 @@ from .platform import (
     IS_WSL,
     PLATFORM_NAME,
     get_cli_dir,
-    get_repo_dir,
 )
 from .deps import install_macos_deps, install_wsl_deps
 from .claude_settings import (
@@ -31,83 +29,8 @@ from .claude_settings import (
 )
 from .codex_config import merge_codex_config, remove_codex_notify
 from .file_ops import (
-    copy_commands,
-    copy_files,
-    copy_hooks,
-    copy_scripts,
-    copy_templates,
-    _copy_lib_subdir,
+    run_install_steps,
 )
-
-
-# ---------------------------------------------------------------------------
-# Shared install helper
-# ---------------------------------------------------------------------------
-
-def _install_common_files(
-    cli_name: str,
-    cmd_dest: Path,
-    tpl_dest: Path,
-    dry_run: bool = False,
-) -> Tuple[int, int, int]:
-    """Copy commands, templates, and scripts — shared between Claude and Codex.
-
-    Args:
-        cli_name: Display name for log messages (e.g. "Claude Code", "Codex CLI")
-        cmd_dest: Destination directory for command files
-        tpl_dest: Destination directory for template files
-        dry_run: If True, only print what would be done
-
-    Returns:
-        Tuple of (commands_copied, templates_copied, scripts_copied)
-    """
-    repo_dir = get_repo_dir()
-
-    # Commands
-    print("Step 1: Installing commands...")
-    source = repo_dir / "commands"
-    if not source.exists():
-        print(f"  WARNING: Commands directory not found: {source}")
-        cmd_count = 0
-    else:
-        cmd_count = copy_files(
-            source_dir=source, dest_dir=cmd_dest, pattern="*.md",
-            dry_run=dry_run, remove_obsolete=True,
-        )
-    if not dry_run:
-        print(f"  {cmd_count} commands installed")
-    print()
-
-    # Templates
-    print("Step 2: Installing templates...")
-    source = repo_dir / "templates"
-    tpl_count = copy_files(
-        source_dir=source, dest_dir=tpl_dest, pattern="*.md",
-        dry_run=dry_run,
-    )
-    if not dry_run:
-        print(f"  {tpl_count} templates installed")
-    print()
-
-    # Scripts
-    print("Step 3: Installing notification scripts...")
-    source = repo_dir / "scripts"
-    cli_key = "codex" if "Codex" in cli_name else "claude"
-    scripts_dest = get_cli_dir(cli_key) / "scripts"
-    if not source.exists():
-        print(f"  WARNING: Scripts directory not found: {source}")
-        script_count = 0
-    else:
-        script_count = copy_files(
-            source_dir=source, dest_dir=scripts_dest, pattern="*.py",
-            dry_run=dry_run, make_executable=True, remove_obsolete=True,
-        )
-        script_count += _copy_lib_subdir(source, scripts_dest, dry_run)
-    if not dry_run:
-        print(f"  {script_count} scripts installed")
-    print()
-
-    return cmd_count, tpl_count, script_count
 
 
 # ---------------------------------------------------------------------------
@@ -121,16 +44,7 @@ def install(dry_run: bool = False) -> bool:
     print("=" * 50)
     print()
 
-    from .platform import get_claude_dir
-    claude_dir = get_claude_dir()
-
-    # Steps 1-3: commands, templates, scripts (shared)
-    _install_common_files(
-        cli_name="Claude Code",
-        cmd_dest=claude_dir / "commands",
-        tpl_dest=claude_dir / "templates",
-        dry_run=dry_run,
-    )
+    run_install_steps("claude", dry_run=dry_run, only_steps=(1, 2, 3))
 
     # Step 4: Platform dependencies
     if IS_MACOS:
@@ -142,15 +56,10 @@ def install(dry_run: bool = False) -> bool:
         install_wsl_deps(dry_run)
         print()
 
-    # Step 5: Hooks
-    print("Step 5: Installing hooks...")
-    hook_count = copy_hooks(dry_run)
-    if not dry_run:
-        print(f"  {hook_count} hooks installed")
-    print()
+    run_install_steps("claude", dry_run=dry_run, only_steps=(5, 6))
 
-    # Step 6: Load and backup settings
-    print("Step 6: Loading settings...")
+    # Step 7: Load and backup settings
+    print("Step 7: Loading settings...")
     settings = load_settings()
     if settings:
         print(f"  Found existing settings")
@@ -162,8 +71,8 @@ def install(dry_run: bool = False) -> bool:
         print("  No existing settings, creating new")
     print()
 
-    # Step 7: Merge settings
-    print("Step 7: Merging configuration...")
+    # Step 8: Merge settings
+    print("Step 8: Merging configuration...")
     new_config = get_full_config()
     merged = merge_settings(settings, new_config)
 
@@ -208,13 +117,7 @@ def install_codex(dry_run: bool = False) -> bool:
     print("=" * 50)
     print()
 
-    # Steps 1-3: commands, templates, scripts (shared)
-    _install_common_files(
-        cli_name="Codex CLI",
-        cmd_dest=codex_dir / "prompts",
-        tpl_dest=codex_dir / "templates",
-        dry_run=dry_run,
-    )
+    run_install_steps("codex", dry_run=dry_run, only_steps=(1, 2, 3))
 
     # Step 4: macOS dependencies
     if IS_MACOS:

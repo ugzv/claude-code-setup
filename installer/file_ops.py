@@ -1,14 +1,125 @@
-"""File copy operations for the installer.
+"""File copy operations and install manifest for the installer."""
 
-Provides a generic copy_files() function and domain-specific wrappers for
-commands, templates, scripts, and hooks.
-"""
-
+from dataclasses import dataclass
 import shutil
 import stat
 from pathlib import Path
+from .platform import IS_WINDOWS, get_cli_dir, get_claude_dir, get_repo_dir
 
-from .platform import IS_WINDOWS, get_claude_dir, get_repo_dir
+
+@dataclass(frozen=True)
+class CopySpec:
+    """One copy operation within an install step."""
+
+    source_rel: tuple[str, ...]
+    dest_parts: tuple[str, ...]
+    pattern: str | None = None
+    make_executable: bool = False
+    remove_obsolete: bool = False
+    prefix: str = ""
+    missing_warning: str | None = None
+
+
+@dataclass(frozen=True)
+class InstallStep:
+    """Declarative install step for a CLI target."""
+
+    number: int
+    title: str
+    summary_label: str | None
+    operations: tuple[CopySpec, ...]
+
+
+def _cli_home(cli: str) -> Path:
+    return get_claude_dir() if cli == "claude" else get_cli_dir(cli)
+
+
+def _build_install_steps(cli: str) -> tuple[InstallStep, ...]:
+    commands_subdir = "commands" if cli == "claude" else "prompts"
+
+    steps = [
+        InstallStep(
+            number=1,
+            title="Installing commands...",
+            summary_label="commands installed",
+            operations=(
+                CopySpec(
+                    source_rel=("commands",),
+                    dest_parts=(commands_subdir,),
+                    pattern="*.md",
+                    remove_obsolete=True,
+                    missing_warning="Commands directory not found",
+                ),
+            ),
+        ),
+        InstallStep(
+            number=2,
+            title="Installing templates...",
+            summary_label="templates installed",
+            operations=(
+                CopySpec(
+                    source_rel=("templates",),
+                    dest_parts=("templates",),
+                    pattern="*.md",
+                ),
+            ),
+        ),
+        InstallStep(
+            number=3,
+            title="Installing notification scripts...",
+            summary_label="scripts installed",
+            operations=(
+                CopySpec(
+                    source_rel=("scripts",),
+                    dest_parts=("scripts",),
+                    pattern="*.py",
+                    make_executable=True,
+                    remove_obsolete=True,
+                    missing_warning="Scripts directory not found",
+                ),
+                CopySpec(
+                    source_rel=("scripts", "lib"),
+                    dest_parts=("scripts", "lib"),
+                    pattern="*.py",
+                    prefix="lib/",
+                ),
+            ),
+        ),
+    ]
+
+    if cli == "claude":
+        steps.extend(
+            [
+                InstallStep(
+                    number=5,
+                    title="Installing statusline...",
+                    summary_label=None,
+                    operations=(
+                        CopySpec(
+                            source_rel=("statusline.sh",),
+                            dest_parts=("statusline.sh",),
+                            make_executable=True,
+                            missing_warning="statusline.sh not found",
+                        ),
+                    ),
+                ),
+                InstallStep(
+                    number=6,
+                    title="Installing hooks...",
+                    summary_label="hooks installed",
+                    operations=(
+                        CopySpec(
+                            source_rel=("hooks",),
+                            dest_parts=("hooks",),
+                            pattern="*.py",
+                            make_executable=True,
+                        ),
+                    ),
+                ),
+            ]
+        )
+
+    return tuple(steps)
 
 
 def copy_files(
@@ -72,6 +183,91 @@ def copy_files(
         copied += 1
 
     return copied
+
+
+def copy_file(
+    source_file: Path,
+    dest_file: Path,
+    dry_run: bool = False,
+    make_executable: bool = False,
+) -> bool:
+    """Copy a single file, applying line-ending normalization when needed."""
+    if not source_file.exists():
+        return False
+
+    if dry_run:
+        print(f"  Would copy: {source_file.name}")
+        return True
+
+    dest_file.parent.mkdir(parents=True, exist_ok=True)
+    fix_endings = not IS_WINDOWS and source_file.suffix in (".py", ".sh", ".md")
+
+    if fix_endings:
+        dest_file.write_bytes(source_file.read_bytes().replace(b"\r\n", b"\n"))
+    else:
+        shutil.copy2(source_file, dest_file)
+
+    if make_executable and not IS_WINDOWS:
+        dest_file.chmod(dest_file.stat().st_mode | stat.S_IXUSR | stat.S_IXGRP | stat.S_IXOTH)
+
+    return True
+
+
+def run_install_steps(
+    cli: str,
+    dry_run: bool = False,
+    only_steps: tuple[int, ...] | None = None,
+) -> dict[str, int]:
+    """Execute the declarative install plan for a CLI target."""
+    repo_dir = get_repo_dir()
+    cli_home = _cli_home(cli)
+    results: dict[str, int] = {}
+
+    for step in _build_install_steps(cli):
+        if only_steps is not None and step.number not in only_steps:
+            continue
+        print(f"Step {step.number}: {step.title}")
+        step_count = 0
+
+        for operation in step.operations:
+            source_path = repo_dir.joinpath(*operation.source_rel)
+            dest_path = cli_home.joinpath(*operation.dest_parts)
+
+            if operation.pattern is None:
+                if not source_path.exists():
+                    if operation.missing_warning:
+                        print(f"  WARNING: {operation.missing_warning}")
+                    continue
+                copied = copy_file(
+                    source_path,
+                    dest_path,
+                    dry_run=dry_run,
+                    make_executable=operation.make_executable,
+                )
+                step_count += int(copied)
+                continue
+
+            if not source_path.exists():
+                if operation.missing_warning:
+                    print(f"  WARNING: {operation.missing_warning}: {source_path}")
+                continue
+
+            step_count += copy_files(
+                source_dir=source_path,
+                dest_dir=dest_path,
+                pattern=operation.pattern,
+                dry_run=dry_run,
+                make_executable=operation.make_executable,
+                remove_obsolete=operation.remove_obsolete,
+                prefix=operation.prefix,
+            )
+
+        if step.summary_label and not dry_run:
+            print(f"  {step_count} {step.summary_label}")
+        print()
+        results[step.title] = step_count
+
+    return results
 
 
 def _copy_lib_subdir(source: Path, dest: Path, dry_run: bool = False) -> int:
@@ -165,6 +361,29 @@ def copy_scripts(dry_run: bool = False) -> int:
 
     return copied
 
+
+def copy_statusline(dry_run: bool = False) -> bool:
+    """Copy statusline.sh to ~/.claude/"""
+    repo_dir = get_repo_dir()
+    source = repo_dir / "statusline.sh"
+    dest = get_claude_dir() / "statusline.sh"
+
+    if not source.exists():
+        print(f"  WARNING: statusline.sh not found")
+        return False
+
+    if dry_run:
+        print(f"  Would copy: statusline.sh")
+    else:
+        if not IS_WINDOWS:
+            # Fix CRLF from Windows mounts
+            dest.write_bytes(source.read_bytes().replace(b"\r\n", b"\n"))
+        else:
+            shutil.copy2(source, dest)
+        if not IS_WINDOWS:
+            dest.chmod(dest.stat().st_mode | stat.S_IXUSR | stat.S_IXGRP | stat.S_IXOTH)
+
+    return True
 
 
 def copy_hooks(dry_run: bool = False) -> int:

@@ -1,9 +1,9 @@
 """
 Notification delivery utilities for Claude Code and Codex CLI hooks.
-Cross-platform: macOS (terminal-notifier/osascript), Windows (toast), and WSL (toast via powershell.exe).
+Cross-platform: macOS, Windows, WSL, and Linux desktops with notify-send.
 """
 
-from .platform_detection import (
+from .platform_runtime import (
     CLI_NAME, IS_MACOS, IS_WSL, USES_WINDOWS_GUI,
     log_debug, run_powershell, run_quiet,
 )
@@ -174,6 +174,32 @@ def _send_notification_windows(
 
 
 # =============================================================================
+# Linux Notifications
+# =============================================================================
+
+def send_notification_linux(title: str, message: str, subtitle: str = "", app_name: str = "") -> None:
+    """Send Linux desktop notifications via notify-send when available."""
+    found, notify_send_path = run_quiet(["which", "notify-send"])
+    if not found or not notify_send_path:
+        log_debug("  → notify-send not available on Linux")
+        return
+
+    cmd = [notify_send_path]
+    if app_name:
+        cmd.extend(["-a", app_name])
+    if subtitle:
+        cmd.extend([f"{title} - {subtitle}", message])
+    else:
+        cmd.extend([title, message])
+
+    ok, _ = run_quiet(cmd, timeout=2)
+    if ok:
+        log_debug(f"  → notify-send SUCCESS: {title}")
+    else:
+        log_debug("  → notify-send FAILED")
+
+
+# =============================================================================
 # Cross-Platform Interface
 # =============================================================================
 
@@ -186,6 +212,8 @@ def send_notification(
         send_notification_macos(title, message, subtitle, app_name)
     elif USES_WINDOWS_GUI:
         _send_notification_windows(title, message, subtitle, app_name, blocking=blocking)
+    else:
+        send_notification_linux(title, message, subtitle, app_name or CLI_NAME)
 
 
 def send_notification_async(title: str, message: str, subtitle: str = "", app_name: str = "") -> None:

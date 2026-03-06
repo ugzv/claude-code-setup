@@ -1,13 +1,13 @@
 #!/usr/bin/env python3
 """
 Shared sound player module for Claude Code hooks.
-Cross-platform: macOS (afplay), Windows (winsound), and WSL (powershell.exe).
+Cross-platform: macOS, Windows, WSL, and Linux desktops.
 """
 
 import subprocess
 from typing import Optional
 
-from lib.platform_detection import (
+from lib.platform_runtime import (
     IS_MACOS, IS_WINDOWS, USES_WINDOWS_GUI,
     run_powershell,
 )
@@ -66,9 +66,46 @@ def play_sound_windows(sound_file: str) -> None:
         pass
 
 
+def _play_linux_with_player(player: str, sound_file: str) -> bool:
+    """Try a Linux audio player command in detached mode."""
+    if not sound_file:
+        return False
+    try:
+        subprocess.Popen(
+            [player, sound_file],
+            stdout=subprocess.DEVNULL,
+            stderr=subprocess.DEVNULL,
+            stdin=subprocess.DEVNULL,
+            start_new_session=True,
+            close_fds=True,
+        )
+        return True
+    except Exception:
+        return False
+
+
+def play_sound_linux(sound_file: str) -> None:
+    """Play a sound on Linux using common desktop audio tools when available."""
+    for player in ("paplay", "aplay"):
+        if _play_linux_with_player(player, sound_file):
+            return
+
+    try:
+        subprocess.Popen(
+            ["canberra-gtk-play", "-i", "complete"],
+            stdout=subprocess.DEVNULL,
+            stderr=subprocess.DEVNULL,
+            stdin=subprocess.DEVNULL,
+            start_new_session=True,
+            close_fds=True,
+        )
+    except Exception:
+        pass
+
+
 def play_sound(sound_file: str) -> None:
     """Play a sound file using platform-appropriate method."""
-    if sound_file is None:
+    if sound_file is None and (IS_MACOS or USES_WINDOWS_GUI):
         return
 
     try:
@@ -76,5 +113,7 @@ def play_sound(sound_file: str) -> None:
             play_sound_macos(sound_file)
         elif USES_WINDOWS_GUI:
             play_sound_windows(sound_file)
+        else:
+            play_sound_linux(sound_file)
     except Exception:
         pass
