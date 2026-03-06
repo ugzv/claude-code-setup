@@ -12,6 +12,12 @@
       "description": "installer/file_ops.py _copy_lib_subdir() does not prune obsolete files from ~/.claude/scripts/lib/ — could leave orphaned modules after future refactors",
       "priority": "low",
       "added": "2026-02-25"
+    },
+    {
+      "id": "shared-platform-core",
+      "description": "installer/platform.py still duplicates base platform detection that now also lives in scripts/lib/platform_runtime.py; extract a shared platform-core module or generated contract to prevent installer/runtime drift",
+      "priority": "low",
+      "added": "2026-03-06"
     }
   ],
   "shipped": [
