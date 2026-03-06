@@ -2,9 +2,9 @@
   "project": "claude-code-setup",
   "currentFocus": [],
   "lastSession": {
-    "date": "2026-02-28",
-    "summary": "Rewrote statusline from bash+jq to pure Python for cross-platform support, fixed JSON field parsing, removed jq dependency, fixed installer path resolution",
-    "commits": ["00372c4", "112536b", "da8480f"]
+    "date": "2026-03-06",
+    "summary": "Modularized the hook runtime, hardened installer portability, updated /think to gpt-5-codex, and normalized Python formatting",
+    "commits": ["24d1483", "edf8597", "2afff8d"]
   },
   "backlog": [
     {
@@ -21,6 +21,21 @@
     }
   ],
   "shipped": [
+    {
+      "date": "2026-03-06",
+      "type": "style",
+      "summary": "Apply ruff and black formatting across installer, hooks, and runtime modules"
+    },
+    {
+      "date": "2026-03-06",
+      "type": "fix",
+      "summary": "Update /think --gpt to use gpt-5-codex and newer model guidance"
+    },
+    {
+      "date": "2026-03-06",
+      "type": "refactor",
+      "summary": "Modularize hook runtime helpers, add Linux notification support, and harden installer entrypoints"
+    },
     {
       "date": "2026-02-28",
       "type": "refactor",
@@ -55,36 +70,6 @@
       "date": "2026-02-16",
       "type": "feat",
       "summary": "Add Codex CLI support to installer with --cli flag (claude|codex|all)"
-    },
-    {
-      "date": "2026-02-16",
-      "type": "docs",
-      "summary": "Update README for dual CLI support with comparison table"
-    },
-    {
-      "date": "2026-02-08",
-      "type": "feat",
-      "summary": "Add reasoning effort selection (low/medium/high) to /think --gpt for Codex 5.3"
-    },
-    {
-      "date": "2026-02-07",
-      "type": "fix",
-      "summary": "Add diff safety guidance to commit command to prevent errors on new files"
-    },
-    {
-      "date": "2026-02-07",
-      "type": "fix",
-      "summary": "Remove terminal focus check that suppressed toast notifications since Feb 6 refactor"
-    },
-    {
-      "date": "2026-02-07",
-      "type": "refactor",
-      "summary": "Eliminate sub-agents and add verify-before-run guards across fix/push/analyze/reflect/think commands"
-    },
-    {
-      "date": "2026-02-07",
-      "type": "chore",
-      "summary": "Merge divergent local and remote branches, resolve push.md conflict"
     }
   ]
 }
