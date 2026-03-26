@@ -1,13 +1,31 @@
 ---
-description: "Set up Claude tracking system (new or existing projects)"
+description: "Set up project tracking system (new or existing projects)"
 ---
 
-Set up the Claude tracking system. Non-destructive and idempotent.
+Set up the project tracking system for the current CLI. Non-destructive and idempotent.
+
+## 0. Determine Target CLI
+
+First determine which CLI is running this command:
+
+- **Claude Code** → project protocol file is `CLAUDE.md`, template is `~/.claude/templates/CLAUDE.md`, user settings are `~/.claude/settings.json`
+- **Codex CLI** → project protocol file is `AGENTS.md`, template is `~/.codex/templates/AGENTS.md`, user config is `~/.codex/config.toml`
+
+If the current CLI is obvious from the environment, use it.
+
+If not obvious, infer from what already exists:
+- If only `CLAUDE.md` exists, prefer Claude
+- If only `AGENTS.md` exists, prefer Codex
+- If both exist, prefer the current CLI and leave the sibling file alone
+
+If still ambiguous, ask one concise question before modifying the protocol file.
+
+State which target you chose before proceeding.
 
 ## 1. Audit Existing Setup
 
 ```bash
-ls -la CLAUDE.md .claude/ 2>/dev/null
+ls -la CLAUDE.md AGENTS.md .claude/ 2>/dev/null
 ```
 
 Report what exists.
@@ -20,6 +38,7 @@ Briefly report what will be created/modified, then proceed immediately. The user
 
 ```bash
 test -f CLAUDE.md && cp CLAUDE.md CLAUDE.md.backup
+test -f AGENTS.md && cp AGENTS.md AGENTS.md.backup
 test -f .claude/state.json && cp .claude/state.json .claude/state.json.backup
 test -f .claude/settings.json && cp .claude/settings.json .claude/settings.json.backup
 ```
@@ -32,13 +51,17 @@ Backups ensure nothing is lost. User can restore if needed.
 mkdir -p .claude
 ```
 
-## 5. Handle CLAUDE.md
+## 5. Handle the Protocol File
 
-**Session protocol goes at TOP** so Claude sees it first.
+**Session protocol goes at TOP** so the CLI sees it first.
 
-- If doesn't exist → create from template (`~/.claude/templates/CLAUDE.md`)
-- If exists but no protocol → prepend protocol from template, keep ALL existing content below
-- If has protocol but missing "Resuming Handoffs" section:
+- First set:
+  - `PROJECT_PROTOCOL_FILE` = `CLAUDE.md` or `AGENTS.md`
+  - `USER_TEMPLATE` = matching template path for the current CLI
+
+- If the protocol file doesn't exist → create from the matching template
+- If it exists but has no session protocol → prepend protocol from the matching template, keep ALL existing content below
+- If it has protocol but is missing the current template's newer sections:
   1. Find the `# SESSION PROTOCOL` section
   2. Find where it ends (next `---` or `#` heading at same level)
   3. **Preserve any custom rules** the user added (look for additions after "## Rules")
@@ -47,6 +70,8 @@ mkdir -p .claude
 - If fully up to date → skip
 
 **Key: Never lose user customizations.** If unsure, ask before modifying.
+
+**Do not overwrite the sibling protocol file automatically.** For example, if migrating from Codex, update `AGENTS.md` and leave any existing `CLAUDE.md` alone unless the user explicitly asks to sync both.
 
 ## 6. Create/Update state.json
 
@@ -66,7 +91,9 @@ mkdir -p .claude
 - Only upgrade format if needed (e.g., `currentFocus` from null/string → array)
 - Never overwrite existing entries
 
-## 7. Verify Hooks
+## 7. Verify CLI Integration
+
+### If target is Claude Code
 
 SessionStart hooks are installed at **user level** (`~/.claude/settings.json`) by `install.py`. They load `state.json` and `handoffs.json` on session start.
 
@@ -75,13 +102,19 @@ SessionStart hooks are installed at **user level** (`~/.claude/settings.json`) b
 cat ~/.claude/settings.json | grep -q "session-start.py" && echo "Hooks installed" || echo "Run install.py first"
 ```
 
-**If not installed:** Tell user to run `install.py` from the claude-code-setup repo.
+**If not installed:** Tell the user to run `install.py` from the claude-code-setup repo.
 
 **Project-level settings** (`.claude/settings.json`) are for project-specific overrides only—don't duplicate the SessionStart hooks here.
 
+### If target is Codex CLI
+
+Codex CLI does **not** support SessionStart hooks yet. The session protocol lives in `AGENTS.md`, so no hook check is required.
+
+If the Codex template or prompts were not installed, tell the user to run `python install.py --cli codex` from the claude-code-setup repo.
+
 ## 8. Clean Up Old Project-Level Hooks
 
-Old versions of `/migrate` installed SessionStart hooks at project level with `python -c` one-liners that break on Windows. These must be removed.
+Old versions of `/migrate` installed SessionStart hooks at project level with `python -c` one-liners that break on Windows. These are legacy Claude artifacts and should be removed if present.
 
 **Check for old hooks:**
 ```bash
@@ -90,7 +123,7 @@ cat .claude/settings.json 2>/dev/null | grep -q "SessionStart" && echo "Found pr
 
 **If found:** Read `.claude/settings.json`, remove the `SessionStart` key from `hooks`, and write back. If the file becomes `{"hooks": {}}` or `{}`, leave it (harmless) or remove the hooks key entirely.
 
-**Why:** User-level hooks handle this now. Project-level duplicates cause errors and run twice.
+**Why:** User-level hooks handle this now for Claude. For Codex they are unused noise. In both cases, project-level duplicates are wrong.
 
 ## 9. Migrate Old Format (if found)
 

@@ -4,87 +4,186 @@ description: "Load prompting philosophy and apply to any prompt work"
 
 Philosophy for building AI agent prompts. Internalize before any prompt work.
 
-## Core Insight
+## Philosophy for Building AI Agent Prompts
 
-Claude is intelligent. Write for a collaborator, not a rule-following machine.
+The model is intelligent. Write for a collaborator that can reason, generalize, and recover from novelty, not a system that only matches patterns.
 
-Rules cover situations you anticipate. Principles let Claude reason about novel situations you never imagined.
+The goal of a good prompt is not to pre-script every case. The goal is to make good judgment likely, make hard boundaries explicit, and keep the model aligned with the real objective.
 
-## Principles Over Rules
+## Core Approach
 
-**Rules** (avoid): "If X then Y", "When X always Y"
-**Principles** (prefer): "Match formality to context", "Verify before claiming", "Explain errors actionably"
+Prefer principles for behavior that requires judgment:
 
-Rules create brittle agents. Principles create adaptive ones.
+- prioritization
+- tone
+- tradeoffs
+- ambiguity handling
+- error handling
+- adaptation to unfamiliar situations
 
-## The Example Trap
+Use explicit rules for things that are genuinely non-negotiable:
 
-Claude learns intensely from examples - including incidental details you didn't intend to emphasize.
+- safety boundaries
+- permission boundaries
+- tool-use restrictions
+- required formats or schemas
+- escalation conditions
+- product or policy constraints
 
-**Problem**: If all your examples share a trait (length, tone, domain, structure), Claude treats that trait as required.
+Principles should carry the reasoning. Rules should define the edges.
 
-**Solution**:
-- 3-5 diverse examples maximum
-- Vary surface details (length, complexity, domain)
-- Explicitly state what the examples demonstrate vs. what's incidental
+## Principles Over Procedures
+
+Avoid over-specifying step-by-step procedures unless exact sequencing truly matters.
+
+Rigid procedures are brittle. They fail when the situation is slightly different from what the prompt anticipated.
+
+Prefer instructions that describe what good judgment looks like:
+
+- understand the task before acting
+- verify claims when correctness may have changed
+- make tradeoffs visible when multiple valid paths exist
+- match tone and depth to user context
+- explain failures in a way that helps the next action
+
+If a process must be followed exactly, say so explicitly and explain why.
 
 ## Explain the Why
 
-Without why: "Keep responses under 100 words"
-With why: "Keep responses under 100 words because [your actual constraint]"
+Whenever an instruction matters, include the purpose behind it.
 
-Understanding the goal lets Claude apply spirit over letter in edge cases.
+A model that understands the goal can preserve the intent in edge cases instead of obeying the wording mechanically.
 
-## Model Selection
+Good prompts do not just say what to do. They make clear what outcome the instruction is protecting.
 
-**Sonnet 4.5**: Default for most work. Add "analyze before calling tools" prompts.
-**Opus 4.5**: Complex multi-step reasoning, orchestrators, costly-error domains.
+## Use Examples Carefully
 
-**Context anxiety** (both): Models rush to finish as context fills, even with space remaining.
-→ Add: "You have abundant context. Take time for thorough analysis."
+Examples are powerful and dangerous.
 
-**Deeper reasoning**: For complex tasks, add "Think through this carefully" or "Explore multiple approaches before concluding."
+Models learn not only the intended pattern, but also incidental details such as:
 
-## Prompt Structure
+- length
+- tone
+- structure
+- domain
+- language
+- style
+
+Use examples only when they materially clarify the intended behavior.
+
+When examples are necessary:
+
+- keep them few
+- vary irrelevant surface details
+- state explicitly what the example demonstrates
+- avoid letting all examples share the same accidental pattern
+
+Do not let examples silently become the policy.
+
+## Prefer Clear Priorities Over Many Instructions
+
+Too many instructions create collisions, dilution, and hidden contradictions.
+
+Prefer a small set of high-value instructions with clear priority.
+
+If two goals can conflict, specify which one wins.
+For example:
+
+- correctness over speed
+- safety over completeness
+- schema compliance over prose quality
+- user intent over generic thoroughness
+
+A prompt is better when removing an instruction improves clarity.
+
+## Avoid Defensive Prompting
+
+Do not fill prompts with long lists of prohibitions just because failure is possible.
+
+State the desired behavior directly and positively whenever possible.
+
+Use negative instructions only when they define a real boundary or prevent a costly failure.
+
+The issue is not saying "do not." The issue is using prohibitions as a substitute for clear intent.
+
+## Avoid Brittle Threshold Thinking Unless It Is Policy
+
+Do not encode arbitrary thresholds when what you really want is judgment.
+
+If the system needs heuristic evaluation, describe the pattern that should trigger concern rather than forcing shallow classification rules.
+
+But if a threshold is part of the actual product, policy, or safety requirement, keep it explicit.
+
+Use judgment where judgment is needed.
+Use thresholds where compliance is required.
+
+## Match Prompting Style to Model and Task
+
+Use lighter prompts when the task is straightforward and the model already knows the domain well.
+
+Use more guidance when:
+
+- the task is high stakes
+- tool use is involved
+- multiple objectives must be balanced
+- the model may otherwise optimize for the wrong thing
+- the environment has important local constraints
+
+Do not add structure for its own sake. Add it to reduce real failure modes.
+
+## Recommended Prompt Shape
 
 ```xml
-<identity>Who and core purpose (1-2 sentences)</identity>
-<context>Background, environment, constraints</context>
-<principles>What good looks like (NOT if-then rules)</principles>
-<tools>When to use each (intent, not mechanics)</tools>
-<output_format>Structure if it matters</output_format>
+<identity>Who the agent is and what it is fundamentally trying to do</identity>
+<context>Relevant environment, constraints, and operating assumptions</context>
+<principles>What good behavior and judgment look like</principles>
+<rules>Only the hard boundaries and non-negotiable requirements</rules>
+<tools>When each tool should be used and what kind of intent should trigger it</tools>
+<output_format>Only if response structure truly matters</output_format>
 ```
 
-## Common Mistakes
+Not every prompt needs every section. Include only what improves performance.
 
-1. **Over-specifying procedures** - "First X, then Y, then if Y check Z" → "Verify relevant conditions"
-2. **Defensive prompting** - "Do NOT X, never Y, avoid Z" → State what you want
-3. **Hand-holding** - Long explanations of obvious concepts → Trust Claude's knowledge
-4. **Edge case exhaustion** - 50 rules → 5 generalizing principles
-5. **Conflicting instructions** - "Be concise" + "Include all details" → Clear priority
-6. **Threshold-based rules** - "If X > 5, flag as high" → Teaches matching, not judgment. Describe patterns that suggest problems instead.
+## Common Failure Modes
 
-## When Generating Prompts
+Avoid:
 
-**Avoid hardcoded examples in your output.** You know The Example Trap—apply it to what you write:
-- State principles abstractly, not through specific instances
-- If examples are essential, use placeholders like `[domain-specific term]` or describe the pattern generically
-- Never use examples that could bias toward a specific language, culture, domain, or style
+- procedural micromanagement when judgment would generalize better
+- too many examples that accidentally teach the wrong pattern
+- hardcoded examples that bias toward one domain, tone, or culture when abstraction would work better
+- conflicting instructions with no priority ordering
+- vague principles where hard constraints are actually required
+- hard constraints where contextual judgment is actually required
+- repetition that adds length but not clarity
 
-The agent reading your prompt will learn from every detail. Keep it clean.
+## Review Standard
 
-## Review Checklist
+Check whether:
 
-- [ ] Instructions are principles, not if-then rules?
-- [ ] Examples demonstrate principles, not patterns?
-- [ ] No hardcoded examples that could bias the target agent?
-- [ ] No unnecessary overlap or contradictions?
-- [ ] Would removing any instruction improve it?
-- [ ] Does Claude understand WHY?
+- the prompt distinguishes principles from hard rules
+- hard boundaries are explicit but minimal
+- instructions reflect the actual goal, not cargo-cult wording
+- examples, if any, teach only what they are meant to teach
+- priorities are clear where tradeoffs may occur
+- any instruction can be removed without loss
+- the model would understand not just what to do, but why
 
-## When Agent Fails
+## Practical Test
 
-Ask: Did instructions not cover this, or not follow them? Would a principle have generalized better?
+If the task changes slightly, would the prompt still produce good behavior?
+
+If yes, the prompt likely teaches principles well.
+If no, it is probably overfit to anticipated cases.
+
+## Summary
+
+Good prompts do three things:
+
+- teach judgment through principles
+- define boundaries through explicit rules
+- preserve clarity by saying only what matters
+
+That is the balance: not over-enforced, not under-specified, and robust to situations you did not predict.
 
 ---
 
