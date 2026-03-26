@@ -2,9 +2,9 @@
   "project": "claude-code-setup",
   "currentFocus": [],
   "lastSession": {
-    "date": "2026-03-06",
-    "summary": "Modularized the hook runtime, hardened installer portability, updated /think to gpt-5-codex, and normalized Python formatting",
-    "commits": ["24d1483", "edf8597", "2afff8d", "61628ec"]
+    "date": "2026-03-26",
+    "summary": "Aligned shared Claude/Codex prompts, preserved user prompts on reinstall, and clarified install support in the README",
+    "commits": ["4ec1643", "2b63982", "a0bb0d8"]
   },
   "backlog": [
     {
@@ -21,6 +21,16 @@
     }
   ],
   "shipped": [
+    {
+      "date": "2026-03-26",
+      "type": "fix",
+      "summary": "Align shared commands and prompts with Codex CLI support"
+    },
+    {
+      "date": "2026-03-26",
+      "type": "fix",
+      "summary": "Preserve user prompts on reinstall and align Codex install checks"
+    },
     {
       "date": "2026-03-06",
       "type": "style",
@@ -61,15 +71,5 @@
       "type": "chore",
       "summary": "Remove orphaned PowerShell launcher scripts and clean up stale temp files"
     },
-    {
-      "date": "2026-02-23",
-      "type": "feat",
-      "summary": "Add WSL runtime support for notifications, sound, and terminal detection"
-    },
-    {
-      "date": "2026-02-16",
-      "type": "feat",
-      "summary": "Add Codex CLI support to installer with --cli flag (claude|codex|all)"
-    }
   ]
 }
