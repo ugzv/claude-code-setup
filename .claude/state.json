@@ -70,6 +70,6 @@
       "date": "2026-02-25",
       "type": "chore",
       "summary": "Remove orphaned PowerShell launcher scripts and clean up stale temp files"
-    },
+    }
   ]
 }
