@@ -1,6 +1,6 @@
 # Claude Code Setup
 
-Session tracking, commands, and notifications for [Claude Code](https://docs.anthropic.com/en/docs/claude-code) and [Codex CLI](https://github.com/openai/codex).
+Session tracking, commands, and notifications for [Claude Code](https://code.claude.com/docs) and [Codex CLI](https://developers.openai.com/codex).
 
 **Platforms:** macOS, Windows, and WSL.
 
@@ -36,7 +36,7 @@ python install.py --wsl         # Install into WSL from Windows
 
 | | Claude Code | Codex CLI |
 |---|---|---|
-| Commands | `~/.claude/commands/` | `~/.codex/prompts/` |
+| Custom command/prompt files | `~/.claude/commands/` | `~/.codex/prompts/` |
 | Settings | `~/.claude/settings.json` | `~/.codex/config.toml` |
 | Project instructions | `CLAUDE.md` | `AGENTS.md` |
 | SessionStart hook | Yes | Not yet supported |
@@ -44,6 +44,10 @@ python install.py --wsl         # Install into WSL from Windows
 | Notifications | Yes (Stop hook) | Yes (notify hook) |
 
 Each CLI gets its own copy of scripts and independent runtime state (debounce, logs, toast identity).
+
+Claude Code support here follows the documented `CLAUDE.md`, settings, hooks, and custom-command behavior. Codex CLI support follows the documented `AGENTS.md`, `config.toml`, and slash-command behavior.
+
+The Codex-specific `~/.codex/prompts/` directory and top-level `notify` hook used by this repo are validated against the current CLI (`codex-cli 0.116.0`) and the shipped binary, but are not clearly documented on the public Codex docs site yet.
 
 ### Setup a project
 
@@ -81,7 +85,7 @@ A state file that persists:
 }
 ```
 
-A hook loads this on session start. `/push` trims `shipped` to 10 entries—older history lives in git.
+Claude Code loads this on `SessionStart`. Codex CLI uses the same project state files, but continuity comes from `AGENTS.md` and the installed prompts because SessionStart and statusline support are not available there yet. `/push` trims `shipped` to 10 entries; older history lives in git.
 
 ## Commands
 
@@ -156,12 +160,13 @@ your-project/
 ├── AGENTS.md              # Session protocol (Codex CLI)
 └── .claude/
     ├── state.json         # Tracking data
-    ├── settings.json      # Hook config
     ├── handoffs.json      # Active handoffs (if any)
     └── handoffs/          # Plan files (if any)
 ```
 
-Global commands:
+`~/.claude/settings.json` stays at user scope. A project-level `.claude/settings.json` is only for optional project overrides or legacy cleanup; `/migrate` should not create SessionStart hooks there.
+
+Global custom command/prompt files:
 - Claude Code: `~/.claude/commands/`
 - Codex CLI: `~/.codex/prompts/`
 
@@ -223,6 +228,11 @@ opus │ main │ ●●●○○○○○○○  30%
 
 ## References
 
-- [Claude Code docs](https://docs.anthropic.com/en/docs/claude-code)
-- [Codex CLI docs](https://github.com/openai/codex)
+- [Claude Code memory (`CLAUDE.md`)](https://code.claude.com/docs/en/memory)
+- [Claude Code settings](https://code.claude.com/docs/en/settings)
+- [Claude Code hooks](https://code.claude.com/docs/en/hooks)
+- [Claude Code custom commands / skills](https://code.claude.com/docs/en/slash-commands)
+- [Codex config basics (`~/.codex/config.toml`)](https://developers.openai.com/codex/config-basic)
+- [Codex `AGENTS.md`](https://developers.openai.com/codex/guides/agents-md)
+- [Codex slash commands](https://developers.openai.com/codex/cli/slash-commands)
 - [Effective harnesses for long-running agents](https://www.anthropic.com/engineering/effective-harnesses-for-long-running-agents)
