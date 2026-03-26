@@ -47,7 +47,7 @@ def _build_install_steps(cli: str) -> tuple[InstallStep, ...]:
                     source_rel=("commands",),
                     dest_parts=(commands_subdir,),
                     pattern="*.md",
-                    remove_obsolete=True,
+                    remove_obsolete=False,
                     missing_warning="Commands directory not found",
                 ),
             ),
@@ -304,7 +304,7 @@ def copy_commands(dry_run: bool = False) -> int:
         pattern="*.md",
         dry_run=dry_run,
         make_executable=False,
-        remove_obsolete=True,
+        remove_obsolete=False,
     )
 
 

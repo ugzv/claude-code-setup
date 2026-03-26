@@ -119,10 +119,14 @@ def install_codex(dry_run: bool = False) -> bool:
 
     run_install_steps("codex", dry_run=dry_run, only_steps=(1, 2, 3))
 
-    # Step 4: macOS dependencies
+    # Step 4: Platform dependencies
     if IS_MACOS:
         print("Step 4: Checking macOS dependencies...")
         install_macos_deps(dry_run)
+        print()
+    elif IS_WSL or not IS_WINDOWS:
+        print("Step 4: Checking Linux/WSL dependencies...")
+        install_wsl_deps(dry_run)
         print()
 
     # Step 5: Configure notify in config.toml
