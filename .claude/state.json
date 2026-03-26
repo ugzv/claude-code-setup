@@ -3,8 +3,8 @@
   "currentFocus": [],
   "lastSession": {
     "date": "2026-03-26",
-    "summary": "Aligned shared Claude/Codex prompts, preserved user prompts on reinstall, and clarified install support in the README",
-    "commits": ["4ec1643", "2b63982", "a0bb0d8"]
+    "summary": "Restored the hook text-processing facade so Claude and Codex notification hooks import cleanly again",
+    "commits": ["ff9ddc5"]
   },
   "backlog": [
     {
@@ -21,6 +21,11 @@
     }
   ],
   "shipped": [
+    {
+      "date": "2026-03-26",
+      "type": "fix",
+      "summary": "Restore text-processing facade exports for notification hooks"
+    },
     {
       "date": "2026-03-26",
       "type": "fix",
@@ -65,11 +70,6 @@
       "date": "2026-02-25",
       "type": "fix",
       "summary": "Pathlib migration, encoding fixes, arrow char standardization, YAML quoting"
-    },
-    {
-      "date": "2026-02-25",
-      "type": "chore",
-      "summary": "Remove orphaned PowerShell launcher scripts and clean up stale temp files"
     }
   ]
 }
