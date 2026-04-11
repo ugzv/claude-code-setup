@@ -16,6 +16,7 @@ class CopySpec:
     pattern: str | None = None
     make_executable: bool = False
     remove_obsolete: bool = False
+    skip_if_exists: bool = False
     prefix: str = ""
     missing_warning: str | None = None
 
@@ -61,6 +62,19 @@ def _build_install_steps(cli: str) -> tuple[InstallStep, ...]:
                     source_rel=("templates",),
                     dest_parts=("templates",),
                     pattern="*.md",
+                ),
+            ),
+        ),
+        InstallStep(
+            number=2,
+            title="Installing global CLAUDE.md...",
+            summary_label="global defaults installed",
+            operations=(
+                CopySpec(
+                    source_rel=("defaults", "CLAUDE.md"),
+                    dest_parts=("CLAUDE.md",),
+                    skip_if_exists=True,
+                    missing_warning="Global CLAUDE.md template not found",
                 ),
             ),
         ),
@@ -177,9 +191,15 @@ def copy_file(
     dest_file: Path,
     dry_run: bool = False,
     make_executable: bool = False,
+    skip_if_exists: bool = False,
 ) -> bool:
     """Copy a single file, applying line-ending normalization when needed."""
     if not source_file.exists():
+        return False
+
+    if skip_if_exists and dest_file.exists():
+        if dry_run:
+            print(f"  Would keep existing: {dest_file.name}")
         return False
 
     if dry_run:
@@ -232,6 +252,7 @@ def run_install_steps(
                     dest_path,
                     dry_run=dry_run,
                     make_executable=operation.make_executable,
+                    skip_if_exists=operation.skip_if_exists,
                 )
                 step_count += int(copied)
                 continue

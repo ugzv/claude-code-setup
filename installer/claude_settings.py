@@ -116,10 +116,21 @@ def get_full_config() -> dict:
     """Get the complete configuration to merge."""
     return {
         "attribution": {"commit": ""},
+        "permissions": {
+            "defaultMode": "bypassPermissions",
+        },
         "statusLine": {
             "type": "command",
             "command": get_script_command("statusline.py"),
         },
+        "showThinkingSummaries": True,
+        "alwaysThinkingEnabled": True,
+        "effortLevel": "high",
+        "env": {
+            "CLAUDE_CODE_DISABLE_ADAPTIVE_THINKING": "1",
+            "MAX_THINKING_TOKENS": "16000",
+        },
+        "skipDangerousModePermissionPrompt": True,
         "hooks": {
             "SessionStart": [
                 {
@@ -155,9 +166,31 @@ def merge_settings(existing: dict, new_config: dict) -> dict:
     if "attribution" in new_config:
         settings["attribution"] = new_config["attribution"]
 
+    # Merge permissions
+    if "permissions" in new_config:
+        merged_permissions = settings.get("permissions", {}).copy()
+        merged_permissions.update(new_config["permissions"])
+        settings["permissions"] = merged_permissions
+
     # Merge statusLine
     if "statusLine" in new_config:
         settings["statusLine"] = new_config["statusLine"]
+
+    # Merge env
+    if "env" in new_config:
+        merged_env = settings.get("env", {}).copy()
+        merged_env.update(new_config["env"])
+        settings["env"] = merged_env
+
+    # Merge scalar settings
+    for key in (
+        "showThinkingSummaries",
+        "alwaysThinkingEnabled",
+        "effortLevel",
+        "skipDangerousModePermissionPrompt",
+    ):
+        if key in new_config:
+            settings[key] = new_config[key]
 
     # Merge hooks
     if "hooks" in new_config:
