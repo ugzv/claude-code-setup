@@ -57,13 +57,13 @@ If a per-file inspection fails, skip and continue — don't let one bad diff blo
 
 While working, you likely noticed things: tech debt, potential bugs, improvement opportunities. This is the moment to capture them—your context is fresh.
 
-Read `.state/state.json`. If it does not exist yet, fall back to legacy `.claude/state.json`. Add genuine discoveries to the backlog—things that would be valuable to address later. Each item needs enough context that a future session (maybe not you) can understand and act on it: what you found, where, why it matters.
+Read `.state/state.json` (fall back to `.claude/state.json` in legacy repos). Add genuine discoveries to the backlog—things that would be valuable to address later. Each item needs enough context that a future session (maybe not you) can understand and act on it: what you found, where, why it matters. State files are local-only (excluded via `.git/info/exclude`) and should never be committed.
 
 Don't pad the backlog with noise. If you discovered nothing worth tracking, that's fine.
 
 ## After Committing
 
-Report what was committed (and how it was grouped, if using `--all`). If you added backlog items, commit that state change separately.
+Report what was committed (and how it was grouped, if using `--all`).
 
 If `--push` was specified, proceed to run `/push` automatically. Otherwise, don't push—that's `/push` when the user is ready.
 

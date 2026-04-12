@@ -148,7 +148,15 @@ Check for legacy runtime files and move them into `.state/`:
 - `.claude/handoffs.json` → `.state/handoffs.json`
 - `.claude/handoffs/` → `.state/handoffs/`
 
-Only remove the legacy `.claude` copies after the `.state/` versions are present and verified. Do **not** delete `.claude/settings.json`.
+After confirming the `.state/` copies exist and are valid, **delete the legacy copies**:
+```bash
+# Only after .state/ versions are verified
+rm -f .claude/state.json .claude/state.json.backup
+rm -f .claude/handoffs.json .claude/handoffs.json.backup
+rm -rf .claude/handoffs .claude/handoffs.backup
+```
+
+Do **not** delete `.claude/settings.json` or `.claude/commands/` — those belong to the CLI, not to session state.
 
 Also check for older formats like `.claude/progress.md`, `changelog.json`, `backlog.json`. Migrate data and remove old files.
 
@@ -156,14 +164,27 @@ Also check for older formats like `.claude/progress.md`, `changelog.json`, `back
 
 Detect project language, check if LSP works (`documentSymbol` on a main file). If not available, offer to install appropriate language server.
 
-## 11. Update .gitignore
+## 11. Hide State from Git
 
-**Goal:** Track `.state/` in git (for multi-PC sync) but ignore backup files.
+**Goal:** Keep `.state/` out of version control without leaking its existence into the committed `.gitignore`.
 
-1. If `.gitignore` contains `.state/` or `.state` → **remove it** (user wants tracking)
-2. Add `.state/*.backup` if not present (backups don't need tracking)
-3. Add `.state/handoffs.backup/` if not present
-4. Leave `.claude/` ignore rules alone unless the user explicitly wants project-level Claude config tracked
+Use `.git/info/exclude` (local-only, never committed) instead of `.gitignore`:
+
+```bash
+mkdir -p .git/info
+touch .git/info/exclude
+```
+
+Add these lines to `.git/info/exclude` if not already present:
+```
+.state/
+```
+
+This single rule covers everything — state, handoffs, backups. No need for granular patterns.
+
+If `.gitignore` currently has `.state/` rules from a prior migration, **remove them** — they belong in exclude now.
+
+**Why not `.gitignore`?** The `.gitignore` is committed and public. Adding `.state/` there tells anyone reading the repo that a tracking system exists. `.git/info/exclude` is local-only and invisible to collaborators.
 
 ## 12. Summary
 

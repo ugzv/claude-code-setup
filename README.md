@@ -170,15 +170,15 @@ After `/migrate`:
 your-project/
 ├── CLAUDE.md              # Session protocol (Claude Code)
 ├── AGENTS.md              # Session protocol (Codex CLI)
-└── .state/
+└── .state/                # Local-only (git-excluded)
     ├── state.json         # Tracking data
     ├── handoffs.json      # Active handoffs (if any)
     └── handoffs/          # Plan files (if any)
 ```
 
-`~/.claude/settings.json` stays at user scope. A project-level `.claude/settings.json` is only for optional project overrides or legacy cleanup; `/migrate` should not create SessionStart hooks there. Shared project runtime state lives in `.state/`, not `.claude/`.
+`~/.claude/settings.json` stays at user scope. A project-level `.claude/settings.json` is only for optional project overrides or legacy cleanup; `/migrate` should not create SessionStart hooks there.
 
-Existing repos that still have legacy `.claude/state.json` or `.claude/handoffs*` are migrated into `.state/` by `/migrate`. During the transition, Claude's SessionStart hook still falls back to the legacy paths so old repos do not break.
+`.state/` is excluded from git via `.git/info/exclude` (local-only, never committed) so the tracking system stays invisible to collaborators and public repos. `/migrate` moves legacy `.claude/state.json` and `.claude/handoffs*` into `.state/` and deletes the old copies.
 
 Global custom workflow files:
 - Claude Code: `~/.claude/commands/`

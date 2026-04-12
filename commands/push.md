@@ -43,15 +43,15 @@ Sessions are ephemeral. `state.json` creates continuity so the next session pick
 **State path order:**
 1. Prefer `.state/state.json`
 2. If missing, fall back to legacy `.claude/state.json`
-3. If neither exists, or the file is intentionally ignored/untracked, skip state tracking and tell the user
+3. If neither exists, skip state tracking and tell the user
+
+`.state/` is excluded from git via `.git/info/exclude` — this is intentional. State is local-only and should **never be committed or pushed**. Just update the file on disk.
 
 **What to update:**
 - **lastSession**: Date, summary, commits pushed
 - **shipped**: Add entry for what's being pushed (keep max 10, drop oldest). Use targeted Edit calls on state.json — never rewrite the whole file, as JSON serializers reformat it and create noisy diffs
 - **currentFocus**: Clear this session's focus; leave others
 - **backlog**: Resolve items addressed by what was pushed
-
-If the chosen state file is not tracked or is intentionally ignored, skip state tracking and tell the user instead of force-adding it.
 
 ## Handoff Cleanup
 

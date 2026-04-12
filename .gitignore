@@ -1,6 +1,4 @@
 .claude/*.backup
-.state/*.backup
-.state/handoffs.backup/
 tmpclaude*
 __pycache__/
 nul

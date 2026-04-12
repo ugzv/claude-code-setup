@@ -40,7 +40,7 @@ When user runs `/handoff --continue` or says "continue" and there's an active ha
 
 ## Commands Available
 - `/commit` - Commit changes (clean, no AI mentions)
-- `/push` - Push + update state.json + clean up completed handoffs
+- `/push` - Push + update local state + clean up completed handoffs
 - `/backlog` - Review and manage backlog items
 - `/handoff` - Create handoff (`--continue` to resume active one)
 
