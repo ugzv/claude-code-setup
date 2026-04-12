@@ -29,6 +29,7 @@ from .claude_settings import (
 )
 from .codex_config import merge_codex_config, remove_codex_notify
 from .file_ops import (
+    install_codex_skills,
     run_install_steps,
 )
 
@@ -77,7 +78,10 @@ def install(dry_run: bool = False) -> bool:
     merged = merge_settings(settings, new_config)
 
     if dry_run:
-        print("  Would configure: attribution, statusLine, SessionStart/Stop hooks")
+        print(
+            "  Would configure: attribution, bypassPermissions default, "
+            "thinking defaults, statusLine, SessionStart/Stop hooks"
+        )
         print()
         print("  Resulting settings.json:")
         print("  " + "-" * 40)
@@ -109,7 +113,7 @@ def install(dry_run: bool = False) -> bool:
 
 
 def install_codex(dry_run: bool = False) -> bool:
-    """Install commands and notifications for Codex CLI."""
+    """Install skills, compatibility prompts, and notifications for Codex CLI."""
     codex_dir = get_cli_dir("codex")
 
     print()
@@ -117,20 +121,28 @@ def install_codex(dry_run: bool = False) -> bool:
     print("=" * 50)
     print()
 
-    run_install_steps("codex", dry_run=dry_run, only_steps=(1, 2, 3))
+    run_install_steps("codex", dry_run=dry_run, only_steps=(1,))
 
-    # Step 4: Platform dependencies
+    print("Step 2: Installing Codex skills...")
+    skill_count = install_codex_skills(dry_run=dry_run)
+    if not dry_run:
+        print(f"  {skill_count} skills installed")
+    print()
+
+    run_install_steps("codex", dry_run=dry_run, only_steps=(3, 4))
+
+    # Step 5: Platform dependencies
     if IS_MACOS:
-        print("Step 4: Checking macOS dependencies...")
+        print("Step 5: Checking macOS dependencies...")
         install_macos_deps(dry_run)
         print()
     elif IS_WSL or not IS_WINDOWS:
-        print("Step 4: Checking Linux/WSL dependencies...")
+        print("Step 5: Checking Linux/WSL dependencies...")
         install_wsl_deps(dry_run)
         print()
 
-    # Step 5: Configure notify in config.toml
-    print("Step 5: Configuring notifications...")
+    # Step 6: Configure notify in config.toml
+    print("Step 6: Configuring notifications...")
     merge_codex_config(codex_dir, dry_run)
     print()
 
@@ -142,12 +154,14 @@ def install_codex(dry_run: bool = False) -> bool:
     else:
         print("INSTALLED for Codex CLI!")
         print()
-        print("Commands available as /command-name in Codex interactive mode")
+        print("Skills available in /skills, with display names like /commit and /migrate")
+        print("Explicit invocation is also available via $claude-code-setup-<name>")
+        print("Legacy ~/.codex/prompts compatibility files were also installed for older Codex builds")
         print()
         print("Features: Desktop notifications on task completion")
         print()
         print("Note: SessionStart hooks and statusline are Claude Code only")
-        print("Next: Restart Codex CLI, use AGENTS.md template for new projects")
+        print("Next: Restart Codex CLI, then use /skills or $claude-code-setup-migrate in a project")
     print()
 
     return True

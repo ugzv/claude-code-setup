@@ -1,8 +1,8 @@
 ---
-description: "List available Claude Code commands and Codex prompts"
+description: "List available Claude Code commands and Codex skills"
 ---
 
-List the custom commands or prompts available for Claude Code and Codex CLI.
+List the custom commands or skills available for Claude Code and Codex CLI.
 
 ## How to Find Commands
 
@@ -15,6 +15,16 @@ for f in ~/.claude/commands/*.md; do [ -f "$f" ] && echo "$(basename "$f" .md): 
 ```bash
 for f in .claude/commands/*.md; do [ -f "$f" ] && echo "$(basename "$f" .md): $(grep -m1 '^description:' "$f" | cut -d: -f2-)"; done
 ```
+
+```bash
+for f in ~/.codex/skills/*/SKILL.md; do [ -f "$f" ] && display="$(grep -m1 'display_name:' "${f%/SKILL.md}/agents/openai.yaml" 2>/dev/null | cut -d: -f2- | sed 's/^ *//' )"; desc="$(grep -m1 'short_description:' "${f%/SKILL.md}/agents/openai.yaml" 2>/dev/null | cut -d: -f2- | sed 's/^ *//' )"; [ -n "$display" ] || display="$(basename "$(dirname "$f")")"; [ -n "$desc" ] || desc="$(grep -m1 '^description:' "$f" | cut -d: -f2-)"; echo "$display: $desc"; done
+```
+
+```bash
+for f in .codex/skills/*/SKILL.md; do [ -f "$f" ] && display="$(grep -m1 'display_name:' "${f%/SKILL.md}/agents/openai.yaml" 2>/dev/null | cut -d: -f2- | sed 's/^ *//' )"; desc="$(grep -m1 'short_description:' "${f%/SKILL.md}/agents/openai.yaml" 2>/dev/null | cut -d: -f2- | sed 's/^ *//' )"; [ -n "$display" ] || display="$(basename "$(dirname "$f")")"; [ -n "$desc" ] || desc="$(grep -m1 '^description:' "$f" | cut -d: -f2-)"; echo "$display: $desc"; done
+```
+
+Legacy compatibility locations:
 
 ```bash
 for f in ~/.codex/prompts/*.md; do [ -f "$f" ] && echo "$(basename "$f" .md): $(grep -m1 '^description:' "$f" | cut -d: -f2-)"; done
@@ -37,12 +47,17 @@ CLAUDE PROJECT COMMANDS
   /deploy      - Deploy to staging
   ...
 
-CODEX USER PROMPTS
-  /prompt-guide - Prompting philosophy for agent work
+CODEX USER SKILLS
+  /commit      - Commit changes [select from /skills]
+  /migrate     - Set up tracking [select from /skills]
   ...
 
-CODEX PROJECT PROMPTS
+CODEX PROJECT SKILLS
   /deploy      - Deploy to staging
+  ...
+
+CODEX USER PROMPTS (LEGACY)
+  /prompt-guide - Legacy custom prompt installation for older Codex builds
   ...
 ```
 
