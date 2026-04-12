@@ -2,9 +2,9 @@
   "project": "claude-code-setup",
   "currentFocus": [],
   "lastSession": {
-    "date": "2026-03-26",
-    "summary": "Restored the hook text-processing facade so Claude and Codex notification hooks import cleanly again",
-    "commits": ["ff9ddc5"]
+    "date": "2026-04-11",
+    "summary": "Seeded Claude installer defaults for reasoning settings and a global CLAUDE.md template",
+    "commits": ["60c1794"]
   },
   "backlog": [
     {
@@ -21,6 +21,11 @@
     }
   ],
   "shipped": [
+    {
+      "date": "2026-04-11",
+      "type": "fix",
+      "summary": "Seed Claude installer defaults and a global CLAUDE.md template"
+    },
     {
       "date": "2026-03-26",
       "type": "fix",
