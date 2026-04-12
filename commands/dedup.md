@@ -19,7 +19,7 @@ Deep duplicate and similar-code detector with concrete merge plans.
 Quick scan before spawning analyzers:
 - Languages, frameworks, directory structure
 - Utility/helper directories (utils/, helpers/, lib/, shared/, common/)
-- Read `.claude/state.json` to check for known duplication items in backlog
+- Read `.state/state.json` (fall back to `.claude/state.json` in legacy repos) to check for known duplication items in backlog
 - Scope from `$ARGUMENTS` — if a path or module is specified, focus there; otherwise scan the full project
 
 ## Phase 2: Spawn Analyzers in Parallel

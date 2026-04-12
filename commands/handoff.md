@@ -29,12 +29,14 @@ When resuming work on an existing handoff:
 ## File Structure
 
 ```
-.claude/
+.state/
 ├── state.json        # session tracking (existing)
 ├── handoffs.json     # handoff index + progress state
 └── handoffs/
     └── {slug}.md     # plan details (static after creation)
 ```
+
+Use `.state/` as the source of truth. Older repos may still have legacy `.claude/state.json` and `.claude/handoffs*` until `/migrate` moves them.
 
 **Separation:**
 - `handoffs.json` = state (progress, validation, learnings) — updates as work happens
@@ -177,8 +179,8 @@ Note: No progress tracking in .md — that lives in `handoffs.json`.
 ## Generation Process
 
 1. **Create slug** from title (e.g., "User Authentication" → `user-authentication`)
-2. **Write plan** to `.claude/handoffs/{slug}.md`
-3. **Add entry** to `.claude/handoffs.json` with all phases as `pending`
+2. **Write plan** to `.state/handoffs/{slug}.md`
+3. **Add entry** to `.state/handoffs.json` with all phases as `pending`
 4. **Confirm** with user
 
 ## Continue Process (--continue)
@@ -186,7 +188,7 @@ Note: No progress tracking in .md — that lives in `handoffs.json`.
 ### 1. Load and Select
 
 ```
-Read .claude/handoffs.json
+Read .state/handoffs.json
 
 If no active handoffs:
   → "No active handoffs. Use /handoff to create one."
@@ -418,7 +420,7 @@ If user asks about something that overlaps an active handoff's scope, mention th
 User: /think [complex task]
 Claude: [analyzes, proposes approach]
 User: /handoff
-Claude: Creates .claude/handoffs/{slug}.md + updates handoffs.json
+Claude: Creates .state/handoffs/{slug}.md + updates handoffs.json
         "Handoff created: {slug}. N phases. Ready for fresh session."
 
 # Session 2: Execution with parallel agents

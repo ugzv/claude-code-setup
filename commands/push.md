@@ -2,7 +2,7 @@
 description: "Push changes and update state [--force to skip checks]"
 ---
 
-Push to remote and update `.claude/state.json`. Fully automatic.
+Push to remote and update `.state/state.json` (fall back to legacy `.claude/state.json` only when needed). Fully automatic.
 
 ## Guiding Principles
 
@@ -40,13 +40,18 @@ Summarize: commits pushed, what shipped, backlog changes.
 
 Sessions are ephemeral. `state.json` creates continuity so the next session picks up where this one left off.
 
+**State path order:**
+1. Prefer `.state/state.json`
+2. If missing, fall back to legacy `.claude/state.json`
+3. If neither exists, or the file is intentionally ignored/untracked, skip state tracking and tell the user
+
 **What to update:**
 - **lastSession**: Date, summary, commits pushed
 - **shipped**: Add entry for what's being pushed (keep max 10, drop oldest). Use targeted Edit calls on state.json — never rewrite the whole file, as JSON serializers reformat it and create noisy diffs
 - **currentFocus**: Clear this session's focus; leave others
 - **backlog**: Resolve items addressed by what was pushed
 
-If `state.json` isn't a committed file or doesn't exist on disk, skip state tracking and tell the user.
+If the chosen state file is not tracked or is intentionally ignored, skip state tracking and tell the user instead of force-adding it.
 
 ## Handoff Cleanup
 

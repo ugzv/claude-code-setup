@@ -4,7 +4,7 @@
 
 ## On Session Start
 
-1. **Read project state**: `cat .claude/state.json`
+1. **Read project state**: `cat .state/state.json` (fall back to `.claude/state.json` only in legacy repos)
 
 2. **Brief summary** (don't force handoff engagement):
    ```
@@ -25,7 +25,7 @@
 
 When user runs `/handoff --continue` or says "continue" and there's an active handoff:
 
-1. **Read the handoff file** (`.claude/handoffs/{id}.md`) for goal, phases, and learnings
+1. **Read the handoff file** (`.state/handoffs/{id}.md`) for goal, phases, and learnings
 2. **Check `lastTouched`** — if recent, warn about possible session conflict
 3. **Update `handoffs.json`** as you complete phases (set `status: "complete"`, add `learnings`)
 4. **Capture insights** — what worked, what didn't, for future sessions

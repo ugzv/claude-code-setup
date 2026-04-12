@@ -18,7 +18,7 @@ The backlog is persistent memory. Your job is to surface what's actionable and h
 
 ## Reading the Backlog
 
-Read `.claude/state.json`. If missing, tell the user to run `/migrate` first.
+Read `.state/state.json`. If missing, fall back to legacy `.claude/state.json`. If neither exists, tell the user to run `/migrate` first.
 
 Show open items numbered by priority (high → medium → low). Include enough context that the user can pick without asking follow-up questions. Show current focus if set.
 

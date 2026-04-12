@@ -28,7 +28,7 @@ Architecture advisor for improving codebase organization.
 Quick scan before spawning analyzers:
 - Languages, frameworks, directory structure
 - Largest files (>500 lines), deepest directories
-- Read `.claude/state.json` to avoid duplicating backlog items
+- Read `.state/state.json` (fall back to `.claude/state.json` in legacy repos) to avoid duplicating backlog items
 
 ## Phase 2: Spawn Analyzers in Parallel
 

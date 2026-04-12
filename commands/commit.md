@@ -10,7 +10,7 @@ Commit code changes that YOU (this Claude session) made. Execute without asking 
 
 **With `--all` flag:** Find ALL uncommitted changes and group them intelligently into multiple commits. Use this when returning to a project with accumulated changes from multiple work sessions.
 
-**With `--push` flag:** After committing, automatically run `/push` (update state.json, run CI checks, push to remote). Can combine: `--all --push`.
+**With `--push` flag:** After committing, automatically run `/push` (update `.state/state.json`, run CI checks, push to remote). Can combine: `--all --push`.
 
 ## Why This Matters
 
@@ -57,7 +57,7 @@ If a per-file inspection fails, skip and continue — don't let one bad diff blo
 
 While working, you likely noticed things: tech debt, potential bugs, improvement opportunities. This is the moment to capture them—your context is fresh.
 
-Read `.claude/state.json`. Add genuine discoveries to the backlog—things that would be valuable to address later. Each item needs enough context that a future session (maybe not you) can understand and act on it: what you found, where, why it matters.
+Read `.state/state.json`. If it does not exist yet, fall back to legacy `.claude/state.json`. Add genuine discoveries to the backlog—things that would be valuable to address later. Each item needs enough context that a future session (maybe not you) can understand and act on it: what you found, where, why it matters.
 
 Don't pad the backlog with noise. If you discovered nothing worth tracking, that's fine.
 

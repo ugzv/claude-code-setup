@@ -25,7 +25,7 @@ State which target you chose before proceeding.
 ## 1. Audit Existing Setup
 
 ```bash
-ls -la CLAUDE.md AGENTS.md .claude/ 2>/dev/null
+ls -la CLAUDE.md AGENTS.md .state/ .claude/ 2>/dev/null
 ```
 
 Report what exists.
@@ -39,7 +39,12 @@ Briefly report what will be created/modified, then proceed immediately. The user
 ```bash
 test -f CLAUDE.md && cp CLAUDE.md CLAUDE.md.backup
 test -f AGENTS.md && cp AGENTS.md AGENTS.md.backup
+test -f .state/state.json && cp .state/state.json .state/state.json.backup
+test -f .state/handoffs.json && cp .state/handoffs.json .state/handoffs.json.backup
+test -d .state/handoffs && cp -R .state/handoffs .state/handoffs.backup
 test -f .claude/state.json && cp .claude/state.json .claude/state.json.backup
+test -f .claude/handoffs.json && cp .claude/handoffs.json .claude/handoffs.json.backup
+test -d .claude/handoffs && cp -R .claude/handoffs .claude/handoffs.backup
 test -f .claude/settings.json && cp .claude/settings.json .claude/settings.json.backup
 ```
 
@@ -48,7 +53,7 @@ Backups ensure nothing is lost. User can restore if needed.
 ## 4. Create Structure
 
 ```bash
-mkdir -p .claude
+mkdir -p .state/handoffs
 ```
 
 ## 5. Handle the Protocol File
@@ -73,7 +78,7 @@ mkdir -p .claude
 
 **Do not overwrite the sibling protocol file automatically.** For example, if migrating from Codex, update `AGENTS.md` and leave any existing `CLAUDE.md` alone unless the user explicitly asks to sync both.
 
-## 6. Create/Update state.json
+## 6. Create/Update `.state/state.json`
 
 **If doesn't exist**, create:
 ```json
@@ -91,11 +96,17 @@ mkdir -p .claude
 - Only upgrade format if needed (e.g., `currentFocus` from null/string → array)
 - Never overwrite existing entries
 
+**Path rules:**
+- Use `.state/state.json` as the source of truth
+- If `.state/state.json` is missing but legacy `.claude/state.json` exists, migrate/copy the legacy data into `.state/state.json` first
+- If both exist, prefer `.state/state.json` and do not overwrite it with legacy content
+- If legacy `.claude/handoffs.json` or `.claude/handoffs/` exist and `.state/` copies do not, migrate them into `.state/`
+
 ## 7. Verify CLI Integration
 
 ### If target is Claude Code
 
-SessionStart hooks are installed at **user level** (`~/.claude/settings.json`) by `install.py`. They load `state.json` and `handoffs.json` on session start.
+SessionStart hooks are installed at **user level** (`~/.claude/settings.json`) by `install.py`. They load `.state/state.json` and `.state/handoffs.json` on session start, with legacy `.claude/...` fallback during migration.
 
 **Check if installed:**
 ```bash
@@ -110,7 +121,12 @@ cat ~/.claude/settings.json | grep -q "session-start.py" && echo "Hooks installe
 
 Codex CLI does **not** support SessionStart hooks yet. The session protocol lives in `AGENTS.md`, so no hook check is required.
 
-If the Codex template or prompts were not installed, tell the user to run `python install.py --cli codex` from the claude-code-setup repo.
+**Check if installed:**
+```bash
+test -f ~/.codex/skills/claude-code-setup-migrate/SKILL.md && echo "Skills installed" || echo "Run install.py --cli codex first"
+```
+
+If the Codex template or skills were not installed, tell the user to run `python install.py --cli codex` from the claude-code-setup repo.
 
 ## 8. Clean Up Old Project-Level Hooks
 
@@ -125,9 +141,16 @@ cat .claude/settings.json 2>/dev/null | grep -q "SessionStart" && echo "Found pr
 
 **Why:** User-level hooks handle this now for Claude. For Codex they are unused noise. In both cases, project-level duplicates are wrong.
 
-## 9. Migrate Old Format (if found)
+## 9. Migrate Legacy Runtime State (if found)
 
-Check for `.claude/progress.md`, `changelog.json`, `backlog.json`. Migrate data and remove old files.
+Check for legacy runtime files and move them into `.state/`:
+- `.claude/state.json` → `.state/state.json`
+- `.claude/handoffs.json` → `.state/handoffs.json`
+- `.claude/handoffs/` → `.state/handoffs/`
+
+Only remove the legacy `.claude` copies after the `.state/` versions are present and verified. Do **not** delete `.claude/settings.json`.
+
+Also check for older formats like `.claude/progress.md`, `changelog.json`, `backlog.json`. Migrate data and remove old files.
 
 ## 10. LSP Setup (Optional)
 
@@ -135,10 +158,12 @@ Detect project language, check if LSP works (`documentSymbol` on a main file). I
 
 ## 11. Update .gitignore
 
-**Goal:** Track `.claude/` in git (for multi-PC sync) but ignore backup files.
+**Goal:** Track `.state/` in git (for multi-PC sync) but ignore backup files.
 
-1. If `.gitignore` contains `.claude/` or `.claude` → **remove it** (user wants tracking)
-2. Add `.claude/*.backup` if not present (backups don't need tracking)
+1. If `.gitignore` contains `.state/` or `.state` → **remove it** (user wants tracking)
+2. Add `.state/*.backup` if not present (backups don't need tracking)
+3. Add `.state/handoffs.backup/` if not present
+4. Leave `.claude/` ignore rules alone unless the user explicitly wants project-level Claude config tracked
 
 ## 12. Summary
 
