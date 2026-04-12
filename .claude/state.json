@@ -2,9 +2,9 @@
   "project": "claude-code-setup",
   "currentFocus": [],
   "lastSession": {
-    "date": "2026-04-11",
-    "summary": "Seeded Claude installer defaults for reasoning settings and a global CLAUDE.md template",
-    "commits": ["60c1794"]
+    "date": "2026-04-12",
+    "summary": "Migrated runtime state to .state/, added Codex skills installer, updated docs",
+    "commits": ["10e80d4", "0db51b3", "b3529db"]
   },
   "backlog": [
     {
@@ -21,6 +21,16 @@
     }
   ],
   "shipped": [
+    {
+      "date": "2026-04-12",
+      "type": "refactor",
+      "summary": "Migrate runtime state from .claude/ to .state/ with legacy fallback"
+    },
+    {
+      "date": "2026-04-12",
+      "type": "feat",
+      "summary": "Generate Codex skills from command markdown files with trigger hints and pruning"
+    },
     {
       "date": "2026-04-11",
       "type": "fix",
@@ -70,11 +80,6 @@
       "date": "2026-02-25",
       "type": "refactor",
       "summary": "Unify notification pipeline, add run_powershell/run_quiet subprocess helpers"
-    },
-    {
-      "date": "2026-02-25",
-      "type": "fix",
-      "summary": "Pathlib migration, encoding fixes, arrow char standardization, YAML quoting"
     }
   ]
 }
