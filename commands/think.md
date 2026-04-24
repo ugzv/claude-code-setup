@@ -64,25 +64,35 @@ If you must present options, recommend one and explain why.
 
 Get a second perspective from GPT via Codex CLI. Useful when you're uncertain about an architectural decision and want fresh eyes on the codebase.
 
-**CRITICAL: Prefer the current configured Codex reasoning model. Do NOT pin older model names unless the user explicitly asks or the repo has a documented requirement. If the local Codex setup already has the right default model, omit `-m` entirely.**
+**CRITICAL: Use GPT-5.5 by default. Always pass `-m gpt-5.5` for `--gpt` unless the user explicitly asks for a different model. Run Codex CLI in full-access YOLO mode with `--dangerously-bypass-approvals-and-sandbox` so it can inspect the repo and execute commands without approval prompts.**
 
 **When `--gpt` is set:**
 
 1. Check if `codex` is installed: `which codex` — if not, skip gracefully and tell the user
 
-2. **Pick reasoning effort based on what you're asking:**
+2. Check Codex CLI basics:
+
+   ```
+   codex --version
+   grep -E '^model[[:space:]]*=' ~/.codex/config.toml 2>/dev/null || true
+   ```
+
+   The config check is diagnostic only. The `--gpt` workflow should still pass `-m gpt-5.5` explicitly by default so the transcript makes the model choice obvious.
+
+3. **Pick reasoning effort based on what you're asking:**
 
    | Effort | When to use | Example question |
    |--------|-------------|------------------|
    | `low` | Sanity-checking a straightforward decision | "Does this file structure follow the existing pattern?" |
    | `medium` | Reviewing an approach with a few tradeoffs | "Which of these two patterns fits better here?" |
    | `high` | Deep analysis across multiple files/concerns | "Trace all callers of X and check if this refactor is safe" |
+   | `xhigh` | Exceptional cases where correctness depends on very deep analysis | "Audit this migration plan across schema, callers, deployment, and rollback paths" |
 
-   **Default to `medium`** — it's the best speed/depth tradeoff for most second opinions. Only escalate to `high` when the question genuinely requires multi-file exploration or relationship tracing. `low` is for quick validation where you mostly know the answer.
+   Choose the effort yourself based on what the question needs. Do not ask the user which effort to use. Use the minimum effort that can answer the question well, and escalate when the work genuinely needs deeper repo exploration or relationship tracing.
 
-   > Do NOT use `xhigh` — it's benchmark-grade and too slow for interactive work. If the question needs that level of depth, break it into smaller focused questions at `high`.
+   > For time-sensitive operational decisions, use the lowest effort that can produce a useful recommendation. Do not let the second opinion block an urgent mitigation; ask a narrower question or proceed with the best available evidence.
 
-3. Construct a prompt that enables focused analysis:
+4. Construct a prompt that enables focused analysis:
    ```
    You are providing a second opinion on a coding decision.
 
@@ -94,22 +104,34 @@ Get a second perspective from GPT via Codex CLI. Useful when you're uncertain ab
    QUESTION: [See principles below]
    ```
 
-4. **Principles for the prompt:**
+5. **Principles for the prompt:**
    - Give context that grounds analysis (what you're doing, what you've decided)
    - State your uncertainty explicitly (the model reasons better when it knows where to focus)
    - Ask questions that reward depth over speed (exploration, relationship tracing, completeness checking)
    - Be specific about the dimension needing analysis, not vague quality judgments
    - Do NOT ask it to "think step by step" — reasoning models do this internally already
 
-5. Run this command (replace `EFFORT` and the prompt; add `-m MODEL` only if you intentionally need to override the configured default):
+6. Run this command (replace `EFFORT` and the prompt). Always capture the final answer with `-o` so a timeout or background shell still leaves a readable result. Put the prompt in a temp file instead of a huge inline shell string; this avoids quoting bugs with JSON, SQL, `!`, backticks, and multiline context:
    ```
-   codex exec --full-auto -c model_reasoning_effort="EFFORT" "[your prompt]"
+   PROMPT="$(mktemp -t codex-second-opinion-prompt.XXXXXX.md)"
+   OUT="$(mktemp -t codex-second-opinion.XXXXXX.md)"
+   cat > "$PROMPT" <<'EOF'
+   [your prompt]
+   EOF
+   codex exec --dangerously-bypass-approvals-and-sandbox --ephemeral -m gpt-5.5 \
+     -c model_reasoning_effort="EFFORT" \
+     -o "$OUT" \
+     - < "$PROMPT"
+   cat "$OUT"
    ```
-   - Prefer the configured default model when it is already appropriate
-   - Only pass `-m MODEL` when the user asked for a specific model or the environment requires an explicit override
-   - Replace `EFFORT` with your chosen level from step 2
+   - Keep `-m gpt-5.5` unless the user explicitly requested a different model
+   - Keep `--dangerously-bypass-approvals-and-sandbox` for full-access YOLO mode
+   - Replace `EFFORT` with your chosen level from step 3
+   - Use a bounded wait: about 2 minutes for `low`, 5 minutes for `medium`, 10 minutes for `high`, and 15 minutes for `xhigh`
+   - If Codex is still running after the bounded wait, say so, stop waiting, and continue with your own recommendation
+   - Do not leave a background Codex shell unattended; if it must run in the background, record its PID/output path, poll it, and kill it after the bounded wait
 
-6. Incorporate insights that shift your understanding. Ignore surface-level observations you already knew.
+7. Incorporate insights that shift your understanding. Ignore surface-level observations you already knew.
 
 **Why this works:** You see your planned approach clearly. The second model explores the codebase independently. Matching effort to question complexity means fast answers when you need validation and deep analysis only when it matters.
 

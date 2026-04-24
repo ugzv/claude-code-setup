@@ -12,6 +12,8 @@ Push to remote and update `.state/state.json` (fall back to legacy `.claude/stat
 
 **Direct Bash calls, not sub-agents.** Sub-agents add ~8k tokens of overhead each. Run all checks as parallel Bash calls in a single message.
 
+**No silent long waits.** If a check or CI poll runs for more than a couple of minutes, report what is still running and what evidence you have so far. Keep going, but don't leave the user guessing whether the command is stuck.
+
 ## Pre-Push: Detect → Fix → Verify → Gate
 
 ### Detect
@@ -25,6 +27,8 @@ Run formatters and linters in auto-fix mode (parallel). If anything changed, sta
 ### Verify
 
 Run checks that can't be auto-fixed — type checking, tests, remaining lint errors — in parallel. These confirm the code is push-ready.
+
+For long-running checks, prefer commands that stream or periodically show progress. If a tool can hang indefinitely, wrap it in the repo's normal timeout mechanism when available, or use a reasonable shell timeout and report that timeout explicitly if it fires.
 
 ### Gate
 

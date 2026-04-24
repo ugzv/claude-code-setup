@@ -12,6 +12,15 @@ Commit code changes that YOU (this Claude session) made. Execute without asking 
 
 **With `--push` flag:** After committing, automatically run `/push` (update `.state/state.json`, run CI checks, push to remote). Can combine: `--all --push`.
 
+## Natural Language Flags
+
+Treat plain-language arguments as intent, not strict syntax. Users often write fast commands like `--all push validate that all is well`.
+
+- Words like `all`, `everything`, `all changes`, or `accumulated changes` mean `--all`
+- Words like `push`, `ship`, `push it`, or `send it` mean `--push`
+- Words like `validate`, `verify`, `check`, or `make sure all is well` mean run the `/push` validation path; if changes were committed, this implies `--push`
+- Do not ask for confirmation just because the user omitted dashes; execute the implied mode
+
 ## Why This Matters
 
 Commits are communication. Someone reading `git log` six months from now should understand what happened and why. Someone bisecting a bug should find atomic changes that either contain the bug or don't—not tangled commits where the bug could be anywhere.
