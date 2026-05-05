@@ -36,9 +36,9 @@ All pass → push. Any failure → stop and report what needs manual attention.
 
 ## Push and Summarize
 
-Check what commits the current branch has ahead of its upstream. If nothing to push, say so and stop. Commit state.json separately if it changed, then push.
+Check what commits the current branch has ahead of its upstream. If nothing to push, say so and stop. Update `state.json` on disk when state tracking exists, but do **not** stage or commit it. Push code/docs commits only.
 
-Summarize: commits pushed, what shipped, backlog changes.
+Summarize: commits pushed, what shipped, state update result, backlog changes.
 
 ## State Tracking
 
@@ -52,10 +52,19 @@ Sessions are ephemeral. `state.json` creates continuity so the next session pick
 `.state/` is excluded from git via `.git/info/exclude` — this is intentional. State is local-only and should **never be committed or pushed**. Just update the file on disk.
 
 **What to update:**
-- **lastSession**: Date, summary, commits pushed
-- **shipped**: Add entry for what's being pushed (keep max 10, drop oldest). Use targeted Edit calls on state.json — never rewrite the whole file, as JSON serializers reformat it and create noisy diffs
+- **lastSession**: Date, concise summary, commits pushed, and uncommitted status if already tracked
+- **shipped**: Add one entry for what's being pushed, then keep max 10 and drop oldest entries. New entries should use this shape:
+  - `date`: today's date
+  - `type`: conventional commit type summary derived from pushed commits, e.g. `fix`, `feat+fix`, `docs`
+  - `summary`: one compact sentence, usually under 300 characters; describe outcomes, not every file path or test name
+  - `commits`: short SHAs that were pushed
 - **currentFocus**: Clear this session's focus; leave others
 - **backlog**: Resolve items addressed by what was pushed
+
+**State editing rules:**
+- Existing state may contain older entries with missing fields. Treat `type`, `commits`, and other keys as optional when reading or summarizing history.
+- Use targeted Edit calls on `state.json` — never rewrite the whole file, as JSON serializers reformat it and create noisy diffs.
+- After editing, validate JSON with an available parser such as `python3 -m json.tool` or `jq empty`; fix validation errors before pushing.
 
 ## Handoff Cleanup
 
